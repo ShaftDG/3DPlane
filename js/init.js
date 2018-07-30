@@ -28,7 +28,8 @@ shaders.load( 'fragmentShaderLoader' , 'fragmentShLoader' , 'fragment' );
 
 var rollOverMesh, rollOverMaterial, floor, group, groupPlane, groupExtrude, groupLines, groupPointsArray, groupLinesUpdate, groupPointsScale, groupLinesScale;
 var objects = [];
-var selectedObject;
+var selectedObject = null;
+var selectedPoint = null;
 var line, lineRect, lineDown, lineScale, positions, positionsRect, positionsDown, positionsUp, positionsScale;
 var count = 0;
 var count1 = 0;
@@ -102,7 +103,7 @@ function init() {
 
      var frustumSize = 1000;
      var aspect = window.innerWidth / window.innerHeight;
-     cameraOrthographic = new THREE.OrthographicCamera( frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 0.1, 20000 );
+     cameraOrthographic = new THREE.OrthographicCamera( frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 0.1, 50000 );
     // cameraOrthographic = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 2000 );
     setDefaultOrthographicCameraPosition();
     cameraOrthographic.name = "cameraOrthographic";
@@ -118,6 +119,8 @@ function init() {
     camera = cameraOrthographic;
     // scene
     scene = new THREE.Scene();
+    scene.background = new THREE.Color( "#cff7ff" );
+    // scene.fog = new THREE.Fog( "#cff7ff", 5000, 10000 );
     scene.name = "MainScene";
 
     group = new THREE.Object3D();
@@ -158,7 +161,7 @@ function init() {
     hemiLight.name = "hemiLight";
     hemiLight.color.setHSL( 0.6, 1, 0.6 );
     hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
-    hemiLight.position.set( 0, 50, 0 );
+    hemiLight.position.set( 5000, 5000, 0 );
     scene.add( hemiLight );
     //
     var dirLight = new THREE.DirectionalLight( '#ffffff', 1.0 );
@@ -179,9 +182,9 @@ function init() {
     dirLight.shadow.bias = -0.0001;
 
     // model
-    var geometry = new THREE.PlaneGeometry(4000, 4000, 1, 1);
+    var geometry = new THREE.PlaneGeometry(20000, 20000, 1, 1);
     // geometry.rotateX(-Math.PI / 2);
-    var material = new THREE.MeshBasicMaterial({color: '#e0f3f0', side: THREE.DoubleSide});
+    var material = new THREE.MeshLambertMaterial({color: '#e0f3f0'/*, side: THREE.DoubleSide*/});
     floor = new THREE.Mesh(geometry, material);
     floor.receiveShadow = true;
     floor.name = 'floor';
@@ -317,29 +320,33 @@ function setTransformControls() {
     dragcontrols.enabled = true;
     dragcontrols.addEventListener( 'hoveron', function ( event ) {
         transformControl.attach( event.object );
-        transformControl.object.scale.set(2, 2, 2);
+        transformControl.object.scale.set(1.5, 1.5, 1.5);
+        transformControl.object.material.color = new THREE.Color("#00d40f");
+        /*
+                selectedObject = null;
+                for (var i = 0; i < groupLinesUpdate.children.length; i++) {
+                    groupLinesUpdate.children[i].material.color = new THREE.Color("#d70003");
+                }
+                for (var i = 0; i < objects.length; i++) {
+                    if (objects[i].name.split('_')[0] === "wallsCup") {
+                        objects[i].material.color = new THREE.Color("#9cc2d7");
+                    }
+                }*/
         // cancelHideTransorm();
     } );
     dragcontrols.addEventListener( 'hoveroff', function ( event ) {
-        if (transformControl.object) {
+        if (transformControl.object !== selectedPoint) {
             transformControl.object.scale.set(1.0, 1.0, 1.0);
+            transformControl.object.material.color = new THREE.Color("#ff0000");
             transformControl.detach(transformControl.object);
         }
         // delayHideTransform();
     } );
     dragcontrols.addEventListener( 'drag', function ( event ) {
         updateObject(transformControl.object);
+        dragEnd();
     } );
-    dragcontrols.addEventListener( 'dragend', function ( event ) {
-        var index = 0;
-        for (var i = 0; i < groupLinesUpdate.children.length; i++) {
-            if (groupLinesUpdate.children[i].name === "line_" + updatedWall.toString()) {
-                index = i;
-                i = groupLinesUpdate.children.length;
-            }
-        }
-        updateExtrudePath(groupLinesUpdate.children[index].geometry.attributes.position.array);
-    } );
+    // dragcontrols.addEventListener( 'dragend', dragEnd );
 
    /* var hiding;
     function delayHideTransform() {
@@ -354,6 +361,17 @@ function setTransformControls() {
     function cancelHideTransorm() {
         if ( hiding ) clearTimeout( hiding );
     }*/
+}
+
+function dragEnd( event ) {
+    var index = 0;
+    for (var i = 0; i < groupLinesUpdate.children.length; i++) {
+        if (groupLinesUpdate.children[i].name === "line_" + updatedWall.toString()) {
+            index = i;
+            i = groupLinesUpdate.children.length;
+        }
+    }
+    updateExtrudePath(groupLinesUpdate.children[index].geometry.attributes.position.array);
 }
 
 function updateObject(object) {
@@ -1208,13 +1226,6 @@ function onDocumentMouseMove( event ) {
     if ( intersects.length > 0 ) {
         var intersect = intersects[ 0 ];
         rollOverMesh.position.copy( intersect.point ).add( intersect.face.normal );
-       /* if(event.shiftKey) {
-            if (Math.abs(0.0 - rollOverMesh.position.x) <= Math.abs(0.0 - rollOverMesh.position.y)) {
-                rollOverMesh.position.x = 0;
-            } else {
-                rollOverMesh.position.y = 0;
-            }
-        }*/
         rollOverMesh.position.divideScalar( 1 ).floor().multiplyScalar( 1 ).addScalar( 1 );
         if (selectedInstr) {
             document.body.style.cursor = 'crosshair';
@@ -1245,19 +1256,6 @@ function leftClick( event ) {
         var intersects = raycaster.intersectObjects(objects, true);
         if (intersects.length > 0) {
             var intersect = intersects[0];
-
-            var arr = intersect.object.name.split('_');
-            if (arr[0] === "walls") {
-                selectedObject = intersect.object;
-                for (var i = 0; i < groupLinesUpdate.children.length; i++) {
-                    if (groupLinesUpdate.children[i].name === "line_" + arr[1]) {
-                        groupLinesUpdate.children[i].material.color = new THREE.Color("#00d40f");
-                    } else {
-                        groupLinesUpdate.children[i].material.color = new THREE.Color("#d70003");
-                    }
-                }
-                // selectedObject.material.color = "#1dff00";
-            }
             /* rollOverMesh.position.copy( intersect.point ).add( intersect.face.normal );
             rollOverMesh.position.divideScalar( 1 ).floor().multiplyScalar( 1 ).addScalar( 0 );*/
             if (selectedInstr) {
@@ -1270,6 +1268,8 @@ function leftClick( event ) {
                     extrudePath();
                     clearPointsPosition();
                     instrument();
+                    selectedObject = null;
+                    selectedPoint = null;
                 } else {
                     if (count === 0) {
                         addPoint(rollOverMesh.position);
@@ -1288,6 +1288,55 @@ function leftClick( event ) {
                         addPointScale(rollOverMesh.position);
                     }
                     addPointScale(rollOverMesh.position);
+                }
+            } else if (transformControl.object) {
+                if (selectedPoint !== transformControl.object && selectedPoint) {
+                    selectedPoint.scale.set(1.0, 1.0, 1.0);
+                    selectedPoint.material.color = new THREE.Color("#ff0000");
+                   /* transformControl.detach(selectedPoint);*/
+                    selectedPoint = null;
+                }
+                selectedPoint = transformControl.object;
+                console.log("!!!!!!!!!!!", selectedPoint);
+                selectedPoint.scale.set(1.5, 1.5, 1.5);
+                transformControl.object.material.color = new THREE.Color("#00d40f");
+                for (var i = 0; i < groupLinesUpdate.children.length; i++) {
+                    groupLinesUpdate.children[i].material.color = new THREE.Color("#d70003");
+                }
+                for (var i = 0; i < objects.length; i++) {
+                    if (objects[i].name.split('_')[0] === "wallsCup") {
+                        objects[i].material.color = new THREE.Color("#9cc2d7");
+                    }
+                }
+            } else if (camera.isOrthographicCamera){
+                var arr = intersect.object.name.split('_');
+                if (arr[0] === "walls") {
+                    selectedObject = intersect.object;
+                    for (var i = 0; i < objects.length; i++) {
+                        if (objects[i].name === "wallsCup_" + arr[1]) {
+                            objects[i].material.color = new THREE.Color("#3fd343");
+                        } else {
+                            objects[i].material.color = new THREE.Color("#9cc2d7");
+                        }
+                    }
+                    for (var i = 0; i < groupLinesUpdate.children.length; i++) {
+                        if (groupLinesUpdate.children[i].name === "line_" + arr[1]) {
+                            groupLinesUpdate.children[i].material.color = new THREE.Color("#302fd4");
+                        } else {
+                            groupLinesUpdate.children[i].material.color = new THREE.Color("#d70003");
+                        }
+                    }
+                    // selectedObject.material.color = "#1dff00";
+                } else {
+                    selectedObject = null;
+                    for (var i = 0; i < objects.length; i++) {
+                        if (objects[i].name.split('_')[0] === "wallsCup") {
+                            objects[i].material.color = new THREE.Color("#9cc2d7");
+                        }
+                    }
+                    for (var i = 0; i < groupLinesUpdate.children.length; i++) {
+                        groupLinesUpdate.children[i].material.color = new THREE.Color("#d70003");
+                    }
                 }
             }
         } else {
@@ -1483,16 +1532,10 @@ function onKeyDown ( event ) {
             clearLastPointsPosition();
             break;
         case 46: // delete
-            // console.log("??????????????", transformControl.object);
-            if (groupPointsArray.length && transformControl.object) {
-                deleteObject(transformControl.object);
-                // console.log("!!!!!!!!!!!!", groupLinesUpdate.children[updatedWall].geometry.attributes.position.array);
-            }
             if (selectedObject) {
                 if (transformControl.object) {
                     transformControl.detach(transformControl.object);
                 }
-
                 var arr = selectedObject.name.split('_');
 
                 for (var i = 0; i < objects.length; i++) {
@@ -1520,7 +1563,38 @@ function onKeyDown ( event ) {
                 }
                 groupPointsArray.splice(index, j);
                 selectedObject = null;
-                // console.log("!!!!!!!!!!!!", groupPointsArray);
+            } else {
+                if (groupPointsArray.length && transformControl.object) {
+                    deleteObject(transformControl.object);
+                }
+            }
+            break;
+        case 37: // left
+            if (selectedPoint) {
+                selectedPoint.position.x -= 1;
+                updateObject(selectedPoint);
+                dragEnd();
+            }
+            break;
+        case 38: // up
+            if (selectedPoint) {
+                selectedPoint.position.y += 1;
+                updateObject(selectedPoint);
+                dragEnd();
+            }
+            break;
+        case 39: // right
+            if (selectedPoint) {
+                selectedPoint.position.x += 1;
+                updateObject(selectedPoint);
+                dragEnd();
+            }
+            break;
+        case 40: // down
+            if (selectedPoint) {
+                selectedPoint.position.y -= 1;
+                updateObject(selectedPoint);
+                dragEnd();
             }
             break;
     }

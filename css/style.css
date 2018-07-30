@@ -63,7 +63,7 @@ canvas {
 	left:0;
 	width:250px;
 	height:100%;
-	background:rgba(0,255,255,0.2);
+	background: rgba(0, 160, 160, 0.7);
 	
 	z-index:5000;
 }
@@ -75,7 +75,7 @@ canvas {
 .infopanel-left p {
     text-align: center;
 	margin:20px 20px;
-	color: #2f595e;
+	color: #c6fffa;
 }
 
 .infopanel-top p {
@@ -175,4 +175,12 @@ input[type="file"] {
 .custom-file-upload:hover {
     background-color: #4CAF50; /* Green */
     color: white;
+}
+
+div.columns     { width: 100%; }
+div.columns p   {
+    width: calc(100% /1.7);
+    height: 100px;
+    float: left;
+    margin: 10px 0px 30px 20px;
 }

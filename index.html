@@ -25,6 +25,15 @@
 
     <script src="js/controls/DragControls.js"></script>
     <script src="js/controls/TransformControls.js"></script>
+
+    <script src="js/shaders/SSAOShader.js"></script>
+    <script src="js/shaders/CopyShader.js"></script>
+
+    <script src="js/postprocessing/EffectComposer.js"></script>
+    <script src="js/postprocessing/RenderPass.js"></script>
+    <script src="js/postprocessing/ShaderPass.js"></script>
+    <script src="js/postprocessing/MaskPass.js"></script>
+    <script src="js/postprocessing/SSAOPass.js"></script>
    <!-- <style type="text/css">
         body {
             font-family: Monospace;
@@ -54,21 +63,20 @@
         <p>
             <span id="output"></span>
         </p>
-        <p>
-            <label>Настройка масштаба:</label>
-        </p>
-        <div class="div-container-left">
-            <p>
-                <button class="inputInstrumentUnselected"
+        <div class="div-container-left columns">
+            <p style="width: 53px; height: 53px">
+                <button style="width: 53px; height: 53px;"
+                        class="inputInstrumentUnselected"
                         type="button"
                         name="changeScale"
                         value="Масштаб"
+                        title="Установить масштаб"
                 ><img name="changeScale" src="textures/icons/scale.png" width="32" height="32"
                       class="icon-button">
                 </button>
             </p>
-            <p>
-                <label style="margin-right: 5px">Значение:</label>
+            <p  style="height: 53px">
+                <label style="width: 100%;">Значение, (см):</label>
                 <input class="inputHeightWall"
                        type="number"
                        step="1"
@@ -77,45 +85,42 @@
                        value="1"
                        id="valueScale"
                        name="valueScale"/>
-                <span>см</span>
             </p>
         </div>
-        <p>
-            <label>Инструменты:</label>
-        </p>
-        <div class="div-container-left">
-            <p>
-                <button class="inputInstrumentUnselected"
+        <div class="div-container-left columns">
+            <p style="width: 53px; height: 100px">
+                <button style="width: 53px; height: 53px; margin-top: calc(100% / 2.3)"
+                        class="inputInstrumentUnselected"
                         type="button"
                         name="changeInstrument"
                         value="Cтена"
+                        title="Рисовать стену"
                 ><img name="changeInstrument" src="textures/icons/plane.png" width="32" height="32"
                       class="icon-button">
                 </button>
             </p>
             <p>
-                <label style="margin-right: 5px">Толщина стены:</label>
-                <input class="inputWidthWall"
-                       type="number"
-                       step="1"
-                       min="1"
-                       max="1000"
-                       value="20"
-                       id="widthWall"
-                       name="widthWall"/>
-                <span>см</span>
-            </p>
-            <p>
-                <label style="margin-right: 5px">Высота стены:</label>
-                <input class="inputHeightWall"
-                       type="number"
-                       step="1"
-                       min="1"
-                       max="1000"
-                       value="280"
-                       id="heightWall"
-                       name="heightWall"/>
-                <span>см</span>
+                    <label style="width: 100%;">Толщина стены, (см):</label>
+                    <input class="inputWidthWall"
+                           type="number"
+                           step="1"
+                           min="1"
+                           max="1000"
+                           value="20"
+                           id="widthWall"
+                           name="widthWall"/>
+                    <!--<span>см</span>-->
+
+                    <label style="width: 100%;">Высота стены, (см):</label>
+                    <input class="inputHeightWall"
+                           type="number"
+                           step="1"
+                           min="1"
+                           max="1000"
+                           value="280"
+                           id="heightWall"
+                           name="heightWall"/>
+                    <!--<span>см</span>-->
             </p>
         </div>
 
@@ -130,6 +135,7 @@
                 type="button"
                 name="cameraOrthographic"
                 value="План"
+                title="План"
         ><img name="cameraOrthographic" src="textures/icons/square.png" width="32" height="32"
               class="icon-button">
         </button>
@@ -138,6 +144,7 @@
                 type="button"
                 name="cameraPerspective"
                 value="3D"
+                title="3D"
         ><img name="cameraPerspective" src="textures/icons/3D.png" width="32" height="32"
               class="icon-button">
         </button>
@@ -146,6 +153,7 @@
                 type="button"
                 name="cameraDefault"
                 value="Центрирование"
+                title="Центрировать камеру"
         ><img name="cameraDefault" src="textures/icons/center.png" width="32" height="32"
               class="icon-button">
         </button>
