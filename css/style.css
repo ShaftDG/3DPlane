@@ -51,7 +51,7 @@ canvas {
 	position:absolute;
 	top:0;
 	right:0;
-	width:380px;
+	width:280px;
 	height:100%;
 	background:rgba(0,255,255,0.2);
 	
@@ -182,5 +182,18 @@ div.columns p   {
     width: calc(100% /1.7);
     height: 100px;
     float: left;
-    margin: 10px 0px 30px 20px;
+    margin: 0px 0px 30px 20px;
+}
+
+.guide li {
+	color: #476d8e;
+	font-size: 8.8pt;
+	text-align: left;
+	margin: 0px 5px 0px 5px;
+}
+.guide p {
+	color:white;
+	font-size: 10pt;
+	text-align: left;
+	margin: 0px 5px 0px 5px;
 }

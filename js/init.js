@@ -48,6 +48,8 @@ var textureSpritePointScale;
 
 var selectedInstr = false;
 var selectedScale = false;
+
+var posMouse = new THREE.Vector3();
 function init() {
     loadingScreen = {
         scene: new THREE.Scene(),
@@ -170,7 +172,7 @@ function init() {
     dirLight.position.set( 0, 1000, 1000 );
     dirLight.position.multiplyScalar( 30 );
     scene.add( dirLight );
-    dirLight.castShadow = true;
+    // dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 2048;
     dirLight.shadow.mapSize.height = 2048;
     var d = 50;
@@ -182,9 +184,9 @@ function init() {
     dirLight.shadow.bias = -0.0001;
 
     // model
-    var geometry = new THREE.PlaneGeometry(20000, 20000, 1, 1);
+    var geometry = new THREE.PlaneGeometry(5000, 5000, 1, 1);
     // geometry.rotateX(-Math.PI / 2);
-    var material = new THREE.MeshLambertMaterial({color: '#e0f3f0'/*, side: THREE.DoubleSide*/});
+    var material = new THREE.MeshBasicMaterial({color: '#effffc'/*, side: THREE.DoubleSide*/});
     floor = new THREE.Mesh(geometry, material);
     floor.receiveShadow = true;
     floor.name = 'floor';
@@ -203,11 +205,11 @@ function init() {
 
     // createWalls();
 
-    var rollOverGeo = new THREE.PlaneBufferGeometry( 1, 1 );
+ /*   var rollOverGeo = new THREE.PlaneBufferGeometry( 1, 1 );
     rollOverMaterial = new THREE.MeshBasicMaterial( { color: '#ff0000', opacity: 0.5, transparent: true } );
     rollOverMesh = new THREE.Mesh( rollOverGeo, rollOverMaterial );
     rollOverMesh.name = "rollOverMesh";
-    scene.add( rollOverMesh );
+    scene.add( rollOverMesh );*/
 
    /* var MAX_POINTS = 500;
     positions = new Float32Array(MAX_POINTS * 3);
@@ -224,10 +226,10 @@ function init() {
     renderer.setPixelRatio( window.devicePixelRatio );
     renderer.setSize( window.innerWidth, window.innerHeight );
     renderer.physicallyBasedShading = true;
-    renderer.shadowMap.enabled = true;
+ /*   renderer.shadowMap.enabled = true;
     renderer.shadowMapAutoUpdate = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.shadowMap.shadowMapSoft = true;
+    renderer.shadowMap.shadowMapSoft = true;*/
     container.appendChild( renderer.domElement );
 
     set2DControl();
@@ -335,7 +337,7 @@ function setTransformControls() {
         // cancelHideTransorm();
     } );
     dragcontrols.addEventListener( 'hoveroff', function ( event ) {
-        if (transformControl.object !== selectedPoint) {
+        if (transformControl.object !== selectedPoint && transformControl.object) {
             transformControl.object.scale.set(1.0, 1.0, 1.0);
             transformControl.object.material.color = new THREE.Color("#ff0000");
             transformControl.detach(transformControl.object);
@@ -512,6 +514,8 @@ function set2DControl() {
 function set3DControl() {
     controlsP = new THREE.OrbitControls( cameraPerspective, renderer.domElement );
     controlsP.maxPolarAngle = Math.PI / 2.1;
+    // controlsP.minDistance = 10;
+    controlsP.maxDistance = 4000;
 }
 
 function handleFileSelect(evt) {
@@ -556,7 +560,8 @@ function addLines() {
 // material
     var material = new THREE.LineBasicMaterial({
         color: '#2b3f8b',
-        linewidth: 20
+        linewidth: 20,
+        transparent: true
     });
 
 // line
@@ -572,7 +577,8 @@ function addLines() {
 // material
     var material = new THREE.LineBasicMaterial({
         color: '#2b3f8b',
-        linewidth: 20
+        linewidth: 20,
+        transparent: true
     });
 
 // line
@@ -588,7 +594,8 @@ function addLines() {
 // material
     var material = new THREE.LineBasicMaterial({
         color: '#2b3f8b',
-        linewidth: 20
+        linewidth: 20,
+        transparent: true
     });
 
 // line
@@ -626,12 +633,12 @@ function updateLine(coord) {
             positions[count * 3 - 3] = positions[count * 3 - 6];
             positions[count * 3 - 2] = coord.y;
             positions[count * 3 - 1] = coord.z;
-            rollOverMesh.position.set(positions[count * 3 - 3], positions[count * 3 - 2], positions[count * 3 - 1])
+            posMouse.set(positions[count * 3 - 3], positions[count * 3 - 2], positions[count * 3 - 1])
         } else {
             positions[count * 3 - 3] = coord.x;
             positions[count * 3 - 2] = positions[count * 3 - 5];
             positions[count * 3 - 1] = coord.z;
-            rollOverMesh.position.set(positions[count * 3 - 3], positions[count * 3 - 2], positions[count * 3 - 1])
+            posMouse.set(positions[count * 3 - 3], positions[count * 3 - 2], positions[count * 3 - 1])
         }
     } /*else if(event.ctrlKey) {
         if ((positions[count * 3 - 6] - coord.x) <= 0) {
@@ -649,11 +656,11 @@ function updateLine(coord) {
         positions[count * 3 - 3] = coord.x;
         positions[count * 3 - 2] = coord.y;
         positions[count * 3 - 1] = coord.z;
-        rollOverMesh.position.set(positions[count * 3 - 3], positions[count * 3 - 2], positions[count * 3 - 1])
+        posMouse.set(positions[count * 3 - 3], positions[count * 3 - 2], positions[count * 3 - 1])
     }
     line.geometry.attributes.position.needsUpdate = true;
     // console.log("positions", positions);
-    updateRectangle(rollOverMesh.position, widthWall / scale);
+    updateRectangle( posMouse, widthWall / scale);
 }
 
 function updateLineScale(coord) {
@@ -663,18 +670,18 @@ function updateLineScale(coord) {
             positionsScale[countScale * 3 - 3] = positionsScale[countScale * 3 - 6];
             positionsScale[countScale * 3 - 2] = coord.y;
             positionsScale[countScale * 3 - 1] = coord.z;
-            rollOverMesh.position.set(positionsScale[countScale * 3 - 3], positionsScale[countScale * 3 - 2], positionsScale[countScale * 3 - 1])
+            // rollOverMesh.position.set(positionsScale[countScale * 3 - 3], positionsScale[countScale * 3 - 2], positionsScale[countScale * 3 - 1])
         } else {
             positionsScale[countScale * 3 - 3] = coord.x;
             positionsScale[countScale * 3 - 2] = positionsScale[countScale * 3 - 5];
             positionsScale[countScale * 3 - 1] = coord.z;
-            rollOverMesh.position.set(positionsScale[countScale * 3 - 3], positionsScale[countScale * 3 - 2], positionsScale[countScale * 3 - 1])
+            // rollOverMesh.position.set(positionsScale[countScale * 3 - 3], positionsScale[countScale * 3 - 2], positionsScale[countScale * 3 - 1])
         }
     } else {
         positionsScale[countScale * 3 - 3] = coord.x;
         positionsScale[countScale * 3 - 2] = coord.y;
         positionsScale[countScale * 3 - 1] = coord.z;
-        rollOverMesh.position.set(positionsScale[countScale * 3 - 3], positionsScale[countScale * 3 - 2], positionsScale[countScale * 3 - 1])
+        // rollOverMesh.position.set(positionsScale[countScale * 3 - 3], positionsScale[countScale * 3 - 2], positionsScale[countScale * 3 - 1])
     }
 
     lineScale.geometry.attributes.position.needsUpdate = true;
@@ -713,7 +720,7 @@ function addPointScale(coord){
     var pointsMaterial = new THREE.PointsMaterial( {
        map: textureSpritePointScale,
        color: '#ffffff',
-       size: 200,
+       size: 50,
        alphaTest: 0.5,
    } );
    var points = new THREE.Points( geometry, pointsMaterial );
@@ -1174,7 +1181,7 @@ function addLineShape( shape, extrudeSettings, color, x, y, z, rx, ry, rz, s, na
     var geometryPoints = new THREE.BufferGeometry().setFromPoints( points );
     // solid line
     var line = new THREE.Line( geometryPoints, new THREE.LineBasicMaterial( { color: color, linewidth: 10, transparent: true } ) );
-    line.position.set( x, y, z + extrudeSettings.depth );
+    line.position.set( x, y, z + 500 );
     line.rotation.set( rx, ry, rz );
     line.scale.set( s, s, s );
     line.name = "line_" + nameWall.toString();
@@ -1184,19 +1191,19 @@ function addLineShape( shape, extrudeSettings, color, x, y, z, rx, ry, rz, s, na
 function addShape( shape, extrudeSettings, colorCup, colorWall, x, y, z, rx, ry, rz, s, nameWall ) {
     // extruded shape
     var geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
-    var mesh = new THREE.Mesh( geometry, new THREE.MeshPhongMaterial( { color: colorWall } ) );
+    var mesh = new THREE.Mesh( geometry, new THREE.MeshPhongMaterial( { color: colorWall/*, transparent: true*/ } ) );
     mesh.position.set( x, y, z );
     mesh.rotation.set( rx, ry, rz );
     mesh.scale.set( s, s, s );
     mesh.name = "walls_" + nameWall.toString();
-    mesh.castShadow = true;
+    // mesh.castShadow = true;
     objects.push(mesh);
     groupExtrude.add( mesh );
     // transformControl.attach( mesh );
     // flat shape
     var geometry = new THREE.ShapeBufferGeometry( shape );
     var mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { color: colorCup/*, wireframe: true*/ } ) );
-    mesh.position.set( x, y, z + 10 );
+    mesh.position.set( x, y, z + 700 );
     mesh.rotation.set( rx, ry, rz );
     mesh.scale.set( 1, 1, 1 );
     mesh.name = "wallsCup_" + nameWall.toString();
@@ -1225,18 +1232,22 @@ function onDocumentMouseMove( event ) {
     var intersects = raycaster.intersectObjects(objects, true);
     if ( intersects.length > 0 ) {
         var intersect = intersects[ 0 ];
-        rollOverMesh.position.copy( intersect.point ).add( intersect.face.normal );
+      /*  rollOverMesh.position.copy( intersect.point ).add( intersect.face.normal );
         rollOverMesh.position.divideScalar( 1 ).floor().multiplyScalar( 1 ).addScalar( 1 );
+        rollOverMesh.position.z = 700;*/       
+        posMouse.copy( intersect.point ).add( intersect.face.normal );
+        posMouse.divideScalar( 1 ).floor().multiplyScalar( 1 ).addScalar( 1 );
+        posMouse.z = 700;
         if (selectedInstr) {
             document.body.style.cursor = 'crosshair';
             if (count !== 0) {
-                updateLine(rollOverMesh.position);
+                updateLine(posMouse);
             }
         } else  if (selectedScale) {
             document.body.style.cursor = 'crosshair';
             if (countScale !== 0) {
                 // console.log("!!!!!!!", positionsScale);
-                updateLineScale(rollOverMesh.position);
+                updateLineScale(posMouse);
             }
         } else {
             document.body.style.cursor = 'auto';
@@ -1255,68 +1266,86 @@ function leftClick( event ) {
         raycaster.setFromCamera(mouse, cameraOrthographic);
         var intersects = raycaster.intersectObjects(objects, true);
         if (intersects.length > 0) {
-            var intersect = intersects[0];
+            if (camera.isOrthographicCamera) {
+            var intersect = intersects[0];         
+            var arr = intersect.object.name.split('_');
             /* rollOverMesh.position.copy( intersect.point ).add( intersect.face.normal );
             rollOverMesh.position.divideScalar( 1 ).floor().multiplyScalar( 1 ).addScalar( 0 );*/
-            if (selectedInstr) {
-                if (positions[count * 3 - 6] === rollOverMesh.position.x &&
-                    positions[count * 3 - 5] === rollOverMesh.position.y &&
-                    positions[count * 3 - 4] === rollOverMesh.position.z) {
-                    // selectedInstr = false;
-                    count --;
-                    count1 -= 2 ;
-                    extrudePath();
-                    clearPointsPosition();
-                    instrument();
-                    selectedObject = null;
-                    selectedPoint = null;
-                } else {
-                    if (count === 0) {
-                        addPoint(rollOverMesh.position);
-                        calculateScale(positionsScale);
-                    }
-                    addPoint(rollOverMesh.position);
-                }
-            } else  if (selectedScale) {
-                if (positionsScale[countScale * 3 - 3] === rollOverMesh.position.x &&
-                    positionsScale[countScale * 3 - 2] === rollOverMesh.position.y &&
-                    positionsScale[countScale * 3 - 1] === rollOverMesh.position.z) {
-                    selectedScale = false;
-                    changeColorButton();
-                } else {
-                    if (countScale === 0) {
-                        addPointScale(rollOverMesh.position);
-                    }
-                    addPointScale(rollOverMesh.position);
-                }
-            } else if (transformControl.object) {
-                if (selectedPoint !== transformControl.object && selectedPoint) {
+
+                if (selectedPoint) {
                     selectedPoint.scale.set(1.0, 1.0, 1.0);
                     selectedPoint.material.color = new THREE.Color("#ff0000");
-                   /* transformControl.detach(selectedPoint);*/
+                    transformControl.detach(selectedPoint);
                     selectedPoint = null;
                 }
-                selectedPoint = transformControl.object;
-                console.log("!!!!!!!!!!!", selectedPoint);
-                selectedPoint.scale.set(1.5, 1.5, 1.5);
-                transformControl.object.material.color = new THREE.Color("#00d40f");
-                for (var i = 0; i < groupLinesUpdate.children.length; i++) {
-                    groupLinesUpdate.children[i].material.color = new THREE.Color("#d70003");
-                }
-                for (var i = 0; i < objects.length; i++) {
-                    if (objects[i].name.split('_')[0] === "wallsCup") {
-                        objects[i].material.color = new THREE.Color("#9cc2d7");
+
+                if (selectedInstr) {
+                    if (positions[count * 3 - 6] === posMouse.x &&
+                        positions[count * 3 - 5] === posMouse.y &&
+                        positions[count * 3 - 4] === posMouse.z) {
+                        // selectedInstr = false;
+                        count--;
+                        count1 -= 2;
+                        extrudePath();
+                        clearPointsPosition();
+                        instrument();
+                        selectedObject = null;
+                        selectedPoint = null;
+                    } else {
+                        if (count === 0) {
+                            addPoint(posMouse);
+                            calculateScale(positionsScale);
+                        }
+                        addPoint(posMouse);
+                    }
+                } else if (selectedScale) {
+                    if (positionsScale[countScale * 3 - 3] === posMouse.x &&
+                        positionsScale[countScale * 3 - 2] === posMouse.y &&
+                        positionsScale[countScale * 3 - 1] === posMouse.z) {
+                        selectedScale = false;
+                        changeColorButton();
+                    } else {
+                        if (countScale === 0) {
+                            addPointScale(posMouse);
+                        }
+                        addPointScale(posMouse);
+                    }
+                } else if (transformControl.object) {
+                    if (selectedPoint !== transformControl.object && selectedPoint) {
+                        selectedPoint.scale.set(1.0, 1.0, 1.0);
+                        selectedPoint.material.color = new THREE.Color("#ff0000");
+                        /* transformControl.detach(selectedPoint);*/
+                        selectedPoint = null;
+                    }
+                    selectedPoint = transformControl.object;
+                    selectedObject = null;
+                    // console.log("!!!!!!!!!!!", selectedPoint);
+                    selectedPoint.scale.set(1.5, 1.5, 1.5);
+                    transformControl.object.material.color = new THREE.Color("#00d40f");
+                    for (var i = 0; i < groupLinesUpdate.children.length; i++) {
+                        groupLinesUpdate.children[i].material.color = new THREE.Color("#d70003");
+                    }
+                    for (var i = 0; i < objects.length; i++) {
+                        if (objects[i].name.split('_')[0] === "wallsCup") {
+                            objects[i].material.color = new THREE.Color("#9cc2d7");
+                        }
                     }
                 }
-            } else if (camera.isOrthographicCamera){
-                var arr = intersect.object.name.split('_');
-                if (arr[0] === "walls") {
+                if (arr[0] === "wallsCup" && !selectedInstr && !selectedScale) {
+                    if (transformControl.object) {
+                        transformControl.object.scale.set(1.0, 1.0, 1.0);
+                        transformControl.object.material.color = new THREE.Color("#ff0000");
+                        transformControl.detach(transformControl.object);
+                        selectedPoint = null;
+                    }
                     selectedObject = intersect.object;
                     for (var i = 0; i < objects.length; i++) {
                         if (objects[i].name === "wallsCup_" + arr[1]) {
                             objects[i].material.color = new THREE.Color("#3fd343");
                         } else {
-                            objects[i].material.color = new THREE.Color("#9cc2d7");
+                            if (objects[i].name.split('_')[0] === "wallsCup") {
+                                objects[i].material.color = new THREE.Color("#9cc2d7");
+                            }
                         }
                     }
                     for (var i = 0; i < groupLinesUpdate.children.length; i++) {
@@ -1394,15 +1423,15 @@ function instrument(){
     }
 }
 
-function calculateScale(pos){
-    var l = getLength(pos);
+function calculateScale(posMouse){
+    var l = getLength(posMouse);
     if (l) {
         scale = valueScale / l;
     }
 }
 
-function getLength(pos){
-    var vec = new THREE.Vector3(pos[0] - pos[3], pos[1] - pos[4], pos[2] - pos[5]);
+function getLength(posMouse){
+    var vec = new THREE.Vector3(posMouse[0] - posMouse[3], posMouse[1] - posMouse[4], posMouse[2] - posMouse[5]);
     var l = vec.length();
     // console.log("l", l);
     return l;
@@ -1524,7 +1553,6 @@ function onKeyDown ( event ) {
         case 82: // r
             break;
         case 83: // s
-            console.log(selectedInstr);
             break;
         case 84: // t
             break;

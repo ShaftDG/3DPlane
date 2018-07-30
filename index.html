@@ -125,42 +125,90 @@
         </div>
 
     </form>
+
+</div>
+
+<div class="controls infopanel">
+    <div class="guide">
+        <p style="color: #9100f2; text-align: center">Инструкция:</p>
+        <p style="color: #0002f2;">при использовании интсрумента "Масштаб":</p>
+        <p>
+        <li>щелчок Левой кнопкой мыши в Рабочей зоне - установка начальной и конечной точки отрезка масшатибрования</li>
+        <li>Shift + Движение мыши - рисование отрезка масшатибрования под прямым углом.</li>
+        <li>в поле "Значение" устанавливается реальный размер соответствующий проведенному отрезку масштабирования (в сантимертах)</li>
+        </p>
+        <p style="color: #0002f2;">при использовании интсрумента "Стена":</p>
+        <p>
+        <li>щелчок Левой кнопкой мыши в Рабочей зоне - установка начала стены (щелчки производить по внутренним углам против часовой стрелки)</li>
+        <li>Shift + Движение мыши - рисование стены под прямым углом</li>
+        <li>Esc - отмена установки последнего угла стены</li>
+        <li>в поле "Толщина стены" вводится толщина стены, которая будет использована при рисовании</li>
+        <li>в поле "Высота стены" вводится высота потолка, которая будет использована при построении 3D модели</li>
+        </p>
+
+        <p style="color: #0002f2;">операции в рабочей зоне без использования инструментов:</p>
+        <p>
+        <li>щелчок Левой кнопкой мыши на СТЕНЕ - выделение стены (окрашивается в зеленый цвет)</li>
+        <li>щелчок Левой кнопкой мыши на ТОЧКЕ - выделение точки (окрашивается в зеленый цвет)</li>
+        <li>Delete - удаление объекта (при выделенной стене или точке)</li>
+        <li>зажатая Левая кнопка мыши на ТОЧКЕ - перетаскивание точки в нужное место</li>
+        <li>щелчок Левой кнопкой мыши на пустом месте - снятие выделения со всех объетов</li>
+        </p>
+        <p style="color: #0002f2;">верхняя панель (слева на право):</p>
+        <p>
+        <li>"План" - работа с планом</li>
+        <li>"3D" - построение 3D модели</li>
+        <li>"Центрировать камеру" - установить камеру в центральное положение</li>
+        </p>
+        <p style="color: #0002f2;">работа с камерой в виде "План":</p>
+        <p>
+        <li>зажатая Правая кнопка мыши - перемещение камеры вдоль осей X и Y</li>
+        <li>вращение колеса мыши - приближение/удаление от плана</li>
+        </p>
+        <p style="color: #0002f2;">работа с камерой в виде "3D":</p>
+        <p>
+        <li>зажатая Правая кнопка мыши - перемещение камеры вдоль осей X и Y</li>
+        <li>зажатая Левая кнопка мыши - вращение вокруг модели</li>
+        <li>вращение колеса мыши - приближение/удаление от модели</li>
+        </p>
+    </div>
 </div>
 <div class="infopanel-top">
     <p>
         <form name="panelCamera" class="formCamera">
-    <p>
-        <!--<label>Режимы камеры:</label>-->
-        <button class="inputInstrumentSelected"
-                type="button"
-                name="cameraOrthographic"
-                value="План"
-                title="План"
-        ><img name="cameraOrthographic" src="textures/icons/square.png" width="32" height="32"
-              class="icon-button">
-        </button>
+                <p>
+                    <!--<label>Режимы камеры:</label>-->
+                    <button class="inputInstrumentSelected"
+                            type="button"
+                            name="cameraOrthographic"
+                            value="План"
+                            title="План"
+                    ><img name="cameraOrthographic" src="textures/icons/square.png" width="32" height="32"
+                          class="icon-button">
+                    </button>
 
-        <button class="inputInstrumentUnselected"
-                type="button"
-                name="cameraPerspective"
-                value="3D"
-                title="3D"
-        ><img name="cameraPerspective" src="textures/icons/3D.png" width="32" height="32"
-              class="icon-button">
-        </button>
+                    <button class="inputInstrumentUnselected"
+                            type="button"
+                            name="cameraPerspective"
+                            value="3D"
+                            title="3D"
+                    ><img name="cameraPerspective" src="textures/icons/3D.png" width="32" height="32"
+                          class="icon-button">
+                    </button>
 
-        <button class="inputCentered"
-                type="button"
-                name="cameraDefault"
-                value="Центрирование"
-                title="Центрировать камеру"
-        ><img name="cameraDefault" src="textures/icons/center.png" width="32" height="32"
-              class="icon-button">
-        </button>
-    </p>
-    </form>
+                    <button class="inputCentered"
+                            type="button"
+                            name="cameraDefault"
+                            value="Центрирование"
+                            title="Центрировать камеру"
+                    ><img name="cameraDefault" src="textures/icons/center.png" width="32" height="32"
+                          class="icon-button">
+                    </button>
+                </p>
+        </form>
     </p>
 </div>
+
 <!--<script type="text/javascript" src="js/main.js"></script>-->
 <script type="text/javascript" src="js/init.js"></script>
 
