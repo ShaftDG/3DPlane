@@ -1343,7 +1343,7 @@ function leftClick( event ) {
                         }
                     }
                 } else {
-                    console.log("!!!!!!!!!!!", transformControl.object);
+                    // console.log("!!!!!!!!!!!", transformControl.object);
                 }
                 if (arr[0] === "wallsCup" && !selectedInstr && !selectedScale) {
                     if (transformControl.object) {
@@ -1575,7 +1575,7 @@ function onKeyDown ( event ) {
             clearLastPointsPosition();
             break;
         case 46: // delete
-            console.log("!!!!!!!!!!!", selectedPoint);
+            // console.log("!!!!!!!!!!!", selectedPoint);
             if (selectedObject) {
                 if (transformControl.object) {
                     transformControl.detach(transformControl.object);
