@@ -247,6 +247,7 @@ function init() {
     document.panelCamera.cameraPerspective.addEventListener("click", changeCamera);
     document.panelCamera.cameraDefault.addEventListener("click", setCameraDefaultPosition);
 
+    document.getElementById('help').addEventListener('click', visibilityHelp, false);
     document.getElementById('file').addEventListener('change', handleFileSelect, false);
     // Get the widthWall input.
     var width = document.getElementById('widthWall');
@@ -288,6 +289,16 @@ function init() {
     }, false);
 
     animate();
+}
+
+function visibilityHelp(event) {
+
+    var helpPanel = document.getElementById('help-panel');
+    if (helpPanel.style.visibility === "hidden") {
+        helpPanel.style.visibility = "visible";
+    } else {
+        helpPanel.style.visibility = "hidden";
+    }
 }
 
 function setTransformControls() {
@@ -1272,13 +1283,14 @@ function leftClick( event ) {
             /* rollOverMesh.position.copy( intersect.point ).add( intersect.face.normal );
             rollOverMesh.position.divideScalar( 1 ).floor().multiplyScalar( 1 ).addScalar( 0 );*/
 
+            if (intersect.object.name === "floor") {
                 if (selectedPoint) {
                     selectedPoint.scale.set(1.0, 1.0, 1.0);
                     selectedPoint.material.color = new THREE.Color("#ff0000");
                     transformControl.detach(selectedPoint);
                     selectedPoint = null;
                 }
-
+            }
                 if (selectedInstr) {
                     if (positions[count * 3 - 6] === posMouse.x &&
                         positions[count * 3 - 5] === posMouse.y &&
@@ -1330,6 +1342,8 @@ function leftClick( event ) {
                             objects[i].material.color = new THREE.Color("#9cc2d7");
                         }
                     }
+                } else {
+                    console.log("!!!!!!!!!!!", transformControl.object);
                 }
                 if (arr[0] === "wallsCup" && !selectedInstr && !selectedScale) {
                     if (transformControl.object) {
@@ -1357,6 +1371,7 @@ function leftClick( event ) {
                     }
                     // selectedObject.material.color = "#1dff00";
                 } else {
+
                     selectedObject = null;
                     for (var i = 0; i < objects.length; i++) {
                         if (objects[i].name.split('_')[0] === "wallsCup") {
@@ -1538,7 +1553,7 @@ function setDefaultOrthographicCameraPosition () {
 }
 
 function setDefaultPerspectiveCameraPosition () {
-    cameraPerspective.position.set(0,500,1000);
+    cameraPerspective.position.set(1800,1800,1800);
     cameraPerspective.rotation.set(0,0,0);
 }
 
@@ -1560,6 +1575,7 @@ function onKeyDown ( event ) {
             clearLastPointsPosition();
             break;
         case 46: // delete
+            console.log("!!!!!!!!!!!", selectedPoint);
             if (selectedObject) {
                 if (transformControl.object) {
                     transformControl.detach(transformControl.object);

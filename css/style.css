@@ -54,9 +54,9 @@ canvas {
 	width:280px;
 	height:100%;
 	background:rgba(0,255,255,0.2);
-	
 	z-index:5000;
 }
+
 .infopanel-left {
 	position:absolute;
 	top:0;
@@ -196,4 +196,20 @@ div.columns p   {
 	font-size: 10pt;
 	text-align: left;
 	margin: 0px 5px 0px 5px;
+}
+
+.button-help {
+	font-size: 20pt;
+	color: #1b6d85;
+	background: rgba(179, 240, 255, 0.5);
+	width: 42px;
+	height: 42px;
+	position:absolute;
+	top:10px;
+	right:10px;
+	z-index:5001;
+}
+
+.button-help:hover {
+	background-color: #f0ffef;
 }

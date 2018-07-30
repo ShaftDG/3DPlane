@@ -25,15 +25,6 @@
 
     <script src="js/controls/DragControls.js"></script>
     <script src="js/controls/TransformControls.js"></script>
-
-    <script src="js/shaders/SSAOShader.js"></script>
-    <script src="js/shaders/CopyShader.js"></script>
-
-    <script src="js/postprocessing/EffectComposer.js"></script>
-    <script src="js/postprocessing/RenderPass.js"></script>
-    <script src="js/postprocessing/ShaderPass.js"></script>
-    <script src="js/postprocessing/MaskPass.js"></script>
-    <script src="js/postprocessing/SSAOPass.js"></script>
    <!-- <style type="text/css">
         body {
             font-family: Monospace;
@@ -128,7 +119,16 @@
 
 </div>
 
-<div class="controls infopanel">
+<button class="button-help"
+        type="button"
+        id="help"
+        name="hlp"
+        value="Помощь"
+        title="Помощь"
+>?
+</button>
+
+<div id="help-panel" class="controls infopanel" style="visibility: hidden;">
     <div class="guide">
         <p style="color: #9100f2; text-align: center">Инструкция:</p>
         <p style="color: #0002f2;">при использовании интсрумента "Масштаб":</p>
