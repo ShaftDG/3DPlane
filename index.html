@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>3DPlane</title>
+    <link href="css/bootstrap.css" rel="stylesheet" />
+    <link href="css/bootstrap-theme.css" rel="stylesheet" />
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+
+    <script src="js/vendor/three.min.js"></script>
+    <script src="js/vendor/csg.js"></script>
+    <script src="js/vendor/ThreeCSG.js"></script>
+
+    <script src="js/QuickHull.js"></script>
+    <script src="js/geometries/ConvexGeometry.js"></script>
+
+    <script src="js/loaders/ShaderLoader.js"></script>
+    <script src="js/libs/jquery.min.js"></script>
+
+    <script src="js/loaders/OBJLoader.js"></script>
+    <script src="js/libs/GeometryUtils.js"></script>
+
+    <script src="js/controls/OrbitControls.js"></script>
+    <script src="js/controls/TrackballControls.js"></script>
+
+    <script src="js/controls/DragControls.js"></script>
+    <script src="js/controls/TransformControls.js"></script>
+   <!-- <style type="text/css">
+        body {
+            font-family: Monospace;
+            background-color: #f0f0f0;
+            margin: 0px;
+            overflow: hidden;
+        }
+        #imageView { position: absolute; left: 20px; border: 1px solid #000; }
+        #imageTemp { position: absolute; left: 20px; }
+    </style>-->
+</head>
+<body>
+<div id="container" name="mainContainer">
+
+    <!--<canvas id="imageView"></canvas>-->
+</div>
+<div id="panel" name="panelInstruments" class="controls infopanel-left">
+    <form name="Instruments">
+        <p>
+            <!--<label>Загрузить план:</label>-->
+            <!--<input type="file" id="file" name="file" />-->
+            <label for="file" class="custom-file-upload">
+                Загрузить план
+            </label>
+            <input id="file" name="file" type="file"/>
+        </p>
+        <p>
+            <span id="output"></span>
+        </p>
+        <p>
+            <label>Настройка масштаба:</label>
+        </p>
+        <div class="div-container-left">
+            <p>
+                <button class="inputInstrumentUnselected"
+                        type="button"
+                        name="changeScale"
+                        value="Масштаб"
+                ><img name="changeScale" src="textures/icons/scale.png" width="32" height="32"
+                      class="icon-button">
+                </button>
+            </p>
+            <p>
+                <label style="margin-right: 5px">Значение:</label>
+                <input class="inputHeightWall"
+                       type="number"
+                       step="1"
+                       min="1"
+                       max="1000"
+                       value="1"
+                       id="valueScale"
+                       name="valueScale"/>
+                <span>см</span>
+            </p>
+        </div>
+        <p>
+            <label>Инструменты:</label>
+        </p>
+        <div class="div-container-left">
+            <p>
+                <button class="inputInstrumentUnselected"
+                        type="button"
+                        name="changeInstrument"
+                        value="Cтена"
+                ><img name="changeInstrument" src="textures/icons/plane.png" width="32" height="32"
+                      class="icon-button">
+                </button>
+            </p>
+            <p>
+                <label style="margin-right: 5px">Толщина стены:</label>
+                <input class="inputWidthWall"
+                       type="number"
+                       step="1"
+                       min="1"
+                       max="1000"
+                       value="20"
+                       id="widthWall"
+                       name="widthWall"/>
+                <span>см</span>
+            </p>
+            <p>
+                <label style="margin-right: 5px">Высота стены:</label>
+                <input class="inputHeightWall"
+                       type="number"
+                       step="1"
+                       min="1"
+                       max="1000"
+                       value="280"
+                       id="heightWall"
+                       name="heightWall"/>
+                <span>см</span>
+            </p>
+        </div>
+
+    </form>
+</div>
+<div class="infopanel-top">
+    <p>
+        <form name="panelCamera" class="formCamera">
+    <p>
+        <!--<label>Режимы камеры:</label>-->
+        <button class="inputInstrumentSelected"
+                type="button"
+                name="cameraOrthographic"
+                value="План"
+        ><img name="cameraOrthographic" src="textures/icons/square.png" width="32" height="32"
+              class="icon-button">
+        </button>
+
+        <button class="inputInstrumentUnselected"
+                type="button"
+                name="cameraPerspective"
+                value="3D"
+        ><img name="cameraPerspective" src="textures/icons/3D.png" width="32" height="32"
+              class="icon-button">
+        </button>
+
+        <button class="inputCentered"
+                type="button"
+                name="cameraDefault"
+                value="Центрирование"
+        ><img name="cameraDefault" src="textures/icons/center.png" width="32" height="32"
+              class="icon-button">
+        </button>
+    </p>
+    </form>
+    </p>
+</div>
+<!--<script type="text/javascript" src="js/main.js"></script>-->
+<script type="text/javascript" src="js/init.js"></script>
+
+</body>
+</html>
+
