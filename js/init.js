@@ -20,13 +20,13 @@ var RESOURCES_LOADED = false;
 var loadingScreen;
 var shaders = new ShaderLoader('glsl', 'glsl');
 shaders.shaderSetLoaded = function(){
-    window.onload = init;
+    init();
 };
 
 shaders.load( 'vertexShaderLoader' , 'vertexShLoader' , 'vertex' );
 shaders.load( 'fragmentShaderLoader' , 'fragmentShLoader' , 'fragment' );
 
-var rollOverMesh, rollOverMaterial, floor, group, groupPlane, groupExtrude, groupLines, groupPointsArray, groupLinesUpdate, groupPointsScale, groupLinesScale;
+var rollOverMesh1, rollOverMesh2, rollOverMesh3, rollOverMesh4, floor, group, groupPlane, groupExtrude, groupLines, groupPointsArray, groupLinesUpdate, groupPointsScale, groupLinesScale;
 var objects = [];
 var selectedObject = null;
 var selectedPoint = null;
@@ -205,12 +205,30 @@ function init() {
 
     // createWalls();
 
- /*   var rollOverGeo = new THREE.PlaneBufferGeometry( 1, 1 );
-    rollOverMaterial = new THREE.MeshBasicMaterial( { color: '#ff0000', opacity: 0.5, transparent: true } );
-    rollOverMesh = new THREE.Mesh( rollOverGeo, rollOverMaterial );
-    rollOverMesh.name = "rollOverMesh";
-    scene.add( rollOverMesh );*/
+    var rollOverGeo = new THREE.PlaneBufferGeometry( 10, 10 );
+    var rollOverMaterial = new THREE.MeshBasicMaterial( { color: '#00ff22', opacity: 0.5, transparent: true } );
+    rollOverMesh1 = new THREE.Mesh( rollOverGeo, rollOverMaterial );
+    rollOverMesh1.name = "rollOverMesh1";
+    // rollOverMesh1.visible = false;
+    scene.add( rollOverMesh1 );
 
+    var rollOverMaterial = new THREE.MeshBasicMaterial( { color: '#feff00', opacity: 0.5, transparent: true } );
+    rollOverMesh2 = new THREE.Mesh( rollOverGeo, rollOverMaterial );
+    rollOverMesh2.name = "rollOverMesh2";
+    // rollOverMesh2.visible = false;
+    scene.add( rollOverMesh2 );
+
+    var rollOverMaterial = new THREE.MeshBasicMaterial( { color: '#ff0100', opacity: 0.5, transparent: true } );
+    rollOverMesh3 = new THREE.Mesh( rollOverGeo, rollOverMaterial );
+    rollOverMesh3.name = "rollOverMesh3";
+    // rollOverMesh3.visible = false;
+    scene.add( rollOverMesh3 );
+
+    var rollOverMaterial = new THREE.MeshBasicMaterial( { color: '#0002ff', opacity: 0.5, transparent: true } );
+    rollOverMesh4 = new THREE.Mesh( rollOverGeo, rollOverMaterial );
+    rollOverMesh4.name = "rollOverMesh4";
+    // rollOverMesh4.visible = false;
+    scene.add( rollOverMesh4 );
    /* var MAX_POINTS = 500;
     positions = new Float32Array(MAX_POINTS * 3);
     positionsRect = new Float32Array(MAX_POINTS * 3);
@@ -271,8 +289,8 @@ function init() {
         return;
     }
     height.addEventListener('change', function (ev) {
-        heightWall = height.value;
-        // console.log(heightWall);
+        heightWall = height.value ;
+        console.log(heightWall);
     }, false);
 
     // Get the valueScale input.
@@ -712,7 +730,7 @@ function addPoint(coord){
     updateLine(coord);
 
     if ( count !== 0) {
-        addRectangle(coord, widthWall);
+        addRectangle(coord, widthWall / scale);
     }
 }
 
@@ -1146,7 +1164,130 @@ function updateExtrudePath(position) {
         addLineShape(inputShape, extrudeSettings, "#d70003", 0, 0, 0, 0, 0, 0, 1, updatedWall);
 }
 
+function crossingWalls() {
+
+    var firstWall = {
+        x0: positions[0],
+        y0: positions[1],
+        z0: positions[2],
+        x1: positions[3],
+        y1: positions[4],
+        z1: positions[5],
+    };
+    var lastWall = {
+        x0: positions[count * 3 - 6],
+        y0: positions[count * 3 - 5],
+        z0: positions[count * 3 - 4],
+        x1: positions[count * 3 - 3],
+        y1: positions[count * 3 - 2],
+        z1: positions[count * 3 - 1],
+    };
+
+    var start1 = new THREE.Vector2(firstWall.x0, firstWall.y0);
+    var end1 = new THREE.Vector2(firstWall.x1, firstWall.y1);
+
+    var start2 = new THREE.Vector2(lastWall.x0, lastWall.y0);
+    var end2 = new THREE.Vector2(lastWall.x1, lastWall.y1);
+
+    var cross = crossSection(start1, end1, start2, end2);
+    // console.log("crosssssssssssssssssss1", cross);
+
+    rollOverMesh1.position.x = cross.x;
+    rollOverMesh1.position.y = cross.y;
+
+    var firstWall = {
+        x0: positionsRect[3],
+        y0: positionsRect[4],
+        z0: positionsRect[5],
+        x1: positionsRect[6],
+        y1: positionsRect[7],
+        z1: positionsRect[8],
+    };
+    var lastWall = {
+        x0: positionsRect[count1 * 3 - 9],
+        y0: positionsRect[count1 * 3 - 8],
+        z0: positionsRect[count1 * 3 - 7],
+        x1: positionsRect[count1 * 3 - 6],
+        y1: positionsRect[count1 * 3 - 5],
+        z1: positionsRect[count1 * 3 - 4],
+    };
+
+    var start1 = new THREE.Vector2(firstWall.x0, firstWall.y0);
+    var end1 = new THREE.Vector2(firstWall.x1, firstWall.y1);
+
+    var start2 = new THREE.Vector2(lastWall.x0, lastWall.y0);
+    var end2 = new THREE.Vector2(lastWall.x1, lastWall.y1);
+
+    var cross = crossSection(start1, end1, start2, end2);
+    // console.log("crosssssssssssssssssss2", cross);
+
+    rollOverMesh2.position.x = cross.x;
+    rollOverMesh2.position.y = cross.y;
+
+
+    var firstWall = {
+        x0: positions[0],
+        y0: positions[1],
+        z0: positions[2],
+        x1: positions[3],
+        y1: positions[4],
+        z1: positions[5],
+    };
+    var lastWall = {
+        x0: positionsRect[count1 * 3 - 9],
+        y0: positionsRect[count1 * 3 - 8],
+        z0: positionsRect[count1 * 3 - 7],
+        x1: positionsRect[count1 * 3 - 6],
+        y1: positionsRect[count1 * 3 - 5],
+        z1: positionsRect[count1 * 3 - 4],
+    };
+
+    var start1 = new THREE.Vector2(firstWall.x0, firstWall.y0);
+    var end1 = new THREE.Vector2(firstWall.x1, firstWall.y1);
+
+    var start2 = new THREE.Vector2(lastWall.x0, lastWall.y0);
+    var end2 = new THREE.Vector2(lastWall.x1, lastWall.y1);
+
+    var cross = crossSection(start1, end1, start2, end2);
+    // console.log("crosssssssssssssssssss3", cross);
+
+    rollOverMesh3.position.x = cross.x;
+    rollOverMesh3.position.y = cross.y;
+
+    var firstWall = {
+        x0: positionsRect[3],
+        y0: positionsRect[4],
+        z0: positionsRect[5],
+        x1: positionsRect[6],
+        y1: positionsRect[7],
+        z1: positionsRect[8],
+    };
+    var lastWall = {
+        x0: positions[count * 3 - 6],
+        y0: positions[count * 3 - 5],
+        z0: positions[count * 3 - 4],
+        x1: positions[count * 3 - 3],
+        y1: positions[count * 3 - 2],
+        z1: positions[count * 3 - 1],
+    };
+
+    var start1 = new THREE.Vector2(firstWall.x0, firstWall.y0);
+    var end1 = new THREE.Vector2(firstWall.x1, firstWall.y1);
+
+    var start2 = new THREE.Vector2(lastWall.x0, lastWall.y0);
+    var end2 = new THREE.Vector2(lastWall.x1, lastWall.y1);
+
+    var cross = crossSection(start1, end1, start2, end2);
+    // console.log("crosssssssssssssssssss4", cross);
+
+    rollOverMesh4.position.x = cross.x;
+    rollOverMesh4.position.y = cross.y;
+
+}
+
 function extrudePath() {
+
+    crossingWalls();
 
     var num = 0;
     var pathPts = [];
@@ -1180,7 +1321,7 @@ function extrudePath() {
     }
 
     var inputShape = new THREE.Shape( pathPts );
-    var extrudeSettings = { depth: heightWall / scale, bevelEnabled: false, steps: 1 };
+    var extrudeSettings = { depth: heightWall, bevelEnabled: false, steps: 1 };
     addShape( inputShape, extrudeSettings, "#9cc2d7", "#39424e", 0, 0, 0, 0, 0, 0, scale, numWalls );
     addLineShape( inputShape, extrudeSettings, "#d70003", 0, 0, 0, 0, 0, 0, 1, numWalls );
     numWalls++;
@@ -1269,6 +1410,55 @@ function onDocumentMouseMove( event ) {
     }
     // console.log("positions", positions);
 
+}
+
+function crossSection(start1, end1, start2, end2) {
+
+    var ret = {
+        overlapping: false,
+        x: null,
+        y: null,
+    }
+
+    var maxx1 = Math.max(start1.x, end1.x), maxy1 = Math.max(start1.y, end1.y);
+    var minx1 = Math.min(start1.x, end1.x), miny1 = Math.min(start1.y, end1.y);
+    var maxx2 = Math.max(start2.x, end2.x), maxy2 = Math.max(start2.y, end2.y);
+    var minx2 = Math.min(start2.x, end2.x), miny2 = Math.min(start2.y, end2.y);
+
+    if (minx1 > maxx2 || maxx1 < minx2 || miny1 > maxy2 || maxy1 < miny2) {
+        return ret;  // Момент, када линии имеют одну общую вершину...
+    }
+
+    var dx1 = end1.x-start1.x, dy1 = end1.y-start1.y; // Длина проекций первой линии на ось x и y
+    var dx2 = end2.x-start2.x, dy2 = end2.y-start2.y; // Длина проекций второй линии на ось x и y
+    var dxx = start1.x-start2.X, dyy = start1.y-start2.y;
+    var div, mul;
+
+    if ((div = dy2*dx1-dx2*dy1) == 0) {
+        return ret; // Линии параллельны...
+    }
+    if (div > 0) {
+        if ((mul = dx1*dyy-dy1*dxx) < 0 || mul > div)
+        return ret; // Первый отрезок пересекается за своими границами...
+        if ((mul = dx2*dyy-dy2*dxx) < 0 || mul > div)
+        return ret; // Второй отрезок пересекается за своими границами...
+    }
+
+    if ((mul = -dx1*dyy-dy1*dxx) < 0 || mul > -div)
+    return ret; // Первый отрезок пересекается за своими границами...
+    if ((mul = -dx2*dyy-dy2*dxx) < 0 || mul > -div)
+    return ret; // Второй отрезок пересекается за своими границами...
+
+    var u = ((end2.x - start2.x)*(start1.y - start2.y) - (end2.y - start2.y)*(start1.x - start2.x))/
+        ((end2.y - start2.y)*(end1.x - start1.x) - (end2.x - start2.x)*(end1.y - start1.y));
+
+    var x = start1.x + u * (end1.x - start1.x);
+    var y = start1.y + u * (end1.y - start1.y);
+
+    ret.x = x;
+    ret.y = y;
+    ret.overlapping = true;
+    return ret;
 }
 
 function leftClick( event ) {
@@ -1435,6 +1625,8 @@ function calculateScale(posMouse){
     var l = getLength(posMouse);
     if (l) {
         scale = valueScale / l;
+    } else {
+        scale = 1;
     }
 }
 
