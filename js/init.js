@@ -627,12 +627,13 @@ function addPointObject(x, y ,z, num) {
     points.name = "points";
     groupPointsArray.add( points );
     // console.log("!!!!!!!!!!!!", groupPointsArray);*/
-    var pointGeometry = new THREE.SphereBufferGeometry( 5, 8, 8 );
-    var pointMaterial = new THREE.MeshBasicMaterial( { color: '#ff0000', opacity: 0.5, transparent: true } );
+    var pointGeometry = new THREE.SphereBufferGeometry( 4, 8, 8 );
+    var pointMaterial = new THREE.MeshBasicMaterial( { color: '#ff0000', /*opacity: 0.5,*/ transparent: true } );
     var point = new THREE.Mesh( pointGeometry, pointMaterial );
     point.name = num.toString() + "_" + numWalls;
     point.position.set(x, y ,z);
     groupPointsArray.push(point);
+    objects.push(point);
     scene.add( point );
     transformControl.attach( point );
 }
@@ -1282,15 +1283,14 @@ function leftClick( event ) {
             var arr = intersect.object.name.split('_');
             /* rollOverMesh.position.copy( intersect.point ).add( intersect.face.normal );
             rollOverMesh.position.divideScalar( 1 ).floor().multiplyScalar( 1 ).addScalar( 0 );*/
-
-            if (intersect.object.name === "floor") {
-                if (selectedPoint) {
-                    selectedPoint.scale.set(1.0, 1.0, 1.0);
-                    selectedPoint.material.color = new THREE.Color("#ff0000");
-                    transformControl.detach(selectedPoint);
-                    selectedPoint = null;
+                if (intersect.object.name === "floor" && !selectedInstr && !selectedScale) {
+                    if (selectedPoint) {
+                        selectedPoint.scale.set(1.0, 1.0, 1.0);
+                        selectedPoint.material.color = new THREE.Color("#ff0000");
+                        transformControl.detach(selectedPoint);
+                        selectedPoint = null;
+                    }
                 }
-            }
                 if (selectedInstr) {
                     if (positions[count * 3 - 6] === posMouse.x &&
                         positions[count * 3 - 5] === posMouse.y &&
@@ -1322,7 +1322,7 @@ function leftClick( event ) {
                         }
                         addPointScale(posMouse);
                     }
-                } else if (transformControl.object) {
+                } else  if (transformControl.object) {
                     if (selectedPoint !== transformControl.object && selectedPoint) {
                         selectedPoint.scale.set(1.0, 1.0, 1.0);
                         selectedPoint.material.color = new THREE.Color("#ff0000");
@@ -1331,7 +1331,6 @@ function leftClick( event ) {
                     }
                     selectedPoint = transformControl.object;
                     selectedObject = null;
-                    // console.log("!!!!!!!!!!!", selectedPoint);
                     selectedPoint.scale.set(1.5, 1.5, 1.5);
                     transformControl.object.material.color = new THREE.Color("#00d40f");
                     for (var i = 0; i < groupLinesUpdate.children.length; i++) {
@@ -1342,24 +1341,20 @@ function leftClick( event ) {
                             objects[i].material.color = new THREE.Color("#9cc2d7");
                         }
                     }
-                } else {
-                    // console.log("!!!!!!!!!!!", transformControl.object);
                 }
                 if (arr[0] === "wallsCup" && !selectedInstr && !selectedScale) {
-                    if (transformControl.object) {
-                        transformControl.object.scale.set(1.0, 1.0, 1.0);
-                        transformControl.object.material.color = new THREE.Color("#ff0000");
-                        transformControl.detach(transformControl.object);
+                    if (selectedPoint) {
+                        selectedPoint.scale.set(1.0, 1.0, 1.0);
+                        selectedPoint.material.color = new THREE.Color("#ff0000");
+                        transformControl.detach(selectedPoint);
                         selectedPoint = null;
                     }
                     selectedObject = intersect.object;
                     for (var i = 0; i < objects.length; i++) {
                         if (objects[i].name === "wallsCup_" + arr[1]) {
-                            objects[i].material.color = new THREE.Color("#3fd343");
-                        } else {
-                            if (objects[i].name.split('_')[0] === "wallsCup") {
-                                objects[i].material.color = new THREE.Color("#9cc2d7");
-                            }
+                            objects[i].material.color = new THREE.Color("#1dff00");
+                        } else if (objects[i].name.split('_')[0] === "wallsCup") {
+                            objects[i].material.color = new THREE.Color("#9cc2d7");
                         }
                     }
                     for (var i = 0; i < groupLinesUpdate.children.length; i++) {
@@ -1369,9 +1364,7 @@ function leftClick( event ) {
                             groupLinesUpdate.children[i].material.color = new THREE.Color("#d70003");
                         }
                     }
-                    // selectedObject.material.color = "#1dff00";
                 } else {
-
                     selectedObject = null;
                     for (var i = 0; i < objects.length; i++) {
                         if (objects[i].name.split('_')[0] === "wallsCup") {
