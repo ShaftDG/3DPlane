@@ -26,11 +26,14 @@ shaders.shaderSetLoaded = function(){
 shaders.load( 'vertexShaderLoader' , 'vertexShLoader' , 'vertex' );
 shaders.load( 'fragmentShaderLoader' , 'fragmentShLoader' , 'fragment' );
 
+// var human;
 var rollOverMesh1, rollOverMesh2, rollOverMesh3, rollOverMesh4, floor, group, groupPlane, groupExtrude, groupLines, groupPoints, groupLinesUpdate, groupPointsScale, groupLinesScale;
 var objects = [];
 var selectedObject = null;
 var selectedPoint = null;
 var line, lineRect, lineDown, lineScale, positions, positionsRect, positionsDown, positionsUp, positionsScale;
+var lineHorizon;
+var magnetX, magnetY;
 var count = 0;
 var count1 = 0;
 var countScale = 0;
@@ -54,6 +57,9 @@ var mapWalls = new Map();
 var mapLines = new Map();
 var mapGroup = new Map();
 var mapPointObjects = new Map();
+
+var mapX = new Map();
+var mapY = new Map();
 
 var posMouse = new THREE.Vector3();
 function init() {
@@ -214,6 +220,13 @@ function init() {
 
     // createWalls();
 
+  /*  var geom = new THREE.BoxBufferGeometry( 50, 180, 20 );
+    var mat = new THREE.MeshBasicMaterial( { color: '#ff00fa', opacity: 0.5, transparent: true } );
+    human = new THREE.Mesh( geom, mat );
+    human.name = "human";
+    // human.visible = false;
+    scene.add( human );*/
+
     var rollOverGeo = new THREE.PlaneBufferGeometry( 10, 10 );
     var rollOverMaterial = new THREE.MeshBasicMaterial( { color: '#00ff22', opacity: 0.5, transparent: true } );
     rollOverMesh1 = new THREE.Mesh( rollOverGeo, rollOverMaterial );
@@ -244,6 +257,7 @@ function init() {
     positionsUp = new Float32Array(2 * 3);
     positionsDown = new Float32Array(2 * 3);*/
 
+   addHorizonLine();
     addLines();
     addScaleLine();
     ////
@@ -383,6 +397,60 @@ function setTransformControls() {
         // delayHideTransform();
     } );
     dragcontrols.addEventListener( 'drag', function ( event ) {
+        var pos = lineHorizon.geometry.attributes.position.array;
+        if (mapX.has(Math.round(transformControl.object.position.x))) {
+            console.log(mapX.get(Math.round(transformControl.object.position.x)));
+            transformControl.object.position.x = Math.round(transformControl.object.position.x);
+
+            pos[0] = transformControl.object.position.x;
+            pos[1] = transformControl.object.position.y;
+            pos[2] = transformControl.object.position.z + 20;
+
+            magnetX = pos[0];
+
+            var p = mapPointObjects.get(mapX.get(Math.round(transformControl.object.position.x)));
+            pos[3] = p.position.x;
+            pos[4] = p.position.y;
+            pos[5] = p.position.z + 20;
+        }
+
+        if (mapY.has(Math.round(transformControl.object.position.y))) {
+            console.log(mapY.get(Math.round(transformControl.object.position.y)));
+            transformControl.object.position.y = Math.round(transformControl.object.position.y);
+
+            pos[0] = transformControl.object.position.x;
+            pos[1] = transformControl.object.position.y;
+            pos[2] = transformControl.object.position.z + 20;
+
+            magnetY = pos[1];
+
+            var p = mapPointObjects.get(mapY.get(Math.round(transformControl.object.position.y)));
+            pos[3] = p.position.x;
+            pos[4] = p.position.y;
+            pos[5] = p.position.z + 20;
+        }
+
+        if (transformControl.object.position.x >= magnetX - 20 && transformControl.object.position.x <= magnetX + 20) {
+            transformControl.object.position.x = magnetX;
+            lineHorizon.visible = true;
+            pos[0] = transformControl.object.position.x;
+            pos[1] = transformControl.object.position.y;
+            pos[2] = transformControl.object.position.z + 20;
+        } else {
+            lineHorizon.visible = false;
+        }
+
+        if (transformControl.object.position.y >= magnetY - 20 && transformControl.object.position.y <= magnetY + 20) {
+            transformControl.object.position.y = magnetY;
+            lineHorizon.visible = true;
+            pos[0] = transformControl.object.position.x;
+            pos[1] = transformControl.object.position.y;
+            pos[2] = transformControl.object.position.z + 20;
+        } else {
+            lineHorizon.visible = false;
+        }
+        lineHorizon.geometry.attributes.position.needsUpdate = true;
+
         updateObject(transformControl.object);
         dragEnd();
     } );
@@ -564,6 +632,20 @@ function handleFileSelect(evt) {
     }
 }
 
+function addHorizonLine() {
+    var geometry = new THREE.BufferGeometry();
+    positionsScale = new Float32Array(2 * 3);
+    geometry.addAttribute('position', new THREE.BufferAttribute(positionsScale, 3));
+    var material = new THREE.LineBasicMaterial({
+        color: '#00ff0c',
+        linewidth: 20,
+        // transparent: true,
+    });
+    lineHorizon = new THREE.Line(geometry, material);
+    lineHorizon.name = "lineHorizon";
+    scene.add(lineHorizon);
+}
+
 function addScaleLine() {
     var geometry = new THREE.BufferGeometry();
     positionsScale = new Float32Array(2 * 3);
@@ -639,6 +721,8 @@ function addPointObject(x, y ,z, num) {
     var point = new THREE.Mesh( pointGeometry, pointMaterial );
     point.name = num.toString() + "_" + numWalls;
     point.position.set(x, y ,z);
+    mapX.set(Math.round(x), point.name);
+    mapY.set(Math.round(y), point.name);
     groupPoints.add(point);
     mapPointObjects.set(point.name, point);
     objects.push(point);
@@ -679,7 +763,7 @@ function updateLine(coord) {
     }
     line.geometry.attributes.position.needsUpdate = true;
     // console.log("positions", positions);
-    updateRectangle( posMouse, widthWall / scale);
+    updateRectangle( posMouse, widthWall * scale);
 }
 
 function updateLineScale(coord) {
@@ -719,7 +803,7 @@ function addPoint(coord){
     updateLine(coord);
 
     if ( count !== 0) {
-        addRectangle(coord, widthWall / scale);
+        addRectangle(coord, widthWall * scale);
     }
 }
 
@@ -835,7 +919,7 @@ function clearLastPointsPosition(){
            z1: positions[count * 3 - 4],
        };
 
-       var vectors = getVectors(currentWall, widthWall / scale);
+       var vectors = getVectors(currentWall, widthWall * scale);
 
        tempCoord.x = vectors.d.x;
        tempCoord.y = vectors.d.y;
@@ -1153,7 +1237,7 @@ function updateExtrudePath(position) {
         }
     }
         var inputShape = new THREE.Shape(pathPts);
-        var extrudeSettings = {depth: heightWall, bevelEnabled: false, steps: 1};
+        var extrudeSettings = {depth: heightWall * scale, bevelEnabled: false, steps: 1};
         addShape(inputShape, extrudeSettings, "#9cc2d7", "#39424e", 0, 0, 0, 0, 0, 0, scale, updatedWall);
         addLineShape(inputShape, extrudeSettings, "#d70003", 0, 0, 0, 0, 0, 0, 1, updatedWall);
 }
@@ -1315,7 +1399,7 @@ function extrudePath() {
     }
 
     var inputShape = new THREE.Shape( pathPts );
-    var extrudeSettings = { depth: heightWall, bevelEnabled: false, steps: 1 };
+    var extrudeSettings = { depth: heightWall * scale, bevelEnabled: false, steps: 1 };
     addShape( inputShape, extrudeSettings, "#9cc2d7", "#39424e", 0, 0, 0, 0, 0, 0, scale, numWalls );
     addLineShape( inputShape, extrudeSettings, "#d70003", 0, 0, 0, 0, 0, 0, 1, numWalls );
     numWalls++;
@@ -1367,8 +1451,8 @@ function onWindowResize() {
     windowHalfX = window.innerWidth / 2;
     windowHalfY = window.innerHeight / 2;
 
-    cameraOrthographic.aspect = window.innerWidth / window.innerHeight;
-    cameraOrthographic.updateProjectionMatrix();
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
 
     renderer.setSize( window.innerWidth, window.innerHeight );
 
@@ -1595,8 +1679,8 @@ function animate() {
 
     requestAnimationFrame( animate );
     //////
-    var deltaTime = clock.getDelta()*100.;
-    var time = Date.now() * 0.01;
+  /*  var deltaTime = clock.getDelta()*100.;
+    var time = Date.now() * 0.01;*/
     //////
 
     if (camera.isOrthographicCamera) {
@@ -1626,10 +1710,11 @@ function instrument(){
 function calculateScale(posMouse){
     var l = getLength(posMouse);
     if (l) {
-        scale = valueScale / l;
+        scale = l / valueScale;
     } else {
         scale = 1;
     }
+    // human.scale.set(scale, scale, scale);
 }
 
 function getLength(posMouse){
@@ -1761,7 +1846,8 @@ function clearMap () {
 function onKeyDown ( event ) {
     switch ( event.keyCode ) {
         case 82: // r
-            console.log("groupLinesUpdate", groupLinesUpdate);
+            console.log("mapX", mapX);
+            console.log("mapY", mapY);
             break;
         case 83: // s
             break;
