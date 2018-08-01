@@ -1773,8 +1773,8 @@ function onKeyDown ( event ) {
                         i = objects.length;
                     }
                 }
-                removeObject(groupExtrude, selectedObject.name);
-                removeObject(groupPlane, "wallsCup_" + arr[1]);
+                removeObject(groupExtrude, "walls_" + arr[1]);
+                removeObject(groupPlane, selectedObject.name);
                 removeObject(groupLinesUpdate, "line_" + arr[1]);
 
                 var index = null;
