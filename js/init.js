@@ -404,14 +404,11 @@ function setTransformControls() {
 }
 
 function dragEnd( event ) {
-    var index = 0;
-    for (var i = 0; i < groupLinesUpdate.children.length; i++) {
-        if (groupLinesUpdate.children[i].name === "line_" + updatedWall.toString()) {
-            index = i;
-            i = groupLinesUpdate.children.length;
-        }
+    var objectlines = null;
+    if (mapLines.has("line_" + updatedWall.toString())) {
+        objectlines = mapLines.get("line_" + updatedWall.toString());
     }
-    updateExtrudePath(groupLinesUpdate.children[index].geometry.attributes.position.array);
+    updateExtrudePath(objectlines.geometry.attributes.position.array);
 }
 
 function updateObject(object) {
@@ -420,14 +417,11 @@ function updateObject(object) {
     var num = +arr[0];
     updatedWall = +arr[1];
     var position;
-    var index = 0;
+    var objectlines = null;
     if (mapLines.has("line_" + arr[1])) {
-        index = groupLinesUpdate.children.indexOf( mapLines.get("line_" + arr[1]) );
-        if (index === -1) {
-            index = 0;
-        }
+        objectlines = mapLines.get("line_" + arr[1]);
     }
-    position = groupLinesUpdate.children[index].geometry.attributes.position.array;
+    position = objectlines.geometry.attributes.position.array;
 
     var length = position.length / 3;
     if (num === 0) {
@@ -443,34 +437,30 @@ function updateObject(object) {
         position[num * 3 + 1] = object.position.y;
         position[num * 3 + 2] = object.position.z;
     }
-    groupLinesUpdate.children[index].geometry.attributes.position.needsUpdate = true;
+    objectlines.geometry.attributes.position.needsUpdate = true;
 }
 
 function deletePointObject(object) {
 
+    transformControl.detach( transformControl.object );
     var arr = object.name.split('_');
     var num = +arr[0];
     updatedWall = +arr[1];
     var indexDeleteElement;
     var position;
-    var index = 0;
+    var objectlines = null;
     if (mapLines.has("line_" + arr[1])) {
-        index = groupLinesUpdate.children.indexOf( mapLines.get("line_" + arr[1]) );
-        if (index === -1) {
-            index = 0;
-        }
+        objectlines = mapLines.get("line_" + arr[1]);
     }
-    position = groupLinesUpdate.children[index].geometry.attributes.position.array;
+    position = objectlines.geometry.attributes.position.array;
     var length = position.length / 3;
-
     if (num === 0) {
         var array =  Array.prototype.slice.call(position);
         array.splice(num * 3, 3);
         array.splice((length-2) * 3, 3);
 
-        // scene.remove(scene.getObjectByName(object.name));
-
-
+        removeObject(groupPoints, mapPointObjects.get(arr[0] + "_" + arr[1]));
+        removeIntersectObjectsArray(objects, mapPointObjects.get(arr[0] + "_" + arr[1]));
         for (var i = 0; i < groupPoints.children.length; i++ ) {
             var name = groupPoints.children[i].name;
 
@@ -484,13 +474,12 @@ function deletePointObject(object) {
                     if (n < 0) {
                         n = 0
                     }
+                    mapPointObjects.delete(groupPoints.children[i].name);
                     groupPoints.children[i].name = n.toString() + "_" + arr[1];
+                    mapPointObjects.set(groupPoints.children[i].name, groupPoints.children[i]);
                 }
             }
         }
-        removeObject(groupPoints, object);
-        // groupPoints.splice(indexDeleteElement, 1);
-
         position[(length-1) * 3 + 0] = array[0];
         position[(length-1) * 3 + 1] = array[1];
         position[(length-1) * 3 + 2] = array[2];
@@ -498,6 +487,8 @@ function deletePointObject(object) {
         var array =  Array.prototype.slice.call(position);
         array.splice(num * 3, 3);
 
+        removeObject(groupPoints, mapPointObjects.get(object.name));
+        removeIntersectObjectsArray(objects, mapPointObjects.get(arr[0] + "_" + arr[1]));
         for (var i = 0; i < groupPoints.children.length; i++ ) {
             var name = groupPoints.children[i].name;
 
@@ -511,11 +502,12 @@ function deletePointObject(object) {
                     if (n < 0) {
                         n = 0
                     }
+                    mapPointObjects.delete(groupPoints.children[i].name);
                     groupPoints.children[i].name = n.toString() + "_" + arr[1];
+                    mapPointObjects.set(groupPoints.children[i].name, groupPoints.children[i]);
                 }
             }
         }
-        removeObject(groupPoints, object);
     }
     for (var i = 0; i < array.length; i++ ) {
         position[i] = array[i];
@@ -524,8 +516,7 @@ function deletePointObject(object) {
     position[(length-2) * 3 + 0] = array[0];
     position[(length-2) * 3 + 1] = array[1];
     position[(length-2) * 3 + 2] = array[2];
-    transformControl.detach( transformControl.object );
-    groupLinesUpdate.children[index].geometry.attributes.position.needsUpdate = true;
+    objectlines.geometry.attributes.position.needsUpdate = true;
 
     if (array.length) {
         updateExtrudePath(position);
@@ -534,13 +525,11 @@ function deletePointObject(object) {
         removeObject(groupExtrude, mapWalls.get("walls_" + updatedWall.toString()));
         removeObject(groupPlane, mapWallsCup.get("wallsCup_" + updatedWall.toString()));
         removeObject(groupLinesUpdate, mapLines.get("line_" + updatedWall.toString()));
-        if (
-            !groupExtrude.children.length &&
-            !groupPlane.children.length &&
-            !groupLinesUpdate.children.length
-        ) {
-            numWalls = 0;
-        }
+
+        removeIntersectObjectsArray(objects, mapWallsCup.get("wallsCup_" + updatedWall.toString()));
+        removeIntersectObjectsArray(objects, mapWalls.get("walls_" + updatedWall.toString()));
+        removeIntersectObjectsArray(objects, mapPointObjects.get("0_0"));
+        clearMap();
     }
 }
 
@@ -1139,6 +1128,9 @@ function updateExtrudePath(position) {
     removeObject(groupExtrude, mapWalls.get("walls_" + updatedWall.toString()));
     removeObject(groupPlane, mapWallsCup.get("wallsCup_" + updatedWall.toString()));
     removeObject(groupLinesUpdate, mapLines.get("line_" + updatedWall.toString()));
+
+    removeIntersectObjectsArray(objects, mapWallsCup.get("wallsCup_" + updatedWall.toString()));
+    removeIntersectObjectsArray(objects, mapWalls.get("walls_" + updatedWall.toString()));
     // console.log("!!!", updatedWall);
 
      var pathPts = [];
@@ -1752,9 +1744,17 @@ function setDefaultPerspectiveCameraPosition () {
     cameraPerspective.rotation.set(0,0,0);
 }
 
-function visibledChildObject ( parentObject,  visible) {
-    for (var i = 0; i < parentObject.length; i++) {
-        parentObject[i].visible = visible;
+function clearMap () {
+    if (
+        !groupExtrude.children.length &&
+        !groupPlane.children.length &&
+        !groupLinesUpdate.children.length
+    ) {
+        numWalls = 0;
+        mapWalls.clear();
+        mapPointObjects.clear();
+        mapWallsCup.clear();
+        mapLines.clear();
     }
 }
 
@@ -1778,7 +1778,7 @@ function onKeyDown ( event ) {
                 }
                 var arr = selectedObject.name.split('_');
 
-                removeIntersectObjectsArray(objects, mapWallsCup.get(selectedObject.name));
+                removeIntersectObjectsArray(objects, mapWallsCup.get("wallsCup_" + arr[1]));
                 removeIntersectObjectsArray(objects, mapWalls.get("walls_" + arr[1]));
 
                 removeObject(groupExtrude, mapWalls.get("walls_" + arr[1]));
@@ -1786,7 +1786,7 @@ function onKeyDown ( event ) {
                 removeObject(groupLinesUpdate, mapLines.get("line_" + arr[1]));
 
 
-                    for (var i = groupPoints.children.length-1; i >= 0; i--) {
+                    for (var i = groupPoints.children.length-1; i > -1; i--) {
                         var name = groupPoints.children[i].name;
                         var a = name.split('_');
                         if (a[1] === arr[1]) {
@@ -1794,8 +1794,8 @@ function onKeyDown ( event ) {
                             removeObject(groupPoints, mapPointObjects.get(groupPoints.children[i].name));
                         }
                     }
-
                 selectedObject = null;
+                clearMap ();
             } else {
                 if (groupPoints.children.length && transformControl.object) {
                     deletePointObject(transformControl.object);
