@@ -844,13 +844,16 @@ function updateLineScale(coord) {
 
 // add point
 function addPoint(coord){
+
+    if (count !== 0) {
+        mapX.set(Math.round(positions[count * 3 - 3]), new THREE.Vector3(positions[count * 3 - 3], positions[count * 3 - 2], positions[count * 3 - 1]));
+        mapY.set(Math.round(positions[count * 3 - 2]), new THREE.Vector3(positions[count * 3 - 3], positions[count * 3 - 2], positions[count * 3 - 1]));
+    }
+
     positions[count * 3 + 0] = coord.x;
     positions[count * 3 + 1] = coord.y;
     positions[count * 3 + 2] = coord.z;
     count++;
-
-    mapX.set(Math.round(coord.x), coord);
-    mapY.set(Math.round(coord.y), coord);
 
     line.geometry.setDrawRange(0, count);
     updateLine(coord);
