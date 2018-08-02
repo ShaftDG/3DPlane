@@ -32,7 +32,8 @@ var objects = [];
 var selectedObject = null;
 var selectedPoint = null;
 var line, lineRect, lineDown, lineScale, positions, positionsRect, positionsDown, positionsUp, positionsScale;
-var lineHorizon;
+var lineHorizontal;
+var lineVertical;
 var magnetX, magnetY;
 var count = 0;
 var count1 = 0;
@@ -257,7 +258,7 @@ function init() {
     positionsUp = new Float32Array(2 * 3);
     positionsDown = new Float32Array(2 * 3);*/
 
-   addHorizonLine();
+    addHelperLine();
     addLines();
     addScaleLine();
     ////
@@ -397,64 +398,76 @@ function setTransformControls() {
         // delayHideTransform();
     } );
     dragcontrols.addEventListener( 'drag', function ( event ) {
-        var pos = lineHorizon.geometry.attributes.position.array;
+
+        var posHor = lineHorizontal.geometry.attributes.position.array;
+        var posVert = lineVertical.geometry.attributes.position.array;
         if (mapX.has(Math.round(transformControl.object.position.x))) {
-            console.log(mapX.get(Math.round(transformControl.object.position.x)));
             transformControl.object.position.x = Math.round(transformControl.object.position.x);
 
-            pos[0] = transformControl.object.position.x;
-            pos[1] = transformControl.object.position.y;
-            pos[2] = transformControl.object.position.z + 20;
+            posVert[0] = transformControl.object.position.x;
 
-            magnetX = pos[0];
+            magnetX = posVert[0];
 
             var p = mapPointObjects.get(mapX.get(Math.round(transformControl.object.position.x)));
-            pos[3] = p.position.x;
-            pos[4] = p.position.y;
-            pos[5] = p.position.z + 20;
+            posVert[3] = p.position.x;
+            posVert[4] = p.position.y;
+            posVert[5] = p.position.z + 20;
         }
 
         if (mapY.has(Math.round(transformControl.object.position.y))) {
-            console.log(mapY.get(Math.round(transformControl.object.position.y)));
             transformControl.object.position.y = Math.round(transformControl.object.position.y);
 
-            pos[0] = transformControl.object.position.x;
-            pos[1] = transformControl.object.position.y;
-            pos[2] = transformControl.object.position.z + 20;
+            posHor[1] = transformControl.object.position.y;
 
-            magnetY = pos[1];
+            magnetY = posHor[1];
 
             var p = mapPointObjects.get(mapY.get(Math.round(transformControl.object.position.y)));
-            pos[3] = p.position.x;
-            pos[4] = p.position.y;
-            pos[5] = p.position.z + 20;
+            posHor[3] = p.position.x;
+            posHor[4] = p.position.y;
+            posHor[5] = p.position.z + 20;
         }
 
-        if (transformControl.object.position.x >= magnetX - 20 && transformControl.object.position.x <= magnetX + 20) {
+        if (transformControl.object.position.x >= magnetX - 40 && transformControl.object.position.x <= magnetX + 40) {
             transformControl.object.position.x = magnetX;
-            lineHorizon.visible = true;
-            pos[0] = transformControl.object.position.x;
-            pos[1] = transformControl.object.position.y;
-            pos[2] = transformControl.object.position.z + 20;
+            lineVertical.visible = true;
+            posVert[0] = transformControl.object.position.x;
+            if (lineHorizontal.visible ) {
+                posVert[1] = posHor[1];
+            } else {
+                posVert[1] = transformControl.object.position.y;
+            }
+            posVert[2] = transformControl.object.position.z + 20;
         } else {
-            lineHorizon.visible = false;
+            lineVertical.visible = false;
         }
 
-        if (transformControl.object.position.y >= magnetY - 20 && transformControl.object.position.y <= magnetY + 20) {
+        if (transformControl.object.position.y >= magnetY - 40 && transformControl.object.position.y <= magnetY + 40) {
             transformControl.object.position.y = magnetY;
-            lineHorizon.visible = true;
-            pos[0] = transformControl.object.position.x;
-            pos[1] = transformControl.object.position.y;
-            pos[2] = transformControl.object.position.z + 20;
+            lineHorizontal.visible = true;
+
+            posHor[0] = transformControl.object.position.x;
+            posHor[1] = transformControl.object.position.y;
+            posHor[2] = transformControl.object.position.z + 20;
         } else {
-            lineHorizon.visible = false;
+            lineHorizontal.visible = false;
         }
-        lineHorizon.geometry.attributes.position.needsUpdate = true;
+        lineHorizontal.geometry.attributes.position.needsUpdate = true;
+        lineVertical.geometry.attributes.position.needsUpdate = true;
 
         updateObject(transformControl.object);
-        dragEnd();
+        // dragEnd();
     } );
-    // dragcontrols.addEventListener( 'dragend', dragEnd );
+    dragcontrols.addEventListener( 'dragend', dragEnd );
+    dragcontrols.addEventListener( 'dragstart', function( e ) {
+        if (selectedPoint !== transformControl.object && selectedPoint) {
+            selectedPoint.scale.set(1.0, 1.0, 1.0);
+            selectedPoint.material.color = new THREE.Color("#ff0000");
+            selectedPoint = null;
+        }
+
+        mapX.delete(Math.round(transformControl.object.position.x));
+        mapY.delete(Math.round(transformControl.object.position.y));
+    } );
 
    /* var hiding;
     function delayHideTransform() {
@@ -477,6 +490,44 @@ function dragEnd( event ) {
         objectlines = mapLines.get("line_" + updatedWall.toString());
     }
     updateExtrudePath(objectlines.geometry.attributes.position.array);
+
+    lineHorizontal.visible = false;
+    lineVertical.visible = false;
+
+        for (var i = 0; i < groupPoints.children.length; i++ ) {
+            mapX.set(Math.round(groupPoints.children[i].position.x), groupPoints.children[i].name);
+            mapY.set(Math.round(groupPoints.children[i].position.y), groupPoints.children[i].name);
+        }
+}
+
+function addHelperLine() {
+    var geometryH = new THREE.BufferGeometry();
+    var h = new Float32Array(2 * 3);
+    geometryH.addAttribute('position', new THREE.BufferAttribute(h, 3));
+   /* var material = new THREE.LineBasicMaterial({
+        color: '#00ff0c',
+        linewidth: 20,
+        // transparent: true,
+    });*/
+    var material = new THREE.LineDashedMaterial( {
+        color: '#009a09',
+        linewidth: 1,
+        scale: 1,
+        dashSize: 3,
+        gapSize: 1,
+        transparent: true } );
+    lineHorizontal = new THREE.Line(geometryH, material);
+    lineHorizontal.computeLineDistances();
+    lineHorizontal.name = "lineHorizontal";
+    scene.add(lineHorizontal);
+
+    var geometryV = new THREE.BufferGeometry();
+    var v = new Float32Array(2 * 3);
+    geometryV.addAttribute('position', new THREE.BufferAttribute(v, 3));
+    lineVertical = new THREE.Line(geometryV, material);
+    lineVertical.computeLineDistances();
+    lineVertical.name = "lineVertical";
+    scene.add(lineVertical);
 }
 
 function updateObject(object) {
@@ -630,20 +681,6 @@ function handleFileSelect(evt) {
             }
         );
     }
-}
-
-function addHorizonLine() {
-    var geometry = new THREE.BufferGeometry();
-    positionsScale = new Float32Array(2 * 3);
-    geometry.addAttribute('position', new THREE.BufferAttribute(positionsScale, 3));
-    var material = new THREE.LineBasicMaterial({
-        color: '#00ff0c',
-        linewidth: 20,
-        // transparent: true,
-    });
-    lineHorizon = new THREE.Line(geometry, material);
-    lineHorizon.name = "lineHorizon";
-    scene.add(lineHorizon);
 }
 
 function addScaleLine() {
@@ -921,8 +958,8 @@ function clearLastPointsPosition(){
 
        var vectors = getVectors(currentWall, widthWall * scale);
 
-       tempCoord.x = vectors.d.x;
-       tempCoord.y = vectors.d.y;
+       tempCoord.x = vectors.c.x;
+       tempCoord.y = vectors.c.y;
 
        updateLine(new THREE.Vector3(positions[count * 3 - 3], positions[count * 3 - 2], positions[count * 3 - 1]));
        line.geometry.setDrawRange(0, count);
@@ -957,32 +994,32 @@ function addRectangle(coord, depth) {
 
    var vectors = getVectors(currentWall, depth);
 
-       positionsRect[count1 * 3 + 0] = vectors.d.x;
-       positionsRect[count1 * 3 + 1] = vectors.d.y;
+       positionsRect[count1 * 3 + 0] = vectors.c.x;
+       positionsRect[count1 * 3 + 1] = vectors.c.y;
        positionsRect[count1 * 3 + 2] = coord.z;
 
        tempCoord.x = positionsRect[count1 * 3 - 3];
        tempCoord.y = positionsRect[count1 * 3 - 2];
 
-   positionsDown[count1 * 3 + 0] = vectors.d.x;
-   positionsDown[count1 * 3 + 1] = vectors.d.y;
+   positionsDown[count1 * 3 + 0] = vectors.c.x;
+   positionsDown[count1 * 3 + 1] = vectors.c.y;
    positionsDown[count1 * 3 + 2] = coord.z;
 
-   positionsDown[count1 * 3 + 3] = vectors.d.x;
-   positionsDown[count1 * 3 + 4] = vectors.d.y;
+   positionsDown[count1 * 3 + 3] = vectors.c.x;
+   positionsDown[count1 * 3 + 4] = vectors.c.y;
    positionsDown[count1 * 3 + 5] = coord.z;
 
        count1++;
-       positionsRect[count1 * 3 + 0] = vectors.d.x;
-       positionsRect[count1 * 3 + 1] = vectors.d.y;
+       positionsRect[count1 * 3 + 0] = vectors.c.x;
+       positionsRect[count1 * 3 + 1] = vectors.c.y;
        positionsRect[count1 * 3 + 2] = coord.z;
 
-   positionsDown[count1 * 3 + 0] = vectors.d.x;
-   positionsDown[count1 * 3 + 1] = vectors.d.y;
+   positionsDown[count1 * 3 + 0] = vectors.c.x;
+   positionsDown[count1 * 3 + 1] = vectors.c.y;
    positionsDown[count1 * 3 + 2] = coord.z;
 
-   positionsDown[count1 * 3 + 3] = vectors.d.x;
-   positionsDown[count1 * 3 + 4] = vectors.d.y;
+   positionsDown[count1 * 3 + 3] = vectors.c.x;
+   positionsDown[count1 * 3 + 4] = vectors.c.y;
    positionsDown[count1 * 3 + 5] = coord.z;
 
        count1++;
@@ -1021,8 +1058,8 @@ function updateRectangle(coord, depth) {
    // console.log("xcv", xcv);
 
    var f = new THREE.Vector2(
-       (positions[count * 3 - 6] - ((tempCoord.x) ? (tempCoord.x + vectors.b.x) / 2 : vectors.b.x)),
-       (positions[count * 3 - 5] - ((tempCoord.y) ? (tempCoord.y + vectors.b.y) / 2 : vectors.b.y))
+       (positions[count * 3 - 6] - ((tempCoord.x) ? (tempCoord.x + vectors.a.x) / 2 : vectors.a.x)),
+       (positions[count * 3 - 5] - ((tempCoord.y) ? (tempCoord.y + vectors.a.y) / 2 : vectors.a.y))
    );
    f = f.normalize();
    // console.log("f", f);
@@ -1033,16 +1070,16 @@ function updateRectangle(coord, depth) {
    var nS1 = f.multiplyScalar(mLen * depth);
 
    var O = new THREE.Vector2();
-   O.addVectors(new THREE.Vector2(positions[count * 3 - 6], positions[count * 3 - 5]), nS1);
+   O.subVectors(new THREE.Vector2(positions[count * 3 - 6], positions[count * 3 - 5]), nS1);
 
    if (vectors.NvectorA.length()) {
        if (Math.acos(angle) <= 2.5) {
-           positionsRect[count1 * 3 - 3] = vectors.d.x;
-           positionsRect[count1 * 3 - 2] = vectors.d.y;
+           positionsRect[count1 * 3 - 3] = vectors.c.x;
+           positionsRect[count1 * 3 - 2] = vectors.c.y;
            positionsRect[count1 * 3 - 1] = coord.z;
 
-           positionsRect[count1 * 3 - 6] = vectors.d.x;
-           positionsRect[count1 * 3 - 5] = vectors.d.y;
+           positionsRect[count1 * 3 - 6] = vectors.c.x;
+           positionsRect[count1 * 3 - 5] = vectors.c.y;
            positionsRect[count1 * 3 - 4] = coord.z;
 
            positionsRect[count1 * 3 - 9] = O.x;
@@ -1061,29 +1098,29 @@ function updateRectangle(coord, depth) {
            positionsDown[count1 * 3 - 8] = currentWall.y0;
            positionsDown[count1 * 3 - 7] = coord.z;
 
-           positionsDown[count1 * 3 - 6] = vectors.d.x;
-           positionsDown[count1 * 3 - 5] = vectors.d.y;
+           positionsDown[count1 * 3 - 6] = vectors.c.x;
+           positionsDown[count1 * 3 - 5] = vectors.c.y;
            positionsDown[count1 * 3 - 4] = coord.z;
 
            positionsDown[count1 * 3 - 3] = currentWall.x1;
            positionsDown[count1 * 3 - 2] = currentWall.y1;
            positionsDown[count1 * 3 - 1] = coord.z;
        } else {
-           positionsRect[count1 * 3 - 3] = vectors.d.x;
-           positionsRect[count1 * 3 - 2] = vectors.d.y;
+           positionsRect[count1 * 3 - 3] = vectors.c.x;
+           positionsRect[count1 * 3 - 2] = vectors.c.y;
            positionsRect[count1 * 3 - 1] = coord.z;
 
-           positionsRect[count1 * 3 - 6] = vectors.d.x;
-           positionsRect[count1 * 3 - 5] = vectors.d.y;
+           positionsRect[count1 * 3 - 6] = vectors.c.x;
+           positionsRect[count1 * 3 - 5] = vectors.c.y;
            positionsRect[count1 * 3 - 4] = coord.z;
 
            /////
-          /* positionsRect[count1 * 3 - 9] = vectors.b.x;
-           positionsRect[count1 * 3 - 8] = vectors.b.y;
+          /* positionsRect[count1 * 3 - 9] = vectors.a.x;
+           positionsRect[count1 * 3 - 8] = vectors.a.y;
            positionsRect[count1 * 3 - 7] = coord.z;
 
-           positionsRect[count1 * 3 - 12] = vectors1.d.x;
-           positionsRect[count1 * 3 - 11] = vectors1.d.y;
+           positionsRect[count1 * 3 - 12] = vectors1.c.x;
+           positionsRect[count1 * 3 - 11] = vectors1.c.y;
            positionsRect[count1 * 3 - 10] = coord.z;*/
 
             positionsRect[count1 * 3 - 9] = O.x;
@@ -1102,8 +1139,8 @@ function updateRectangle(coord, depth) {
             positionsDown[count1 * 3 - 8] = currentWall.y0;
             positionsDown[count1 * 3 - 7] = coord.z;
 
-            positionsDown[count1 * 3 - 6] = vectors.d.x;
-            positionsDown[count1 * 3 - 5] = vectors.d.y;
+            positionsDown[count1 * 3 - 6] = vectors.c.x;
+            positionsDown[count1 * 3 - 5] = vectors.c.y;
             positionsDown[count1 * 3 - 4] = coord.z;
 
             positionsDown[count1 * 3 - 3] = currentWall.x1;
