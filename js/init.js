@@ -277,10 +277,11 @@ function init() {
     set2DControl();
     set3DControl();
     setTransformControls();
-    container.addEventListener( 'mousemove', onDocumentMouseMove, false );
+
+    document.getElementsByTagName("canvas")[0].addEventListener( 'mousemove', onDocumentMouseMove, false );
     window.addEventListener( 'resize', onWindowResize, false );
     document.addEventListener( 'keydown', onKeyDown, false );
-    container.addEventListener( 'mouseup', onDocumentMouseDown, false );
+    document.getElementsByTagName("canvas")[0].addEventListener( 'mouseup', onDocumentMouseDown, false );
 
     document.Instruments.changeInstrument.addEventListener("click", instrument);
     document.Instruments.changeScale.addEventListener("click", changeScale);
@@ -399,61 +400,7 @@ function setTransformControls() {
     } );
     dragcontrols.addEventListener( 'drag', function ( event ) {
 
-        var posHor = lineHorizontal.geometry.attributes.position.array;
-        var posVert = lineVertical.geometry.attributes.position.array;
-        if (mapX.has(Math.round(transformControl.object.position.x))) {
-            transformControl.object.position.x = Math.round(transformControl.object.position.x);
-
-            posVert[0] = transformControl.object.position.x;
-
-            magnetX = posVert[0];
-
-            var p = mapPointObjects.get(mapX.get(Math.round(transformControl.object.position.x)));
-            posVert[3] = p.position.x;
-            posVert[4] = p.position.y;
-            posVert[5] = p.position.z + 20;
-        }
-
-        if (mapY.has(Math.round(transformControl.object.position.y))) {
-            transformControl.object.position.y = Math.round(transformControl.object.position.y);
-
-            posHor[1] = transformControl.object.position.y;
-
-            magnetY = posHor[1];
-
-            var p = mapPointObjects.get(mapY.get(Math.round(transformControl.object.position.y)));
-            posHor[3] = p.position.x;
-            posHor[4] = p.position.y;
-            posHor[5] = p.position.z + 20;
-        }
-
-        if (transformControl.object.position.x >= magnetX - 40 && transformControl.object.position.x <= magnetX + 40) {
-            transformControl.object.position.x = magnetX;
-            lineVertical.visible = true;
-            posVert[0] = transformControl.object.position.x;
-            if (lineHorizontal.visible ) {
-                posVert[1] = posHor[1];
-            } else {
-                posVert[1] = transformControl.object.position.y;
-            }
-            posVert[2] = transformControl.object.position.z + 20;
-        } else {
-            lineVertical.visible = false;
-        }
-
-        if (transformControl.object.position.y >= magnetY - 40 && transformControl.object.position.y <= magnetY + 40) {
-            transformControl.object.position.y = magnetY;
-            lineHorizontal.visible = true;
-
-            posHor[0] = transformControl.object.position.x;
-            posHor[1] = transformControl.object.position.y;
-            posHor[2] = transformControl.object.position.z + 20;
-        } else {
-            lineHorizontal.visible = false;
-        }
-        lineHorizontal.geometry.attributes.position.needsUpdate = true;
-        lineVertical.geometry.attributes.position.needsUpdate = true;
-
+        updateHelperLines(transformControl.object);
         updateObject(transformControl.object);
         // dragEnd();
     } );
@@ -495,9 +442,71 @@ function dragEnd( event ) {
     lineVertical.visible = false;
 
         for (var i = 0; i < groupPoints.children.length; i++ ) {
-            mapX.set(Math.round(groupPoints.children[i].position.x), groupPoints.children[i].name);
-            mapY.set(Math.round(groupPoints.children[i].position.y), groupPoints.children[i].name);
+            mapX.set(Math.round(groupPoints.children[i].position.x), groupPoints.children[i].position);
+            mapY.set(Math.round(groupPoints.children[i].position.y), groupPoints.children[i].position);
         }
+}
+
+function updateHelperLines(object) {
+    var posHor = lineHorizontal.geometry.attributes.position.array;
+    var posVert = lineVertical.geometry.attributes.position.array;
+    if (mapX.has(Math.round(object.position.x))) {
+        object.position.x = Math.round(object.position.x);
+
+        posVert[0] = object.position.x;
+
+        magnetX = posVert[0];
+
+        var p = mapX.get(Math.round(object.position.x));
+        posVert[3] = p.x;
+        posVert[4] = p.y;
+        posVert[5] = p.z + 20;
+    }
+
+    if (mapY.has(Math.round(object.position.y))) {
+        object.position.y = Math.round(object.position.y);
+
+        posHor[1] = object.position.y;
+
+        magnetY = posHor[1];
+
+        var p = mapY.get(Math.round(object.position.y));
+        posHor[3] = p.x;
+        posHor[4] = p.y;
+        posHor[5] = p.z + 20;
+    }
+
+    if (object.position.x >= magnetX - 20 && object.position.x <= magnetX + 20) {
+        object.position.x = magnetX;
+        lineVertical.visible = true;
+        posVert[0] = object.position.x;
+        if (lineHorizontal.visible ) {
+            posVert[1] = posHor[1];
+        } else {
+            posVert[1] = object.position.y;
+        }
+        posVert[2] = object.position.z + 20;
+    } else {
+        lineVertical.visible = false;
+    }
+
+    if (object.position.y >= magnetY - 20 && object.position.y <= magnetY + 20) {
+        object.position.y = magnetY;
+        lineHorizontal.visible = true;
+
+        posHor[0] = object.position.x;
+        posHor[1] = object.position.y;
+        posHor[2] = object.position.z + 20;
+    } else {
+        lineHorizontal.visible = false;
+    }
+    lineHorizontal.geometry.attributes.position.needsUpdate = true;
+    lineVertical.geometry.attributes.position.needsUpdate = true;
+    lineVertical.computeLineDistances();
+    lineVertical.geometry.lineDistancesNeedUpdate = true;
+    lineHorizontal.computeLineDistances();
+    lineHorizontal.geometry.lineDistancesNeedUpdate = true;
+    return object.position;
 }
 
 function addHelperLine() {
@@ -511,21 +520,21 @@ function addHelperLine() {
     });*/
     var material = new THREE.LineDashedMaterial( {
         color: '#009a09',
-        linewidth: 1,
-        scale: 1,
-        dashSize: 3,
-        gapSize: 1,
+        dashSize: 10,
+        gapSize: 5,
         transparent: true } );
-    lineHorizontal = new THREE.Line(geometryH, material);
+    lineHorizontal = new THREE.LineSegments(geometryH, material);
     lineHorizontal.computeLineDistances();
+    lineHorizontal.geometry.lineDistancesNeedUpdate = true;
     lineHorizontal.name = "lineHorizontal";
     scene.add(lineHorizontal);
 
     var geometryV = new THREE.BufferGeometry();
     var v = new Float32Array(2 * 3);
     geometryV.addAttribute('position', new THREE.BufferAttribute(v, 3));
-    lineVertical = new THREE.Line(geometryV, material);
+    lineVertical = new THREE.LineSegments(geometryV, material);
     lineVertical.computeLineDistances();
+    lineVertical.geometry.lineDistancesNeedUpdate = true;
     lineVertical.name = "lineVertical";
     scene.add(lineVertical);
 }
@@ -758,8 +767,8 @@ function addPointObject(x, y ,z, num) {
     var point = new THREE.Mesh( pointGeometry, pointMaterial );
     point.name = num.toString() + "_" + numWalls;
     point.position.set(x, y ,z);
-    mapX.set(Math.round(x), point.name);
-    mapY.set(Math.round(y), point.name);
+    mapX.set(Math.round(x), point.position);
+    mapY.set(Math.round(y), point.position);
     groupPoints.add(point);
     mapPointObjects.set(point.name, point);
     objects.push(point);
@@ -767,7 +776,10 @@ function addPointObject(x, y ,z, num) {
 }
 // update line
 function updateLine(coord) {
-
+    var obj = {
+        position: coord
+    }
+    coord = updateHelperLines(obj);
     if(event.shiftKey) {
         if (Math.abs(positions[count * 3 - 6] - coord.x) <= Math.abs(positions[count * 3 - 5] - coord.y)) {
             positions[count * 3 - 3] = positions[count * 3 - 6];
@@ -836,6 +848,10 @@ function addPoint(coord){
     positions[count * 3 + 1] = coord.y;
     positions[count * 3 + 2] = coord.z;
     count++;
+
+    mapX.set(Math.round(coord.x), coord);
+    mapY.set(Math.round(coord.y), coord);
+
     line.geometry.setDrawRange(0, count);
     updateLine(coord);
 
@@ -904,6 +920,9 @@ function clearLastPointsPosition(){
    if ( count <= 2) {
        clearPointsPosition();
    } else {
+       mapX.delete(Math.round(positions[count * 3 - 6]));
+       mapY.delete(Math.round(positions[count * 3 - 5]));
+
        positions[count * 3 - 6] = positions[count * 3 - 3];
        positions[count * 3 - 5] = positions[count * 3 - 2];
        positions[count * 3 - 4] = positions[count * 3 - 1];
@@ -1511,13 +1530,14 @@ function onDocumentMouseMove( event ) {
         posMouse.z = 700;
         if (selectedInstr) {
             document.body.style.cursor = 'crosshair';
+            document.getElementsByTagName("canvas")[0].style.cursor = 'crosshair';
             if (count !== 0) {
                 updateLine(posMouse);
             }
         } else  if (selectedScale) {
             document.body.style.cursor = 'crosshair';
+            document.getElementsByTagName("canvas")[0].style.cursor = 'crosshair';
             if (countScale !== 0) {
-                // console.log("!!!!!!!", positionsScale);
                 updateLineScale(posMouse);
             }
         } else {
