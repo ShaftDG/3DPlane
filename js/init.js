@@ -271,9 +271,9 @@ function setTransformControls() {
 
         designer.updateHelperLines(transformControl.object);
         designer.updateObject(transformControl.object);
-        // dragEnd();
+        dragEnd();
     } );
-    dragcontrols.addEventListener( 'dragend', dragEnd );
+    // dragcontrols.addEventListener( 'dragend', dragEnd );
     dragcontrols.addEventListener( 'dragstart', function( e ) {
         if (designer.selectedPoint !== transformControl.object && designer.selectedPoint) {
             designer.selectedPoint.scale.set(1.0, 1.0, 1.0);
@@ -591,6 +591,7 @@ function onKeyDown ( event ) {
                     if (a[1] === arr[1]) {
                         designer.removeIntersectObjectsArray(designer.objects, designer.mapPointObjects.get(designer.groupPoints.children[i].name));
                         designer.removeObject(designer.groupPoints, designer.mapPointObjects.get(designer.groupPoints.children[i].name));
+                        designer.removeObject(designer.groupProportions, designer.mapProportions.get(designer.groupProportions.children[i].name));
                     }
                 }
                 designer.selectedObject = null;

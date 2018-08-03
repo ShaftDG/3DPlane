@@ -46,6 +46,7 @@ function ControlDesigner(textureSpritePointScale) {
     this.mapWalls = new Map();
     this.mapLines = new Map();
     this.mapGroup = new Map();
+    this.mapProportions = new Map();
     this.mapPointObjects = new Map();
 
     this.mapX = new Map();
@@ -81,6 +82,10 @@ function ControlDesigner(textureSpritePointScale) {
     this.groupPoints = new THREE.Object3D();
     this.groupPoints.name = "groupPoints";
     this.add(this.groupPoints);
+
+    this.groupProportions = new THREE.Object3D();
+    this.groupProportions.name = "groupProportions";
+    this.add(this.groupProportions);
 
     // model
     var geometry = new THREE.PlaneGeometry(5000, 5000, 1, 1);
@@ -303,6 +308,8 @@ ControlDesigner.prototype.deletePointObject = function (object) {
             }
         }
     }
+
+    this.removeObject(this.groupProportions, this.mapProportions.get(arr[0] + "_" + arr[1]));
     for (var i = 0; i < array.length; i++ ) {
         position[i] = array[i];
     }
@@ -863,7 +870,7 @@ ControlDesigner.prototype.removeIntersectObjectsArray = function (array, object)
 
 ControlDesigner.prototype.removeObject = function ( groupObject, object ) {
     groupObject.remove(object);
-    if (object.geometry) {
+  /*  if (object.geometry) {
         object.geometry.dispose();
     }
     if (object.material) {
@@ -871,7 +878,7 @@ ControlDesigner.prototype.removeObject = function ( groupObject, object ) {
     }
     if (object.texture) {
         object.texture.dispose();
-    }
+    }*/
 };
 
 ControlDesigner.prototype.removeLines = function ( groupObject ) {
@@ -901,6 +908,7 @@ ControlDesigner.prototype.updateExtrudePath = function (position) {
     this.removeIntersectObjectsArray(this.objects, this.mapWalls.get("walls_" + this.updatedWall.toString()));
     // console.log("!!!", this.this.updatedWall);
 
+    var num = 0;
     var pathPts = [];
 
     for (var i = 0; i < position.length / 3; i++) {
@@ -914,10 +922,20 @@ ControlDesigner.prototype.updateExtrudePath = function (position) {
                 // console.log("!!!");
             } else {
                 pathPts.push(new THREE.Vector2(position[i * 3 + 0], position[i * 3 + 1]));
+                this.removeObject(this.groupProportions, this.mapProportions.get((num-1).toString()+ "_" + this.updatedWall.toString()));
+                var start = new THREE.Vector2(position[i * 3 - 3], position[i * 3 - 2], position[i * 3 - 1]);
+                var end = new THREE.Vector2(position[i * 3 + 0], position[i * 3 + 1], position[i * 3 + 2]);
+                this.positionProportions(start, end, num-1, this.updatedWall.toString());
+                num++;
             }
 
         } else {
             pathPts.push(new THREE.Vector2(position[i * 3 + 0], position[i * 3 + 1]));
+       /*     this.removeObject(this.groupProportions, this.mapProportions.get((num).toString()+ "_" + this.updatedWall.toString()));
+            var start = new THREE.Vector2(position[i * 3 - 3], position[i * 3 - 2], position[i * 3 - 1]);
+            var end = new THREE.Vector2(position[i * 3 + 0], position[i * 3 + 1], position[i * 3 + 2]);
+            this.positionProportions(start, end, num, this.updatedWall.toString());*/
+            num++;
         }
     }
     var inputShape = new THREE.Shape(pathPts);
@@ -1096,6 +1114,95 @@ ControlDesigner.prototype.crossSection = function (start1, end1, start2, end2) {
     return ret;
 };
 
+ControlDesigner.prototype.positionProportions = function (start, end, num, numWalls) {
+
+    var lengthVector = Math.round(new THREE.Vector2(start.x - end.x, start.y - end.y).length());
+
+    if (lengthVector > 0) {
+        var angle;
+
+        var vector = {
+            x0: start.x,
+            y0: start.y,
+            z0: start.z,
+            x1: end.x,
+            y1: end.y,
+            z1: end.z,
+        };
+
+        var a, b, v;
+        var middle = new THREE.Vector3();
+
+        if (start.x > end.x) {
+            if (start.y < end.y) {
+                angle = this.getAngle(
+                    new THREE.Vector2(1, 0),
+                    new THREE.Vector2(start.x - end.x, start.y - end.y)
+                );
+                angle = Math.acos(angle);
+            } else  if (start.y > end.y) {
+
+                angle = this.getAngle(
+                    new THREE.Vector2(1, 0),
+                    new THREE.Vector2(end.x - start.x, end.y - start.y)
+                );
+                angle = Math.acos(angle) + Math.PI;
+            } else  if (start.y === end.y) {
+                angle = 0;
+            }
+            v = this.getVectors(vector, 10);
+            a = v.b;
+            b = v.d;
+            middle = new THREE.Vector3((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2);
+        } else if (start.x < end.x) {
+            if (start.y < end.y) {
+                angle = this.getAngle(
+                    new THREE.Vector2(1, 0),
+                    new THREE.Vector2(start.x - end.x, start.y - end.y)
+                );
+                angle = Math.acos(angle) + Math.PI;
+            } else if (start.y > end.y){
+
+                angle = this.getAngle(
+                    new THREE.Vector2(1, 0),
+                    new THREE.Vector2(end.x - start.x, end.y - start.y)
+                );
+                angle = Math.acos(angle);
+            } else  if (start.y === end.y) {
+                angle = 0;
+            }
+            v = this.getVectors(vector, 27);
+            a = v.b;
+            b = v.d;
+            middle = new THREE.Vector3((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2);
+        } else if (start.x === end.x) {
+            if (start.y < end.y) {
+                v = this.getVectors(vector, 27);
+            } else if (start.y > end.y){
+                v = this.getVectors(vector, 10);
+            }
+
+            angle = -Math.PI / 2 ;
+
+            a = v.b;
+            b = v.d;
+            middle = new THREE.Vector3((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2);
+        }
+
+        var spritey = this.makeTextSprite(" " + lengthVector + " ", {
+            fontsize: 64,
+            backgroundColor: {r: 255, g: 255, b: 255, a: 0.0}
+        }, angle, num, numWalls);
+        spritey.position.copy(middle)/*.multiplyScalar(1.1)*/;
+        console.log(lengthVector);
+        if (lengthVector <= 20) {
+            spritey.visible = false;
+        }
+        this.groupProportions.add(spritey);
+        this.mapProportions.set(spritey.name, spritey);
+    }
+};
+
 ControlDesigner.prototype.extrudePath = function () {
 
     // this.crossingWalls();
@@ -1106,6 +1213,11 @@ ControlDesigner.prototype.extrudePath = function () {
     for (var i = 0; i < this.count; i++) {
         pathPts.push( new THREE.Vector2 ( this.positions[i * 3 + 0], this.positions[i * 3 + 1] ) );
         this.addPointObject(this.positions[i * 3 + 0], this.positions[i * 3 + 1], this.positions[i * 3 + 2], num);
+        if (i !== 0) {
+            var start = new THREE.Vector2(this.positions[i * 3 - 3], this.positions[i * 3 - 2], this.positions[i * 3 - 1]);
+            var end = new THREE.Vector2(this.positions[i * 3 + 0], this.positions[i * 3 + 1], this.positions[i * 3 + 2]);
+            this.positionProportions(start, end, num-1, this.numWalls.toString());
+        }
         num++;
     }
 
@@ -1117,19 +1229,46 @@ ControlDesigner.prototype.extrudePath = function () {
                 this.positionsRect[i * 3 + 1] === this.positionsRect[i * 3 + 4] &&
                 this.positionsRect[i * 3 + 2] === this.positionsRect[i * 3 + 5]
             ) {
-                // console.log("!!!");
+                if (i === 0) {
+                    var start = new THREE.Vector2(pathPts[pathPts.length - 1].x, pathPts[pathPts.length - 1].y, pathPts[pathPts.length - 1].z);
+                    var end = new THREE.Vector2(pathPts[0].x, pathPts[0].y, pathPts[0].z);
+                    this.positionProportions(start, end, pathPts.length - 1, this.numWalls.toString());
+                    console.log("3", pathPts.length - 1);
+                }
             } else {
                 pathPts.push(new THREE.Vector2(this.positionsRect[i * 3 + 0], this.positionsRect[i * 3 + 1]));
                 this.addPointObject(this.positionsRect[i * 3 + 0], this.positionsRect[i * 3 + 1], this.positionsRect[i * 3 + 2], num);
+                if (i !== 0) {
+                    var start = new THREE.Vector2(pathPts[pathPts.length - 2].x, pathPts[pathPts.length - 2].y, pathPts[pathPts.length - 2].z);
+                    var end = new THREE.Vector2(pathPts[pathPts.length - 1].x, pathPts[pathPts.length - 1].y, pathPts[pathPts.length - 1].z);
+                    this.positionProportions(start, end, pathPts.length - 2, this.numWalls.toString());
+                    console.log("2", pathPts.length - 2);
+                }
                 num++;
             }
-
         } else {
             pathPts.push(new THREE.Vector2(this.positionsRect[i * 3 + 0], this.positionsRect[i * 3 + 1]));
             this.addPointObject(this.positionsRect[i * 3 + 0], this.positionsRect[i * 3 + 1], this.positionsRect[i * 3 + 2], num);
+
+            var start = new THREE.Vector2(pathPts[pathPts.length - 2].x, pathPts[pathPts.length - 2].y, pathPts[pathPts.length - 2].z);
+            var end = new THREE.Vector2(pathPts[pathPts.length - 1].x, pathPts[pathPts.length - 1].y, pathPts[pathPts.length - 1].z);
+            this.positionProportions(start, end, pathPts.length - 2, this.numWalls.toString());
+            console.log("1", pathPts.length - 2);
             num++;
         }
     }
+/*
+    for (var i = 0; i < pathPts.length; i++) {
+        if (i !== 0) {
+            var start = new THREE.Vector2(pathPts[i - 1].x, pathPts[i - 1].y, pathPts[i - 1].z);
+            var end = new THREE.Vector2(pathPts[i].x, pathPts[i].y, pathPts[i].z);
+            this.positionProportions(start, end, i, this.numWalls.toString());
+        } else {
+            var start = new THREE.Vector2(pathPts[pathPts.length - 1].x, pathPts[pathPts.length - 1].y, pathPts[pathPts.length - 1].z);
+            var end = new THREE.Vector2(pathPts[i].x, pathPts[i].y, pathPts[i].z);
+            this.positionProportions(start, end, i, this.numWalls.toString());
+        }
+    }*/
 
     var inputShape = new THREE.Shape( pathPts );
     var extrudeSettings = { depth: this.heightWall * this.scalePlane, bevelEnabled: false, steps: 1 };
@@ -1222,6 +1361,7 @@ ControlDesigner.prototype.clearMap = function  () {
         this.mapPointObjects.clear();
         this.mapWallsCup.clear();
         this.mapLines.clear();
+        this.mapProportions.clear();
     }
 };
 
@@ -1316,4 +1456,61 @@ ControlDesigner.prototype.mouseClick = function (intersect){
         this.unselectObject(this.selectedObject);
         this.selectedObject = null;
     }
+};
+
+ControlDesigner.prototype.makeTextSprite = function ( message, parameters, angle, num, numWalls){
+    function roundRect(ctx, w, h)
+    {
+        ctx.beginPath();
+        ctx.moveTo(-w, h);
+        ctx.lineTo(w, h);
+        ctx.lineTo(w, -h);
+        ctx.lineTo(-w, -h);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    if ( parameters === undefined ) parameters = {};
+
+    var fontface = parameters.hasOwnProperty("fontface") ?
+        parameters["fontface"] : "Arial";
+
+    var fontsize = parameters.hasOwnProperty("fontsize") ?
+        parameters["fontsize"] : 18;
+
+    var backgroundColor = parameters.hasOwnProperty("backgroundColor") ?
+        parameters["backgroundColor"] : { r:255, g:255, b:255, a:1.0 };
+
+    var canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 128;
+    var context = canvas.getContext('2d');
+    context.font = fontsize + "px " + fontface;
+
+    // get size data (height depends only on font size)
+    var metrics = context.measureText( message );
+    var textWidth = metrics.width;
+
+    // background color
+    context.fillStyle   = "rgba(" + backgroundColor.r + "," + backgroundColor.g + ","
+        + backgroundColor.b + "," + backgroundColor.a + ")";
+
+    roundRect(context, textWidth, fontsize * 1.3);
+
+    // text color
+    context.fillStyle = "rgba(0, 0, 0, 1.0)";
+    context.fillText( message, 0 , fontsize);
+
+    // canvas contents will be used for a texture
+    var texture = new THREE.Texture(canvas);
+    texture.needsUpdate = true;
+
+    // var spriteAlignment = THREE.SpriteAlignment.topLeft;
+
+    var spriteMaterial = new THREE.SpriteMaterial(
+        { rotation: -angle, map: texture/*, alignment: spriteAlignment*/ } );
+    var sprite = new THREE.Sprite( spriteMaterial );
+    sprite.name = num.toString() + "_" + numWalls ;
+    sprite.scale.set(100,50,1.0);
+    return sprite;
 };
