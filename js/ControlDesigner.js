@@ -143,7 +143,7 @@ ControlDesigner.prototype.updateHelperLines = function (object) {
         posHor[5] = pY.z + 20;
     }
 
-    if (object.position.x >= this.magnetX - 20 && object.position.x <= this.magnetX + 20) {
+    if (object.position.x >= this.magnetX - 7 && object.position.x <= this.magnetX + 7) {
         object.position.x = this.magnetX;
         this.lineVertical.visible = true;
         posVert[0] = object.position.x;
@@ -157,10 +157,9 @@ ControlDesigner.prototype.updateHelperLines = function (object) {
         this.lineVertical.visible = false;
     }
 
-    if (object.position.y >= this.magnetY - 20 && object.position.y <= this.magnetY + 20) {
+    if (object.position.y >= this.magnetY - 7 && object.position.y <= this.magnetY + 7) {
         object.position.y = this.magnetY;
         this.lineHorizontal.visible = true;
-
         posHor[0] = object.position.x;
         posHor[1] = object.position.y;
         posHor[2] = object.position.z + 20;

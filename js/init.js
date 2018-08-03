@@ -337,6 +337,7 @@ function set3DControl() {
     controlsP = new THREE.OrbitControls( cameraPerspective, renderer.domElement );
     controlsP.maxPolarAngle = Math.PI / 2.1;
     controlsP.maxDistance = 4000;
+    controlsP.enablePan = false;
 }
 
 function handleFileSelect(evt) {
