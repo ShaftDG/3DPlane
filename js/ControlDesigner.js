@@ -92,12 +92,11 @@ function ControlDesigner(textureSpritePointScale) {
     this.objects.push( this.floor );
     this.mapGroup.set(this.floor.name, this.floor);
     this.group.add(this.floor);
-    
+
     this.addHelperLine();
     this.addLines();
     this.addScaleLine();
 }
-
 
 ControlDesigner.prototype = Object.create(THREE.Object3D.prototype);
 ControlDesigner.prototype.constructor = ControlDesigner;
@@ -113,7 +112,7 @@ ControlDesigner.prototype.addBackground = function (texture){
     this.planeBackground.position.z = 2;
     this.mapGroup.set(this.planeBackground.name, this.planeBackground);
     this.group.add(this.planeBackground);
-}
+};
 
 ControlDesigner.prototype.updateHelperLines = function (object) {
     var posHor = this.lineHorizontal.geometry.attributes.position.array;
@@ -125,10 +124,10 @@ ControlDesigner.prototype.updateHelperLines = function (object) {
 
         this.magnetX = posVert[0];
 
-        var p = this.mapX.get(Math.round(object.position.x));
-        posVert[3] = p.x;
-        posVert[4] = p.y;
-        posVert[5] = p.z + 20;
+        var pX = this.mapX.get(Math.round(object.position.x));
+        posVert[3] = pX.x;
+        posVert[4] = pX.y;
+        posVert[5] = pX.z + 20;
     }
 
     if (this.mapY.has(Math.round(object.position.y))) {
@@ -138,10 +137,10 @@ ControlDesigner.prototype.updateHelperLines = function (object) {
 
         this.magnetY = posHor[1];
 
-        var p = this.mapY.get(Math.round(object.position.y));
-        posHor[3] = p.x;
-        posHor[4] = p.y;
-        posHor[5] = p.z + 20;
+        var pY = this.mapY.get(Math.round(object.position.y));
+        posHor[3] = pY.x;
+        posHor[4] = pY.y;
+        posHor[5] = pY.z + 20;
     }
 
     if (object.position.x >= this.magnetX - 20 && object.position.x <= this.magnetX + 20) {
@@ -238,7 +237,7 @@ ControlDesigner.prototype.updateObject = function (object) {
 
 ControlDesigner.prototype.deletePointObject = function (object) {
 
-   transformControl.detach( transformControl.object );
+    transformControl.detach( transformControl.object );
     var arr = object.name.split('_');
     var num = +arr[0];
     this.updatedWall = +arr[1];
