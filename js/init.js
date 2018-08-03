@@ -90,25 +90,18 @@ function init() {
     textureSpritePointScale = textureLoader.load( "textures/sprites/triangle.png" );
 
     container = document.getElementById('container');
-
-    // container = document.createElement( 'div' );
     document.body.appendChild( container );
 
     var frustumSize = 1000;
     var aspect = window.innerWidth / window.innerHeight;
     cameraOrthographic = new THREE.OrthographicCamera( frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 0.1, 50000 );
-    // cameraOrthographic = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 2000 );
     setDefaultOrthographicCameraPosition();
     cameraOrthographic.name = "cameraOrthographic";
-    // cameraOrthographic.position.y = 100;
-    // cameraOrthographic.lookAt( new THREE.Vector3(0,0,0));
-
 
     cameraPerspective = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 20000 );
     setDefaultPerspectiveCameraPosition();
     cameraPerspective.name = "cameraPerspective";
-    // cameraPerspective.position.y = 100;
-    // cameraPerspective.lookAt( new THREE.Vector3(0,0,0));
+
     camera = cameraOrthographic;
     // scene
     scene = new THREE.Scene();
@@ -144,55 +137,6 @@ function init() {
     dirLight.shadow.camera.bottom = -d;
     dirLight.shadow.camera.far = 3500;
     dirLight.shadow.bias = -0.0001;
-
-    /*   var pointsMaterial = new THREE.PointsMaterial( {
-           color: '#0080ff',
-           size: 2,
-           alphaTest: 0.5
-       } );
-       var points = new THREE.Points( geometry, pointsMaterial );
-       points.position.z += 1;
-       points.name = "points";
-       scene.add( points );*/
-
-    // createWalls();
-
-    /*  var geom = new THREE.BoxBufferGeometry( 50, 180, 20 );
-      var mat = new THREE.MeshBasicMaterial( { color: '#ff00fa', opacity: 0.5, transparent: true } );
-      human = new THREE.Mesh( geom, mat );
-      human.name = "human";
-      // human.visible = false;
-      scene.add( human );*/
-
-  /*  var rollOverGeo = new THREE.PlaneBufferGeometry( 10, 10 );
-    var rollOverMaterial = new THREE.MeshBasicMaterial( { color: '#00ff22', opacity: 0.5, transparent: true } );
-    rollOverMesh1 = new THREE.Mesh( rollOverGeo, rollOverMaterial );
-    rollOverMesh1.name = "rollOverMesh1";
-    // rollOverMesh1.visible = false;
-    scene.add( rollOverMesh1 );
-
-    var rollOverMaterial = new THREE.MeshBasicMaterial( { color: '#feff00', opacity: 0.5, transparent: true } );
-    rollOverMesh2 = new THREE.Mesh( rollOverGeo, rollOverMaterial );
-    rollOverMesh2.name = "rollOverMesh2";
-    // rollOverMesh2.visible = false;
-    scene.add( rollOverMesh2 );
-
-    var rollOverMaterial = new THREE.MeshBasicMaterial( { color: '#ff0100', opacity: 0.5, transparent: true } );
-    rollOverMesh3 = new THREE.Mesh( rollOverGeo, rollOverMaterial );
-    rollOverMesh3.name = "rollOverMesh3";
-    // rollOverMesh3.visible = false;
-    scene.add( rollOverMesh3 );
-
-    var rollOverMaterial = new THREE.MeshBasicMaterial( { color: '#0002ff', opacity: 0.5, transparent: true } );
-    rollOverMesh4 = new THREE.Mesh( rollOverGeo, rollOverMaterial );
-    rollOverMesh4.name = "rollOverMesh4";
-    // rollOverMesh4.visible = false;
-    scene.add( rollOverMesh4 );*/
-    /* var MAX_POINTS = 500;
-     positions = new Float32Array(MAX_POINTS * 3);
-     positionsRect = new Float32Array(MAX_POINTS * 3);
-     positionsUp = new Float32Array(2 * 3);
-     positionsDown = new Float32Array(2 * 3);*/
 
     ////
     renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true, precision: "highp" });
@@ -623,7 +567,7 @@ function onKeyDown ( event ) {
         case 84: // t
             break;
         case 27: // esc
-            this.clearLastPointsPosition();
+            designer.clearLastPointsPosition();
             break;
         case 46: // delete
             if (designer.selectedObject) {

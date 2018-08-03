@@ -610,7 +610,7 @@ ControlDesigner.prototype.clearLastPointsPosition = function (){
             z1: this.positions[this.count * 3 - 4],
         };
 
-        var vectors = getVectors(currentWall, this.widthWall * this.scalePlane);
+        var vectors = this.getVectors(currentWall, this.widthWall * this.scalePlane);
 
         this.tempCoord.x = vectors.c.x;
         this.tempCoord.y = vectors.c.y;
@@ -1099,7 +1099,7 @@ ControlDesigner.prototype.crossSection = function (start1, end1, start2, end2) {
 
 ControlDesigner.prototype.extrudePath = function () {
 
-    this.crossingWalls();
+    // this.crossingWalls();
 
     var num = 0;
     var pathPts = [];
