@@ -9248,7 +9248,7 @@
 			new Vector4(), new Vector4(), new Vector4()
 		];
 
-		// init
+		// init_reserv
 
 		for ( var i = 0; i !== _NumberOfMaterialVariants; ++ i ) {
 
@@ -19679,7 +19679,7 @@
 		emptyTextures[ gl.TEXTURE_2D ] = createTexture( gl.TEXTURE_2D, gl.TEXTURE_2D, 1 );
 		emptyTextures[ gl.TEXTURE_CUBE_MAP ] = createTexture( gl.TEXTURE_CUBE_MAP, gl.TEXTURE_CUBE_MAP_POSITIVE_X, 6 );
 
-		// init
+		// init_reserv
 
 		colorBuffer.setClear( 0, 0, 0, 1 );
 		depthBuffer.setClear( 1 );
@@ -43176,7 +43176,7 @@
 
 		if ( this.curveType === 'centripetal' || this.curveType === 'chordal' ) {
 
-			// init Centripetal / Chordal Catmull-Rom
+			// init_reserv Centripetal / Chordal Catmull-Rom
 			var pow = this.curveType === 'chordal' ? 0.5 : 0.25;
 			var dt0 = Math.pow( p0.distanceToSquared( p1 ), pow );
 			var dt1 = Math.pow( p1.distanceToSquared( p2 ), pow );
