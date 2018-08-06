@@ -165,6 +165,7 @@ function init() {
 
     document.Instruments.changeInstrument.addEventListener("click", changeInstrument);
     document.Instruments.changeScale.addEventListener("click", changeScale);
+    document.Instruments.changeMagnet.addEventListener("click", changeMagnet);
 
     document.panelCamera.cameraOrthographic.addEventListener("click", changeCamera);
     document.panelCamera.cameraPerspective.addEventListener("click", changeCamera);
@@ -200,7 +201,7 @@ function init() {
     // Get the valueScale input.
     var valueSc = document.getElementById('valueScale');
     designer.valueScale = valueSc.value;
-    if (!valueScale) {
+    if (!designer.valueScale) {
         alert('Error: failed to get the valueScale element!');
         designer.valueScale = 1;
         return;
@@ -210,6 +211,19 @@ function init() {
         // console.log(valueScale);
     }, false);
 
+  /*  // Get the sensitivityMagnet input.
+    var sensitivityMag = document.getElementById('sensitivityMagnet');
+    designer.sensitivity = sensitivityMag.value;
+    if (!designer.sensitivity) {
+        alert('Error: failed to get the sensitivityMagnet element!');
+        designer.sensitivity = 10;
+        return;
+    }
+    sensitivityMag.addEventListener('change', function (ev) {
+        designer.sensitivity = sensitivityMag.value;
+        // console.log(valueScale);
+    }, false);
+*/
     animate();
 }
 
@@ -271,9 +285,9 @@ function setTransformControls() {
 
         designer.updateHelperLines(transformControl.object);
         designer.updateObject(transformControl.object);
-        dragEnd();
+        // dragEnd();
     } );
-    // dragcontrols.addEventListener( 'dragend', dragEnd );
+    dragcontrols.addEventListener( 'dragend', dragEnd );
     dragcontrols.addEventListener( 'dragstart', function( e ) {
         if (designer.selectedPoint !== transformControl.object && designer.selectedPoint) {
             designer.selectedPoint.scale.set(1.0, 1.0, 1.0);
@@ -307,8 +321,8 @@ function dragEnd( event ) {
     }
     designer.updateExtrudePath(objectlines.geometry.attributes.position.array);
 
-    designer.lineHorizontal.visible = false;
-    designer.lineVertical.visible = false;
+   designer.lineHorizontal.visible = false;
+   designer.lineVertical.visible = false;
 
     for (var i = 0; i < designer.groupPoints.children.length; i++ ) {
         designer.mapX.set(Math.round(designer.groupPoints.children[i].position.x), designer.groupPoints.children[i].position);
@@ -452,6 +466,13 @@ function changeInstrument(){
     }
 }
 
+function changeMagnet(){
+    if (camera.isOrthographicCamera) {
+        designer.boolMagnet = !designer.boolMagnet;
+        changeColorButton();
+    }
+}
+
 function changeScale(){
     if (camera.isOrthographicCamera) {
         designer.groupLinesScale.visible = true;
@@ -479,6 +500,14 @@ function changeColorButton(){
         document.Instruments.changeScale.classList.remove("inputInstrumentSelected");
         document.Instruments.changeScale.classList.add("inputInstrumentUnselected");
     }
+
+    if (designer.boolMagnet) {
+        document.Instruments.changeMagnet.classList.remove("inputInstrumentUnselected");
+        document.Instruments.changeMagnet.classList.add("inputInstrumentSelected");
+    } else {
+        document.Instruments.changeMagnet.classList.remove("inputInstrumentSelected");
+        document.Instruments.changeMagnet.classList.add("inputInstrumentUnselected");
+    }
 }
 
 function changeCamera(event){
@@ -496,11 +525,13 @@ function changeCamera(event){
         designer.group.rotation.x = 0;
         designer.group.scale.set(1, 1, 1);
         designer.groupExtrude.rotation.x = designer.group.rotation.x;
+        designer.groupProportions.rotation.x = designer.group.rotation.x;
         designer.groupExtrude.visible = false;
         designer.groupPlane.visible = true;
         designer.groupLinesUpdate.visible = true;
         designer.groupLines.visible = true;
         designer.groupPoints.visible = true;
+        designer.groupProportions.visible = true;
         transformControl.enabled = true;
         transformControl.visible = true;
 
@@ -518,6 +549,7 @@ function changeCamera(event){
         designer.group.rotation.x = -Math.PI / 2;
         designer.group.scale.set(designer.scalePlane, designer.scalePlane, designer.scalePlane);
         designer.groupExtrude.rotation.x = designer.group.rotation.x;
+        designer.groupProportions.rotation.x = designer.group.rotation.x;
         designer.groupExtrude.visible = true;
         designer.groupPlane.visible = false;
         designer.groupLinesUpdate.visible = false;
@@ -528,6 +560,7 @@ function changeCamera(event){
         designer.groupLinesScale.visible = false;
 
         designer.groupPoints.visible = false;
+        designer.groupProportions.visible = false;
         transformControl.enabled = false;
         transformControl.visible = false;
 
@@ -560,8 +593,9 @@ function setDefaultPerspectiveCameraPosition () {
 function onKeyDown ( event ) {
     switch ( event.keyCode ) {
         case 82: // r
-            console.log(" designer.mapX",  designer.mapX);
-            console.log(" designer.mapY",  designer.mapY);
+            // console.log(" designer.mapX",  designer.mapX);
+            // console.log(" designer.mapY",  designer.mapY);
+            console.log(" designer.mapProportions",  designer.mapProportions);
             break;
         case 83: // s
             break;
