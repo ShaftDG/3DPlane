@@ -396,6 +396,10 @@ function onDocumentMouseMove( event ) {
         posMouse.copy( intersect.point ).add( intersect.face.normal );
         posMouse.divideScalar( 1 ).floor().multiplyScalar( 1 ).addScalar( 1 );
         posMouse.z = 700;
+        var obj = {
+            position: posMouse
+        }
+        posMouse = designer.updateHelperLines(obj);
         designer.mouseMove(posMouse);
 
     } else {
@@ -593,9 +597,9 @@ function setDefaultPerspectiveCameraPosition () {
 function onKeyDown ( event ) {
     switch ( event.keyCode ) {
         case 82: // r
-            // console.log(" designer.mapX",  designer.mapX);
-            // console.log(" designer.mapY",  designer.mapY);
-            console.log(" designer.mapProportions",  designer.mapProportions);
+            console.log(" designer.mapX",  designer.mapX);
+            console.log(" designer.mapY",  designer.mapY);
+            // console.log(" designer.mapProportions",  designer.mapProportions);
             break;
         case 83: // s
             break;
