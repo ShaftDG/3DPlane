@@ -396,10 +396,12 @@ function onDocumentMouseMove( event ) {
         posMouse.copy( intersect.point ).add( intersect.face.normal );
         posMouse.divideScalar( 1 ).floor().multiplyScalar( 1 ).addScalar( 1 );
         posMouse.z = 700;
-        var obj = {
-            position: posMouse
+        if (designer.selectedInstr) {
+            var obj = {
+                position: posMouse
+            }
+            posMouse = designer.updateHelperLines(obj);
         }
-        posMouse = designer.updateHelperLines(obj);
         designer.mouseMove(posMouse);
 
     } else {

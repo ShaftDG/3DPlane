@@ -14,7 +14,7 @@ function ControlDesigner(textureSpritePointScale) {
 
     this.magnetX = null;
     this.magnetY = null;
-    this.boolMagnet = true;
+    this.boolMagnet = false;
     this.sensitivity = 10;
     this.line = null;
     this.lineRect = null;
@@ -1404,7 +1404,7 @@ ControlDesigner.prototype.addLineShape = function ( shape, extrudeSettings, colo
 ControlDesigner.prototype.addShape = function ( shape, extrudeSettings, colorCup, colorWall, x, y, z, rx, ry, rz, s, nameWall ) {
     // extruded shape
     var geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
-    var mesh = new THREE.Mesh( geometry, new THREE.MeshPhongMaterial( { color: colorWall/*, transparent: true*/ } ) );
+    var mesh = new THREE.Mesh( geometry, new THREE.MeshPhongMaterial( { color: colorWall/*, transparent: true*/, side: THREE.DoubleSide } ) );
     mesh.position.set( x, y, z );
     mesh.rotation.set( rx, ry, rz );
     mesh.scale.set( s, s, s );
@@ -1413,6 +1413,18 @@ ControlDesigner.prototype.addShape = function ( shape, extrudeSettings, colorCup
     this.mapWalls.set(mesh.name, mesh);
     this.objects.push(mesh);
     this.groupExtrude.add( mesh );
+
+/*    var geom = new THREE.SphereGeometry( 20, 16, 16 );
+    var s = new THREE.Mesh( geom );
+    s.name = "s";
+
+  var geom = new THREE.CubeGeometry( 180, 50, 20 );
+  var human = new THREE.Mesh( geom );
+  human.name = "human";
+   //this.groupExtrude.add( human );
+
+  this.booleanOperation( human, s);*/
+
     // flat shape
     var geometry = new THREE.ShapeBufferGeometry( shape );
     var mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { color: colorCup/*, wireframe: true*/ } ) );
@@ -1518,6 +1530,9 @@ ControlDesigner.prototype.mouseClick = function (intersect){
             changeInstrument();
             this.selectedObject = null;
             this.selectedPoint = null;
+
+            this.lineHorizontal.visible = false;
+            this.lineVertical.visible = false;
         } else {
             if (this.count === 0) {
                 this.addPoint(this.posMouse);
@@ -1619,3 +1634,25 @@ ControlDesigner.prototype.makeTextSprite = function ( message, parameters, angle
     sprite.scale.set(80,40,1.0);
     return sprite;
 };
+/*
+
+ControlDesigner.prototype.booleanOperation = function ( obj1, obj2 ){
+
+    var mat = new THREE.MeshBasicMaterial( { color: '#15ff00', side: THREE.DoubleSide } );
+
+    var obj1BSP = new ThreeBSP( obj1 );
+    var obj2BSP = new ThreeBSP( obj2 );
+
+    var newSubtractBSP = obj1BSP.subtract( obj2BSP );
+    var newUnionBSP = obj1BSP.union( obj2BSP );
+    var newIntersectBSP = obj1BSP.intersect( obj2BSP );
+
+    // var newIntersectMesh = newIntersectBSP.toMesh( obj1.material );
+    // this.groupExtrude.add( newIntersectMesh );
+
+    var newUnionMesh = newUnionBSP.toMesh( mat );
+    this.groupExtrude.add( newUnionMesh );
+
+    // var newSubtractMesh = newSubtractBSP.toMesh( mat );
+    // this.add( newSubtractMesh );
+};*/
