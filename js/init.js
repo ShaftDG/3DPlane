@@ -166,6 +166,7 @@ function init() {
     document.Instruments.changeInstrument.addEventListener("click", changeInstrument);
     document.Instruments.changeScale.addEventListener("click", changeScale);
     document.Instruments.changeMagnet.addEventListener("click", changeMagnet);
+    document.Instruments.changeDoor.addEventListener("click", changeDoor);
 
     document.panelCamera.cameraOrthographic.addEventListener("click", changeCamera);
     document.panelCamera.cameraPerspective.addEventListener("click", changeCamera);
@@ -387,7 +388,7 @@ function onDocumentMouseMove( event ) {
     event.preventDefault();
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    raycaster.setFromCamera( mouse, cameraOrthographic );
+    raycaster.setFromCamera( mouse, camera );
     var intersects = raycaster.intersectObjects(designer.objects, true);
     if ( intersects.length > 0 ) {
         var intersect = intersects[ 0 ];
@@ -395,15 +396,19 @@ function onDocumentMouseMove( event ) {
         var posMouse = new THREE.Vector3();
         posMouse.copy( intersect.point ).add( intersect.face.normal );
         posMouse.divideScalar( 1 ).floor().multiplyScalar( 1 ).addScalar( 1 );
-        posMouse.z = 700;
-        if (designer.selectedInstr) {
-            var obj = {
-                position: posMouse
+
+        if (camera.isOrthographicCamera) {
+            posMouse.z = 700;
+            if (designer.selectedInstr) {
+                var obj = {
+                    position: posMouse
+                };
+                posMouse = designer.updateHelperLines(obj);
             }
-            posMouse = designer.updateHelperLines(obj);
+        } else if (camera.isPerspectiveCamera) {
+            designer.mouseMoveDoor(posMouse, intersect);
         }
         designer.mouseMove(posMouse);
-
     } else {
         document.body.style.cursor = 'auto';
     }
@@ -414,12 +419,14 @@ function leftClick( event ) {
     event.preventDefault();
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    raycaster.setFromCamera(mouse, cameraOrthographic);
+    raycaster.setFromCamera(mouse, camera);
     var intersects = raycaster.intersectObjects(designer.objects, true);
     if (intersects.length > 0) {
+        var intersect = intersects[0];
         if (camera.isOrthographicCamera) {
-            var intersect = intersects[0];
-            designer.mouseClick( intersect );
+            designer.mouseClickOrtho( intersect );
+        } else if (camera.isPerspectiveCamera) {
+            designer.mouseClickPersp( intersect );
         }
     } else {
         document.body.style.cursor = 'auto';
@@ -479,6 +486,13 @@ function changeMagnet(){
     }
 }
 
+function changeDoor(){
+    if (camera.isPerspectiveCamera) {
+        designer.boolDoor = !designer.boolDoor;
+        changeColorButton();
+    }
+}
+
 function changeScale(){
     if (camera.isOrthographicCamera) {
         designer.groupLinesScale.visible = true;
@@ -514,6 +528,14 @@ function changeColorButton(){
         document.Instruments.changeMagnet.classList.remove("inputInstrumentSelected");
         document.Instruments.changeMagnet.classList.add("inputInstrumentUnselected");
     }
+
+    if (designer.boolDoor) {
+        document.Instruments.changeDoor.classList.remove("inputInstrumentUnselected");
+        document.Instruments.changeDoor.classList.add("inputInstrumentSelected");
+    } else {
+        document.Instruments.changeDoor.classList.remove("inputInstrumentSelected");
+        document.Instruments.changeDoor.classList.add("inputInstrumentUnselected");
+    }
 }
 
 function changeCamera(event){
@@ -544,6 +566,9 @@ function changeCamera(event){
         camera = cameraOrthographic;
         setDefaultOrthographicCameraPosition();
         set2DControl();
+
+        designer.boolDoor = false;
+        changeColorButton();
     } else if (event.srcElement.name === "cameraPerspective") {
 
         document.panelCamera.cameraPerspective.classList.add("inputInstrumentSelected");

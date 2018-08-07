@@ -12,6 +12,8 @@ function ControlDesigner(textureSpritePointScale) {
     this.lineHorizontal = null;
     this.lineVertical = null;
 
+    this.boolDoor = false;
+
     this.magnetX = null;
     this.magnetY = null;
     this.boolMagnet = false;
@@ -1413,17 +1415,7 @@ ControlDesigner.prototype.addShape = function ( shape, extrudeSettings, colorCup
     this.mapWalls.set(mesh.name, mesh);
     this.objects.push(mesh);
     this.groupExtrude.add( mesh );
-
-/*    var geom = new THREE.SphereGeometry( 20, 16, 16 );
-    var s = new THREE.Mesh( geom );
-    s.name = "s";
-
-  var geom = new THREE.CubeGeometry( 180, 50, 20 );
-  var human = new THREE.Mesh( geom );
-  human.name = "human";
-   //this.groupExtrude.add( human );
-
-  this.booleanOperation( human, s);*/
+ // this.booleanOperation( mesh, human);
 
     // flat shape
     var geometry = new THREE.ShapeBufferGeometry( shape );
@@ -1507,10 +1499,12 @@ ControlDesigner.prototype.mouseMove = function (posMouse){
         if (this.countScale !== 0) {
             this.updateLineScale(this.posMouse);
         }
+    } else if (this.boolDoor) {
+
     }
 };
 
-ControlDesigner.prototype.mouseClick = function (intersect){
+ControlDesigner.prototype.mouseClickOrtho = function (intersect){
     var arr = intersect.object.name.split('_');
 
     if (intersect.object.name === "floor" && !this.selectedInstr && !this.selectedScale) {
@@ -1582,6 +1576,70 @@ ControlDesigner.prototype.mouseClick = function (intersect){
     }
 };
 
+ControlDesigner.prototype.mouseClickPersp = function (intersect){
+    var arr = intersect.object.name.split('_');
+
+ /*   if (arr[0] === "wallsCup" && !this.selectedInstr && !this.selectedScale) {
+
+        this.unselectPointObject(this.selectedPoint);
+        this.selectedPoint = null;
+
+        this.unselectObject(this.selectedObject);
+
+        this.selectedObject = intersect.object;
+
+        this.selectObject(this.selectedObject);
+
+    } else {
+        this.unselectObject(this.selectedObject);
+        this.selectedObject = null;
+    }*/
+    if (!this.door && this.boolDoor && arr[0] === "walls") {
+        this.createDoor();
+
+        var vec = intersect.face.normal.clone();
+        if (vec.z !== 1) {
+
+            var up = new THREE.Vector3(0, 1, 0);
+
+            var radians = Math.acos(vec.dot(up));
+
+            this.door.rotation.y = -radians;
+
+            this.door.position.copy(intersect.point).add(intersect.face.normal);
+            this.door.position.y = 100;
+        }
+    } else if (this.door) {
+
+    }
+};
+
+ControlDesigner.prototype.mouseMoveDoor = function ( posMouse, intersect){
+    var arr = intersect.object.name.split('_');
+    if (this.boolDoor && this.door && arr[0] === "walls") {
+
+        // get the face normal in object space
+        var vec = intersect.face.normal.clone();
+        console.log(vec.x, vec.y, vec.z);
+
+        if (vec.z !== 1) {
+
+            var up = new THREE.Vector3(0, 1, 0);
+
+            var radians = Math.acos(vec.dot(up));
+
+            if (vec.x >= 0) {
+                this.door.rotation.y = -radians;
+            } else {
+                this.door.rotation.y = radians;
+            }
+
+            this.door.position.copy(intersect.point).add(intersect.face.normal);
+            this.door.position.y = 110;
+        }
+    }
+};
+
 ControlDesigner.prototype.makeTextSprite = function ( message, parameters, angle, num, numWalls){
     function roundRect(ctx, w, h)
     {
@@ -1634,7 +1692,6 @@ ControlDesigner.prototype.makeTextSprite = function ( message, parameters, angle
     sprite.scale.set(80,40,1.0);
     return sprite;
 };
-/*
 
 ControlDesigner.prototype.booleanOperation = function ( obj1, obj2 ){
 
@@ -1643,16 +1700,19 @@ ControlDesigner.prototype.booleanOperation = function ( obj1, obj2 ){
     var obj1BSP = new ThreeBSP( obj1 );
     var obj2BSP = new ThreeBSP( obj2 );
 
-    var newSubtractBSP = obj1BSP.subtract( obj2BSP );
-    var newUnionBSP = obj1BSP.union( obj2BSP );
-    var newIntersectBSP = obj1BSP.intersect( obj2BSP );
+    var newSubtractBSP = obj1BSP.subtract( obj2BSP ).toGeometry();
+    var newUnionBSP = obj1BSP.union( obj2BSP ).toGeometry();
+    var newIntersectBSP = obj1BSP.intersect( obj2BSP ).toGeometry();
 
-    // var newIntersectMesh = newIntersectBSP.toMesh( obj1.material );
-    // this.groupExtrude.add( newIntersectMesh );
+    var mesh = new THREE.Mesh( newSubtractBSP, obj1.material );
+    this.groupExtrude.add( mesh );
+};
 
-    var newUnionMesh = newUnionBSP.toMesh( mat );
-    this.groupExtrude.add( newUnionMesh );
-
-    // var newSubtractMesh = newSubtractBSP.toMesh( mat );
-    // this.add( newSubtractMesh );
-};*/
+ControlDesigner.prototype.createDoor = function (){
+    var geom = new THREE.CubeGeometry( 150, 220, 100 );
+    var mat = new THREE.MeshPhongMaterial({color: "#ff00fa"});
+    this.door = new THREE.Mesh( geom, mat );
+    this.door.name = "door";
+    this.add(this.door);
+    // this.groupExtrude.add( human );
+};
