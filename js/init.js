@@ -29,17 +29,13 @@ shaders.load( 'vertexShaderLoader' , 'vertexShLoader' , 'vertex' );
 shaders.load( 'fragmentShaderLoader' , 'fragmentShLoader' , 'fragment' );
 
 // var human;
-var rollOverMesh1, rollOverMesh2, rollOverMesh3, rollOverMesh4, floor, group, groupPlane, groupExtrude, groupLines, groupPoints, groupLinesUpdate, groupPointsScale, groupLinesScale;
+var floor, group, groupPlane, groupExtrude, groupLines, groupPoints, groupLinesUpdate, groupLinesScale;
 
 var planeBackground;
 
 var textureSpritePointScale;
 
-var mapGroup = new Map();
-var mapPointObjects = new Map();
-
-var mapX = new Map();
-var mapY = new Map();
+var width, height, depth, fromFloor;
 
 function init() {
     loadingScreen = {
@@ -167,6 +163,7 @@ function init() {
     document.Instruments.changeScale.addEventListener("click", changeScale);
     document.Instruments.changeMagnet.addEventListener("click", changeMagnet);
     document.Instruments.changeDoor.addEventListener("click", changeDoor);
+    document.Instruments.changeWindow.addEventListener("click", changeWindow);
 
     document.panelCamera.cameraOrthographic.addEventListener("click", changeCamera);
     document.panelCamera.cameraPerspective.addEventListener("click", changeCamera);
@@ -175,28 +172,28 @@ function init() {
     document.getElementById('help').addEventListener('click', visibilityHelp, false);
     document.getElementById('file').addEventListener('change', handleFileSelect, false);
     // Get the widthWall input.
-    var width = document.getElementById('widthWall');
-    designer.widthWall = width.value;
+    var w = document.getElementById('widthWall');
+    designer.widthWall = w.value;
     if (!designer.widthWall) {
         alert('Error: failed to get the widthWall element!');
         designer.widthWall = 20;
         return;
     }
-    width.addEventListener('change', function (ev) {
-        designer.widthWall = width.value;
+    w.addEventListener('change', function (ev) {
+        designer.widthWall = w.value;
         // console.log(lineWidth);
     }, false);
 
     // Get the heightWall input.
-    var height = document.getElementById('heightWall');
-    designer.heightWall = height.value;
+    var h = document.getElementById('heightWall');
+    designer.heightWall = h.value;
     if (!designer.heightWall) {
         alert('Error: failed to get the heightWall element!');
         designer.heightWall = 280;
         return;
     }
-    height.addEventListener('change', function (ev) {
-        designer.heightWall = height.value ;
+    h.addEventListener('change', function (ev) {
+        designer.heightWall = h.value ;
     }, false);
 
     // Get the valueScale input.
@@ -225,6 +222,65 @@ function init() {
         // console.log(valueScale);
     }, false);
 */
+
+    // Get the widthDoor input.
+    width = document.getElementById('width');
+    // designer.widthDoor = 150;
+    // designer.widthWindow = 150;
+
+    width.addEventListener('change', function (ev) {
+        if (designer.boolDoor) {
+            designer.widthDoor = width.value;
+            designer.door.scale.x = designer.widthDoor;
+        } else if (designer.boolWindow) {
+            designer.widthWindow = width.value;
+            designer.window.scale.x = designer.widthWindow;
+        }
+    }, false);
+
+    // Get the heightDoor input.
+    height = document.getElementById('height');
+    // designer.heightDoor = 220;
+    // designer.heightWindow = 150;
+
+    height.addEventListener('change', function (ev) {
+        if (designer.boolDoor) {
+            designer.heightDoor = height.value;
+            designer.door.scale.y = designer.heightDoor;
+        } else if (designer.boolWindow) {
+            designer.heightWindow = height.value;
+            designer.window.scale.y = designer.heightWindow;
+        }
+    }, false);
+
+    // Get the depthDoor input.
+    depth = document.getElementById('depth');
+    // designer.depthDoor = 100;
+    // designer.depthWindow = 100;
+
+    depth.addEventListener('change', function (ev) {
+        if (designer.boolDoor) {
+            designer.depthDoor = depth.value;
+            designer.door.scale.z = designer.depthDoor;
+        } else if (designer.boolWindow) {
+            designer.depthWindow = depth.value;
+            designer.door.scale.z = designer.depthWindow;
+        }
+    }, false);
+
+    // Get the fromFloorDoor input.
+    fromFloor = document.getElementById('fromFloor');
+    // designer.fromFloorDoor = 0;
+    // designer.fromFloorWindow = 70;
+
+    fromFloor.addEventListener('change', function (ev) {
+        if (designer.boolDoor) {
+            designer.fromFloorDoor = fromFloor.value;
+        } else if (designer.boolWindow) {
+            designer.fromFloorWindow = fromFloor.value;
+        }
+    }, false);
+
     animate();
 }
 
@@ -256,12 +312,12 @@ function setTransformControls() {
          updateObject(transformControl.object);
      } );*/
 
-    var dragcontrols = new THREE.DragControls( designer.groupPoints.children, camera, renderer.domElement ); //
+    var arrObjects = designer.groupPoints.children;
+    var dragcontrols = new THREE.DragControls( arrObjects, camera, renderer.domElement ); //
     dragcontrols.enabled = true;
     dragcontrols.addEventListener( 'hoveron', function ( event ) {
         transformControl.attach( event.object );
-        transformControl.object.scale.set(1.5, 1.5, 1.5);
-        transformControl.object.material.color = new THREE.Color("#00d40f");
+        designer.selectPointObject(transformControl.object);
         /*
                 selectedObject = null;
                 for (var i = 0; i < groupLinesUpdate.children.length; i++) {
@@ -276,8 +332,7 @@ function setTransformControls() {
     } );
     dragcontrols.addEventListener( 'hoveroff', function ( event ) {
         if (transformControl.object !== designer.selectedPoint && transformControl.object) {
-            transformControl.object.scale.set(1.0, 1.0, 1.0);
-            transformControl.object.material.color = new THREE.Color("#ff0000");
+            designer.unselectPointObject(transformControl.object);
             transformControl.detach(transformControl.object);
         }
         // delayHideTransform();
@@ -291,8 +346,7 @@ function setTransformControls() {
     dragcontrols.addEventListener( 'dragend', dragEnd );
     dragcontrols.addEventListener( 'dragstart', function( e ) {
         if (designer.selectedPoint !== transformControl.object && designer.selectedPoint) {
-            designer.selectedPoint.scale.set(1.0, 1.0, 1.0);
-            designer.selectedPoint.material.color = new THREE.Color("#ff0000");
+            designer.unselectPointObject(designer.selectedPoint);
             designer.selectedPoint = null;
         }
 
@@ -406,7 +460,11 @@ function onDocumentMouseMove( event ) {
                 posMouse = designer.updateHelperLines(obj);
             }
         } else if (camera.isPerspectiveCamera) {
-            designer.mouseMoveDoor(posMouse, intersect);
+            if (designer.boolDoor) {
+                designer.mouseMoveDoor(posMouse, intersect);
+            } else if (designer.boolWindow) {
+                designer.mouseMoveWindow(posMouse, intersect);
+            }
         }
         designer.mouseMove(posMouse);
     } else {
@@ -426,7 +484,11 @@ function leftClick( event ) {
         if (camera.isOrthographicCamera) {
             designer.mouseClickOrtho( intersect );
         } else if (camera.isPerspectiveCamera) {
-            designer.mouseClickPersp( intersect );
+            if (designer.boolDoor) {
+                designer.mouseClickDoor(intersect);
+            } else if (designer.boolWindow) {
+                designer.mouseClickWindow(intersect);
+            }
         }
     } else {
         document.body.style.cursor = 'auto';
@@ -488,7 +550,32 @@ function changeMagnet(){
 
 function changeDoor(){
     if (camera.isPerspectiveCamera) {
+
+        width.value = designer.widthDoor;
+        height.value = designer.heightDoor;
+        depth.value = designer.depthDoor;
+        fromFloor.value = designer.fromFloorDoor;
+
         designer.boolDoor = !designer.boolDoor;
+        if (designer.boolDoor) {
+            designer.boolWindow = false;
+        }
+        changeColorButton();
+    }
+}
+
+function changeWindow(){
+    if (camera.isPerspectiveCamera) {
+
+        width.value = designer.widthWindow;
+        height.value = designer.heightWindow;
+        depth.value = designer.depthWindow;
+        fromFloor.value = designer.fromFloorWindow;
+
+        designer.boolWindow = !designer.boolWindow;
+        if (designer.boolWindow) {
+            designer.boolDoor = false;
+        }
         changeColorButton();
     }
 }
@@ -536,6 +623,14 @@ function changeColorButton(){
         document.Instruments.changeDoor.classList.remove("inputInstrumentSelected");
         document.Instruments.changeDoor.classList.add("inputInstrumentUnselected");
     }
+
+    if (designer.boolWindow) {
+        document.Instruments.changeWindow.classList.remove("inputInstrumentUnselected");
+        document.Instruments.changeWindow.classList.add("inputInstrumentSelected");
+    } else {
+        document.Instruments.changeWindow.classList.remove("inputInstrumentSelected");
+        document.Instruments.changeWindow.classList.add("inputInstrumentUnselected");
+    }
 }
 
 function changeCamera(event){
@@ -552,7 +647,7 @@ function changeCamera(event){
 
         designer.group.rotation.x = 0;
         designer.group.scale.set(1, 1, 1);
-        designer.groupExtrude.rotation.x = designer.group.rotation.x;
+   //     designer.groupExtrude.rotation.x = designer.group.rotation.x;
         designer.groupProportions.rotation.x = designer.group.rotation.x;
         designer.groupExtrude.visible = false;
         designer.groupPlane.visible = true;
@@ -568,6 +663,7 @@ function changeCamera(event){
         set2DControl();
 
         designer.boolDoor = false;
+        designer.boolWindow = false;
         changeColorButton();
     } else if (event.srcElement.name === "cameraPerspective") {
 
@@ -579,7 +675,7 @@ function changeCamera(event){
 
         designer.group.rotation.x = -Math.PI / 2;
         designer.group.scale.set(designer.scalePlane, designer.scalePlane, designer.scalePlane);
-        designer.groupExtrude.rotation.x = designer.group.rotation.x;
+    //    designer.groupExtrude.rotation.x = designer.group.rotation.x;
         designer.groupProportions.rotation.x = designer.group.rotation.x;
         designer.groupExtrude.visible = true;
         designer.groupPlane.visible = false;

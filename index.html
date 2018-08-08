@@ -27,7 +27,7 @@
     <script src="js/controls/TransformControls.js"></script>
 
     <!--<script src="js/libs/csg.js"></script>-->
-    <script src="js/libs/ThreeCSG.js"></script>
+    <script src="js/libs/ThreeBSP.js"></script>
 
     <script src="js/ControlDesigner.js"></script>
    <!-- <style type="text/css">
@@ -61,7 +61,7 @@
         </p>
         <div class="div-container-left columns">
             <p style="width: 53px; height: 53px">
-                <button style="width: 53px; height: 53px;"
+                <button style="width: 54px; height: 53px;"
                         class="inputInstrumentUnselected"
                         type="button"
                         name="changeScale"
@@ -85,7 +85,7 @@
         </div>
         <div class="div-container-left columns">
             <p style="width: 53px; height: 100px">
-                <button style="width: 53px; height: 53px; margin-top: calc(100% / 2.3)"
+                <button style="width: 54px; height: 53px; margin-top: calc(100% / 2.3)"
                         class="inputInstrumentUnselected"
                         type="button"
                         name="changeInstrument"
@@ -122,7 +122,7 @@
 
         <div class="div-container-left columns">
             <p style="width: 53px; height: 53px">
-                <button style="width: 53px; height: 53px"
+                <button style="height: 53px"
                         class="inputInstrumentUnselected"
                         type="button"
                         name="changeMagnet"
@@ -132,42 +132,84 @@
                       class="icon-button">
                 </button>
             </p>
-            <p style="height: 53px">
-               <!-- <label style="width: 100%;">Чувствительность:</label>
-                <input class="inputWidthWall"
-                       type="number"
-                       step="1"
-                       min="1"
-                       max="50"
-                       value="10"
-                       id="sensitivityMagnet"
-                       name="sensitivityMagnet"/>-->
-            </p>
+            <p style="height: 53px"></p>
         </div>
         <div class="div-container-left columns">
-            <p style="width: 53px; height: 53px">
-                <button style="width: 53px; height: 53px"
+            <p style="width: 53px; height: 206px">
+                <button style="height: 53px; margin-top: calc(100% / 1.5)"
                         class="inputInstrumentUnselected"
                         type="button"
                         name="changeDoor"
                         value="Door"
                         title="Дверь"
-                ><img name="changeDoor" src="textures/icons/magnet.png" width="40" height="40"
+                ><img name="changeDoor" src="textures/icons/door.png" width="40" height="40"
+                      class="icon-button">
+                </button>
+
+                <button style="height: 53px; margin-top: calc(100% / 1.5)"
+                        class="inputInstrumentUnselected"
+                        type="button"
+                        name="changeWindow"
+                        value="Window"
+                        title="Окно"
+                ><img name="changeWindow" src="textures/icons/window.png" width="40" height="40"
+                      class="icon-button">
+                </button>
+
+            </p>
+            <p style="height: 206px">
+                <label style="width: 100%;">Ширина, (см):</label>
+                <input class="inputHeightWall"
+                       type="number"
+                       step="1"
+                       min="0"
+                       max="1000"
+                       value="150"
+                       id="width"
+                       name="width"/>
+                <label style="width: 100%;">Высота, (см):</label>
+                <input class="inputHeightWall"
+                       type="number"
+                       step="1"
+                       min="0"
+                       max="1000"
+                       value="220"
+                       id="height"
+                       name="height"/>
+                <label style="width: 100%;">Глубина, (см):</label>
+                <input class="inputHeightWall"
+                       type="number"
+                       step="1"
+                       min="0"
+                       max="1000"
+                       value="100"
+                       id="depth"
+                       name="depth"/>
+                <label style="width: 100%;">От пола, (см):</label>
+                <input class="inputHeightWall"
+                       type="number"
+                       step="1"
+                       min="0"
+                       max="1000"
+                       value="0"
+                       id="fromFloor"
+                       name="fromFloor"/>
+            </p>
+        </div>
+    <!--    <div class="div-container-left columns">
+            <p style="width: 53px; height: 53px">
+                <button style="height: 53px"
+                        class="inputInstrumentUnselected"
+                        type="button"
+                        name="changeWindow"
+                        value="Window"
+                        title="Окно"
+                ><img name="changeWindow" src="textures/icons/window.png" width="40" height="40"
                       class="icon-button">
                 </button>
             </p>
-            <!--   <p style="height: 53px">
-                   <label style="width: 100%;">Чувствительность:</label>
-                   <input class="inputWidthWall"
-                          type="number"
-                          step="1"
-                          min="1"
-                          max="50"
-                          value="10"
-                          id="sensitivityMagnet"
-                          name="sensitivityMagnet"/>
-               </p>-->
-        </div>
+            <p style="height: 53px"></p>
+        </div>-->
     </form>
 
 </div>

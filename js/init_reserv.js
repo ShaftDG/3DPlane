@@ -1491,7 +1491,7 @@ function addShape( shape, extrudeSettings, colorCup, colorWall, x, y, z, rx, ry,
     mapWalls.set(mesh.name, mesh);
     objects.push(mesh);
     groupExtrude.add( mesh );
-    // transformControl.attach( mesh );
+
     // flat shape
     var geometry = new THREE.ShapeBufferGeometry( shape );
     var mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { color: colorCup/*, wireframe: true*/ } ) );
