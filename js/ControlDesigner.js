@@ -134,97 +134,663 @@ ControlDesigner.prototype.addBackground = function (texture){
     this.group.add(this.planeBackground);
 };
 
-ControlDesigner.prototype.updateHelperLines = function (object) {
-    if (this.boolMagnet) {
-        var posHor = this.lineHorizontal.geometry.attributes.position.array;
-        var posVert = this.lineVertical.geometry.attributes.position.array;
-        if (this.mapX.has(Math.round(object.position.x))) {
-            object.position.x = Math.round(object.position.x);
-
-            posVert[0] = object.position.x;
-
-            this.magnetX = posVert[0];
-
-            var pX = this.mapX.get(Math.round(object.position.x));
-            posVert[3] = pX.x;
-            posVert[4] = pX.y;
-            posVert[5] = pX.z + 20;
-        }
-
-        if (this.mapY.has(Math.round(object.position.y))) {
-            object.position.y = Math.round(object.position.y);
-
-            posHor[1] = object.position.y;
-
-            this.magnetY = posHor[1];
-
-            var pY = this.mapY.get(Math.round(object.position.y));
-            posHor[3] = pY.x;
-            posHor[4] = pY.y;
-            posHor[5] = pY.z + 20;
-        }
-
-        if (object.position.x >= this.magnetX - this.sensitivity && object.position.x <= this.magnetX + this.sensitivity) {
-            object.position.x = this.magnetX;
-            this.lineVertical.visible = true;
-            posVert[0] = object.position.x;
-            if (this.lineHorizontal.visible) {
-                posVert[1] = posHor[1];
-            } else {
-                posVert[1] = object.position.y;
-            }
-            posVert[2] = object.position.z + 20;
-        } else {
-            this.lineVertical.visible = false;
-        }
-
-        if (object.position.y >= this.magnetY - this.sensitivity && object.position.y <= this.magnetY + this.sensitivity) {
-            object.position.y = this.magnetY;
-            this.lineHorizontal.visible = true;
-            posHor[0] = object.position.x;
-            posHor[1] = object.position.y;
-            posHor[2] = object.position.z + 20;
-        } else {
-            this.lineHorizontal.visible = false;
-        }
-        this.lineHorizontal.geometry.attributes.position.needsUpdate = true;
-        this.lineVertical.geometry.attributes.position.needsUpdate = true;
-        this.lineVertical.computeLineDistances();
-        this.lineVertical.geometry.lineDistancesNeedUpdate = true;
-        this.lineHorizontal.computeLineDistances();
-        this.lineHorizontal.geometry.lineDistancesNeedUpdate = true;
+/////////////// 2D
+                // Scale
+ControlDesigner.prototype.addPointScale = function (coord){
+    this.positionsScale[this.countScale * 3 + 0] = coord.x;
+    this.positionsScale[this.countScale * 3 + 1] = coord.y;
+    this.positionsScale[this.countScale * 3 + 2] = coord.z;
+    this.countScale++;
+    if (this.countScale >= 2) {
+        this.countScale = 2;
     }
-    return object.position;
+    this.lineScale.geometry.setDrawRange(0, this.countScale);
+    this.updateLineScale(coord);
+
+    var geometry = new THREE.BufferGeometry();
+    geometry.addAttribute('position', new THREE.BufferAttribute(this.positionsScale, 3));
+    var pointsMaterial = new THREE.PointsMaterial( {
+        map: this.textureSpritePointScale,
+        color: '#ffffff',
+        size: 50,
+        alphaTest: 0.5,
+    } );
+    var points = new THREE.Points( geometry, pointsMaterial );
+    // points.position.z += 1;
+    points.name = "points";
+    this.groupPointsScale.push( points );
+
+    this.groupLinesScale.add( points );
 };
 
-ControlDesigner.prototype.addHelperLine = function () {
-    var geometryH = new THREE.BufferGeometry();
-    var h = new Float32Array(2 * 3);
-    geometryH.addAttribute('position', new THREE.BufferAttribute(h, 3));
-    /* var material = new THREE.LineBasicMaterial({
-         color: '#00ff0c',
-         linewidth: 20,
-         // transparent: true,
-     });*/
-    var material = new THREE.LineDashedMaterial( {
-        color: '#009a09',
-        dashSize: 10,
-        gapSize: 5,
-        transparent: true } );
-    this.lineHorizontal = new THREE.LineSegments(geometryH, material);
-    this.lineHorizontal.computeLineDistances();
-    this.lineHorizontal.geometry.lineDistancesNeedUpdate = true;
-    this.lineHorizontal.name = "lineHorizontal";
-    this.add(this.lineHorizontal);
+ControlDesigner.prototype.addScaleLine = function () {
+    var geometry = new THREE.BufferGeometry();
+    this.positionsScale = new Float32Array(2 * 3);
+    geometry.addAttribute('position', new THREE.BufferAttribute(this.positionsScale, 3));
+    var material = new THREE.LineBasicMaterial({
+        color: '#ff0200',
+        linewidth: 20,
+        // transparent: true,
+    });
+    this.lineScale = new THREE.Line(geometry, material);
+    this.lineScale.name = "lineScale";
+    this.groupLinesScale.add(this.lineScale);
+};
 
-    var geometryV = new THREE.BufferGeometry();
-    var v = new Float32Array(2 * 3);
-    geometryV.addAttribute('position', new THREE.BufferAttribute(v, 3));
-    this.lineVertical = new THREE.LineSegments(geometryV, material);
-    this.lineVertical.computeLineDistances();
-    this.lineVertical.geometry.lineDistancesNeedUpdate = true;
-    this.lineVertical.name = "lineVertical";
-    this.add(this.lineVertical);
+ControlDesigner.prototype.updateLineScale = function (coord) {
+
+    if(event.shiftKey) {
+        if (Math.abs(this.positionsScale[this.countScale * 3 - 6] - coord.x) <= Math.abs(this.positionsScale[this.countScale * 3 - 5] - coord.y)) {
+            this.positionsScale[this.countScale * 3 - 3] = this.positionsScale[this.countScale * 3 - 6];
+            this.positionsScale[this.countScale * 3 - 2] = coord.y;
+            this.positionsScale[this.countScale * 3 - 1] = coord.z;
+        } else {
+            this.positionsScale[this.countScale * 3 - 3] = coord.x;
+            this.positionsScale[this.countScale * 3 - 2] = this.positionsScale[this.countScale * 3 - 5];
+            this.positionsScale[this.countScale * 3 - 1] = coord.z;
+        }
+    } else {
+        this.positionsScale[this.countScale * 3 - 3] = coord.x;
+        this.positionsScale[this.countScale * 3 - 2] = coord.y;
+        this.positionsScale[this.countScale * 3 - 1] = coord.z;
+    }
+
+    this.lineScale.geometry.attributes.position.needsUpdate = true;
+    for (var i = 0; i < this.groupPointsScale.length; i++) {
+        this.groupPointsScale[i].geometry.attributes.position.needsUpdate = true;
+    }
+};
+
+ControlDesigner.prototype.clearPointsScalePosition = function (){
+    this.positionsScale[0] = 0;
+    this.positionsScale[1] = 0;
+    this.positionsScale[2] = 0;
+    this.positionsScale[3] = 0;
+    this.positionsScale[4] = 0;
+    this.positionsScale[5] = 0;
+    this.countScale = 0;
+    this.lineScale.geometry.attributes.position.needsUpdate = true;
+    for (var i = 0; i < this.groupPointsScale.length; i++) {
+        this.groupPointsScale[i].geometry.attributes.position.needsUpdate = true;
+        this.groupPointsScale[i].visible = false;
+    }
+};
+
+
+                // Drawing
+ControlDesigner.prototype.addLines = function () {
+// LINE
+// geometry
+    var geometry = new THREE.BufferGeometry();
+    var MAX_POINTS = 500;
+    this.positions = new Float32Array(MAX_POINTS * 3);
+    geometry.addAttribute('position', new THREE.BufferAttribute(this.positions, 3));
+
+// material
+    var material = new THREE.LineBasicMaterial({
+        color: '#2b3f8b',
+        linewidth: 20,
+        transparent: true
+    });
+
+// this.line
+    this.line = new THREE.Line(geometry, material);
+    this.line.name = "line";
+    this.groupLines.add(this.line);
+
+/////////////////////////
+    var geometry = new THREE.BufferGeometry();
+    this.positionsRect = new Float32Array(MAX_POINTS * 3);
+    geometry.addAttribute('position', new THREE.BufferAttribute(this.positionsRect, 3));
+
+// material
+    var material = new THREE.LineBasicMaterial({
+        color: '#2b3f8b',
+        linewidth: 20,
+        transparent: true
+    });
+
+// this.line
+    this.lineRect = new THREE.Line(geometry, material);
+    this.lineRect.name = "lineRect";
+    this.groupLines.add(this.lineRect);
+
+//////////////////////////
+    var geometry = new THREE.BufferGeometry();
+    this.positionsDown = new Float32Array(MAX_POINTS * 3);
+    geometry.addAttribute('position', new THREE.BufferAttribute(this.positionsDown, 3));
+
+// material
+    var material = new THREE.LineBasicMaterial({
+        color: '#2b3f8b',
+        linewidth: 20,
+        transparent: true
+    });
+
+// this.line
+    this.lineDown = new THREE.LineSegments(geometry, material);
+    this.lineDown.name = "lineDown";
+    this.groupLines.add(this.lineDown);
+};
+
+ControlDesigner.prototype.addRectangle = function (coord, depth) {
+
+    var currentWall = {
+        x0: this.positions[this.count * 3 - 6],
+        y0: this.positions[this.count * 3 - 5],
+        z0: this.positions[this.count * 3 - 4],
+        x1: coord.x,
+        y1: coord.y,
+        z1: coord.z,
+    };
+
+    var vectors = this.getVectors(currentWall, depth);
+
+    this.positionsRect[this.count1 * 3 + 0] = vectors.c.x;
+    this.positionsRect[this.count1 * 3 + 1] = vectors.c.y;
+    this.positionsRect[this.count1 * 3 + 2] = coord.z;
+
+    this.tempCoord.x = this.positionsRect[this.count1 * 3 - 3];
+    this.tempCoord.y = this.positionsRect[this.count1 * 3 - 2];
+
+    this.positionsDown[this.count1 * 3 + 0] = vectors.c.x;
+    this.positionsDown[this.count1 * 3 + 1] = vectors.c.y;
+    this.positionsDown[this.count1 * 3 + 2] = coord.z;
+
+    this.positionsDown[this.count1 * 3 + 3] = vectors.c.x;
+    this.positionsDown[this.count1 * 3 + 4] = vectors.c.y;
+    this.positionsDown[this.count1 * 3 + 5] = coord.z;
+
+    this.count1++;
+    this.positionsRect[this.count1 * 3 + 0] = vectors.c.x;
+    this.positionsRect[this.count1 * 3 + 1] = vectors.c.y;
+    this.positionsRect[this.count1 * 3 + 2] = coord.z;
+
+    this.positionsDown[this.count1 * 3 + 0] = vectors.c.x;
+    this.positionsDown[this.count1 * 3 + 1] = vectors.c.y;
+    this.positionsDown[this.count1 * 3 + 2] = coord.z;
+
+    this.positionsDown[this.count1 * 3 + 3] = vectors.c.x;
+    this.positionsDown[this.count1 * 3 + 4] = vectors.c.y;
+    this.positionsDown[this.count1 * 3 + 5] = coord.z;
+
+    this.count1++;
+    this.lineRect.geometry.setDrawRange(0, this.count1);
+    this.lineDown.geometry.setDrawRange(0, this.count1);
+};
+
+ControlDesigner.prototype.addPoint = function (coord){
+
+    this.posMouse.copy(coord);
+    if (this.count !== 0) {
+        this.mapX.set(Math.round(this.positions[this.count * 3 - 3]),
+            new THREE.Vector3(this.positions[this.count * 3 - 3], this.positions[this.count * 3 - 2], this.positions[this.count * 3 - 1]));
+        this.mapY.set(Math.round(this.positions[this.count * 3 - 2]),
+            new THREE.Vector3(this.positions[this.count * 3 - 3], this.positions[this.count * 3 - 2], this.positions[this.count * 3 - 1]));
+    }
+
+    this.positions[this.count * 3 + 0] = coord.x;
+    this.positions[this.count * 3 + 1] = coord.y;
+    this.positions[this.count * 3 + 2] = coord.z;
+    this.count++;
+
+    this.line.geometry.setDrawRange(0, this.count);
+    this.updateLine(coord);
+
+    if ( this.count !== 0) {
+        this.addRectangle(coord, this.widthWall * this.scalePlane);
+    }
+};
+
+ControlDesigner.prototype.updateLine = function (coord) {
+    if(event.shiftKey) {
+        if (Math.abs(this.positions[this.count * 3 - 6] - coord.x) <= Math.abs(this.positions[this.count * 3 - 5] - coord.y)) {
+            this.positions[this.count * 3 - 3] = this.positions[this.count * 3 - 6];
+            this.positions[this.count * 3 - 2] = coord.y;
+            this.positions[this.count * 3 - 1] = coord.z;
+            this.posMouse.set(this.positions[this.count * 3 - 3], this.positions[this.count * 3 - 2], this.positions[this.count * 3 - 1])
+        } else {
+            this.positions[this.count * 3 - 3] = coord.x;
+            this.positions[this.count * 3 - 2] = this.positions[this.count * 3 - 5];
+            this.positions[this.count * 3 - 1] = coord.z;
+            this.posMouse.set(this.positions[this.count * 3 - 3], this.positions[this.count * 3 - 2], this.positions[this.count * 3 - 1])
+        }
+    } /*else if(event.ctrlKey) {
+        if ((this.positions[this.count * 3 - 6] - coord.x) <= 0) {
+            this.positions[this.count * 3 - 3] = coord.y;
+            this.positions[this.count * 3 - 2] = coord.y;
+            this.positions[this.count * 3 - 1] = coord.z;
+            rollOverMesh.position.set(this.positions[this.count * 3 - 3], this.positions[this.count * 3 - 2], this.positions[this.count * 3 - 1])
+        } else {
+            this.positions[this.count * 3 - 3] = coord.x;
+            this.positions[this.count * 3 - 2] = coord.x;
+            this.positions[this.count * 3 - 1] = coord.z;
+            rollOverMesh.position.set(this.positions[this.count * 3 - 3], this.positions[this.count * 3 - 2], this.positions[this.count * 3 - 1])
+        }
+    }*/ else {
+        this.positions[this.count * 3 - 3] = coord.x;
+        this.positions[this.count * 3 - 2] = coord.y;
+        this.positions[this.count * 3 - 1] = coord.z;
+        this.posMouse.set(this.positions[this.count * 3 - 3], this.positions[this.count * 3 - 2], this.positions[this.count * 3 - 1])
+    }
+
+    this.line.geometry.attributes.position.needsUpdate = true;
+    // console.log("this.positions", this.positions);
+    this.updateRectangle( this.posMouse, this.widthWall * this.scalePlane);
+};
+
+ControlDesigner.prototype.updateRectangle = function (coord, depth) {
+    var previousWall = {
+        x0: this.positions[this.count * 3 - 9],
+        y0: this.positions[this.count * 3 - 8],
+        z0: this.positions[this.count * 3 - 7],
+        x1: this.positions[this.count * 3 - 6],
+        y1: this.positions[this.count * 3 - 5],
+        z1: this.positions[this.count * 3 - 4],
+    };
+    var currentWall = {
+        x0: this.positions[this.count * 3 - 6],
+        y0: this.positions[this.count * 3 - 5],
+        z0: this.positions[this.count * 3 - 4],
+        x1: coord.x,
+        y1: coord.y,
+        z1: coord.z,
+    };
+
+    var angle = this.getAngle(
+        new THREE.Vector2(previousWall.x0 - previousWall.x1, previousWall.y0 - previousWall.y1),
+        new THREE.Vector2(currentWall.x0 - currentWall.x1, currentWall.y0 - currentWall.y1)
+    );
+    // console.log("angle", angle);
+    //2.5 <
+
+    var vectors = this.getVectors(currentWall, depth);
+    var vectors1 = this.getVectors(previousWall, depth);
+    var xcv = (vectors.NvectorA.dot( vectors1.NvectorA ));
+    // console.log("xcv", xcv);
+
+    var f = new THREE.Vector2(
+        (this.positions[this.count * 3 - 6] - ((this.tempCoord.x) ? (this.tempCoord.x + vectors.a.x) / 2 : vectors.a.x)),
+        (this.positions[this.count * 3 - 5] - ((this.tempCoord.y) ? (this.tempCoord.y + vectors.a.y) / 2 : vectors.a.y))
+    );
+    f = f.normalize();
+    // console.log("f", f);
+
+    var mLen = depth / (f.dot( vectors.NvectorA ));
+    // console.log("mLen = "+mLen);
+
+    var nS1 = f.multiplyScalar(mLen * depth);
+
+    var O = new THREE.Vector2();
+    O.subVectors(new THREE.Vector2(this.positions[this.count * 3 - 6], this.positions[this.count * 3 - 5]), nS1);
+
+    if (vectors.NvectorA.length()) {
+        if (Math.acos(angle) <= 2.5) {
+            this.positionsRect[this.count1 * 3 - 3] = vectors.c.x;
+            this.positionsRect[this.count1 * 3 - 2] = vectors.c.y;
+            this.positionsRect[this.count1 * 3 - 1] = coord.z;
+
+            this.positionsRect[this.count1 * 3 - 6] = vectors.c.x;
+            this.positionsRect[this.count1 * 3 - 5] = vectors.c.y;
+            this.positionsRect[this.count1 * 3 - 4] = coord.z;
+
+            this.positionsRect[this.count1 * 3 - 9] = O.x;
+            this.positionsRect[this.count1 * 3 - 8] = O.y;
+            this.positionsRect[this.count1 * 3 - 7] = coord.z;
+
+            this.positionsRect[this.count1 * 3 - 12] = O.x;
+            this.positionsRect[this.count1 * 3 - 11] = O.y;
+            this.positionsRect[this.count1 * 3 - 10] = coord.z;
+
+            this.positionsDown[this.count1 * 3 - 12] = O.x;
+            this.positionsDown[this.count1 * 3 - 11] = O.y;
+            this.positionsDown[this.count1 * 3 - 10] = coord.z;
+
+            this.positionsDown[this.count1 * 3 - 9] = currentWall.x0;
+            this.positionsDown[this.count1 * 3 - 8] = currentWall.y0;
+            this.positionsDown[this.count1 * 3 - 7] = coord.z;
+
+            this.positionsDown[this.count1 * 3 - 6] = vectors.c.x;
+            this.positionsDown[this.count1 * 3 - 5] = vectors.c.y;
+            this.positionsDown[this.count1 * 3 - 4] = coord.z;
+
+            this.positionsDown[this.count1 * 3 - 3] = currentWall.x1;
+            this.positionsDown[this.count1 * 3 - 2] = currentWall.y1;
+            this.positionsDown[this.count1 * 3 - 1] = coord.z;
+        } else {
+            this.positionsRect[this.count1 * 3 - 3] = vectors.c.x;
+            this.positionsRect[this.count1 * 3 - 2] = vectors.c.y;
+            this.positionsRect[this.count1 * 3 - 1] = coord.z;
+
+            this.positionsRect[this.count1 * 3 - 6] = vectors.c.x;
+            this.positionsRect[this.count1 * 3 - 5] = vectors.c.y;
+            this.positionsRect[this.count1 * 3 - 4] = coord.z;
+
+            /////
+            /* this.positionsRect[this.count1 * 3 - 9] = vectors.a.x;
+             this.positionsRect[this.count1 * 3 - 8] = vectors.a.y;
+             this.positionsRect[this.count1 * 3 - 7] = coord.z;
+
+             this.positionsRect[this.count1 * 3 - 12] = vectors1.c.x;
+             this.positionsRect[this.count1 * 3 - 11] = vectors1.c.y;
+             this.positionsRect[this.count1 * 3 - 10] = coord.z;*/
+
+            this.positionsRect[this.count1 * 3 - 9] = O.x;
+            this.positionsRect[this.count1 * 3 - 8] = O.y;
+            this.positionsRect[this.count1 * 3 - 7] = coord.z;
+
+            this.positionsRect[this.count1 * 3 - 12] = O.x;
+            this.positionsRect[this.count1 * 3 - 11] = O.y;
+            this.positionsRect[this.count1 * 3 - 10] = coord.z;
+
+            this.positionsDown[this.count1 * 3 - 12] = O.x;
+            this.positionsDown[this.count1 * 3 - 11] = O.y;
+            this.positionsDown[this.count1 * 3 - 10] = coord.z;
+
+            this.positionsDown[this.count1 * 3 - 9] = currentWall.x0;
+            this.positionsDown[this.count1 * 3 - 8] = currentWall.y0;
+            this.positionsDown[this.count1 * 3 - 7] = coord.z;
+
+            this.positionsDown[this.count1 * 3 - 6] = vectors.c.x;
+            this.positionsDown[this.count1 * 3 - 5] = vectors.c.y;
+            this.positionsDown[this.count1 * 3 - 4] = coord.z;
+
+            this.positionsDown[this.count1 * 3 - 3] = currentWall.x1;
+            this.positionsDown[this.count1 * 3 - 2] = currentWall.y1;
+            this.positionsDown[this.count1 * 3 - 1] = coord.z;
+
+        }
+    } else {
+
+        /* this.positionsDown[this.count * 3 - 3] = this.positionsDown[this.count * 3 - 6];
+         this.positionsDown[this.count * 3 - 2] = this.positionsDown[this.count * 3 - 5];
+         this.positionsDown[this.count * 3 - 1] = this.positionsDown[this.count * 3 - 4];*/
+
+        /* this.positionsRect[this.count1 * 3 - 3] = this.positionsRect[this.count1 * 3 - 6];
+         this.positionsRect[this.count1 * 3 - 2] = this.positionsRect[this.count1 * 3 - 5];
+         this.positionsRect[this.count1 * 3 - 1] = this.positionsRect[this.count1 * 3 - 4];
+
+         this.positionsRect[this.count1 * 3 - 9] = this.positionsRect[this.count1 * 3 - 12];
+         this.positionsRect[this.count1 * 3 - 8] = this.positionsRect[this.count1 * 3 - 11];
+         this.positionsRect[this.count1 * 3 - 7] = this.positionsRect[this.count1 * 3 - 10];*/
+    }
+
+    if (this.count > 1) {
+
+        if (this.positions[this.count * 3 - 6] === this.positions[this.count * 3 - 3] &&
+            this.positions[this.count * 3 - 5] === this.positions[this.count * 3 - 2] &&
+            this.positions[this.count * 3 - 4] === this.positions[this.count * 3 - 1]) {
+
+        } else {
+            this.removeObject(this.groupProportions, this.mapProportions.get(((this.count - 2)*2).toString() + "_" + this.numWalls.toString()));
+            var start = new THREE.Vector2(this.positions[this.count * 3 - 6], this.positions[this.count * 3 - 5], this.positions[this.count * 3 - 4]);
+            var end = new THREE.Vector2(this.positions[this.count * 3 - 3], this.positions[this.count * 3 - 2], this.positions[this.count * 3 - 1]);
+            this.positionProportions(start, end, (this.count - 2)*2, this.numWalls.toString());
+
+            /*     this.removeObject(this.groupProportions, this.mapProportions.get(((this.count - 2) * 4 + 1).toString() + "_" + this.numWalls.toString()));
+                 var end = new THREE.Vector2(this.positionsDown[this.count1 * 3 - 6], this.positionsDown[this.count1 * 3 - 5], this.positionsDown[this.count1 * 3 - 4]);
+                 var start = new THREE.Vector2(this.positionsDown[this.count1 * 3 - 3], this.positionsDown[this.count1 * 3 - 2], this.positionsDown[this.count1 * 3 - 1]);
+                 this.positionProportions(start, end, (this.count - 2) * 4 + 1, this.numWalls.toString());*/
+
+            this.removeObject(this.groupProportions, this.mapProportions.get(((this.count-2)*2+1 ).toString() + "_" + this.numWalls.toString()));
+            var end = new THREE.Vector2(this.positionsRect[this.count1 * 3 - 9], this.positionsRect[this.count1 * 3 - 8], this.positionsRect[this.count1 * 3 - 7]);
+            var start = new THREE.Vector2(this.positionsRect[this.count1 * 3 - 3], this.positionsRect[this.count1 * 3 - 2], this.positionsRect[this.count1 * 3 - 1]);
+            this.positionProportions(start, end, (this.count-2)*2+1 , this.numWalls.toString());
+
+            /*    this.removeObject(this.groupProportions, this.mapProportions.get(((this.count - 2) * 4 + 3).toString() + "_" + this.numWalls.toString()));
+                var start = new THREE.Vector2(this.positionsDown[this.count1 * 3 - 12], this.positionsDown[this.count1 * 3 - 11], this.positionsDown[this.count1 * 3 - 10]);
+                var end = new THREE.Vector2(this.positionsDown[this.count1 * 3 - 9], this.positionsDown[this.count1 * 3 - 8], this.positionsDown[this.count1 * 3 - 7]);
+                this.positionProportions(start, end, (this.count - 2) * 4 + 3, this.numWalls.toString());*/
+
+            if (this.count > 2) {
+                this.removeObject(this.groupProportions, this.mapProportions.get(((this.count-2)*2-1).toString() + "_" + this.numWalls.toString()));
+                var end = new THREE.Vector2(this.positionsRect[this.count1 * 3 - 15], this.positionsRect[this.count1 * 3 - 14], this.positionsRect[this.count1 * 3 - 13]);
+                var start = new THREE.Vector2(this.positionsRect[this.count1 * 3 - 9], this.positionsRect[this.count1 * 3 - 8], this.positionsRect[this.count1 * 3 - 7]);
+                this.positionProportions(start, end, (this.count-2)*2-1, this.numWalls.toString());
+            }
+        }
+    }
+
+    this.lineRect.geometry.attributes.position.needsUpdate = true;
+    this.lineDown.geometry.attributes.position.needsUpdate = true;
+};
+
+ControlDesigner.prototype.clearLastPointsPosition = function (){
+    if ( this.count <= 2) {
+        this.removeObject(this.groupProportions, this.mapProportions.get(((this.count - 2)*2).toString() + "_" + this.numWalls.toString()));
+        this.mapProportions.delete(((this.count - 2)*2).toString() + "_" + this.numWalls.toString());
+        this.removeObject(this.groupProportions, this.mapProportions.get(((this.count-2)*2+1 ).toString() + "_" + this.numWalls.toString()));
+        this.mapProportions.delete(((this.count-2)*2+1 ).toString() + "_" + this.numWalls.toString());
+
+        this.clearPointsPosition();
+    } else {
+        this.mapX.delete(Math.round(this.positions[this.count * 3 - 6]));
+        this.mapY.delete(Math.round(this.positions[this.count * 3 - 5]));
+
+        this.positions[this.count * 3 - 6] = this.positions[this.count * 3 - 3];
+        this.positions[this.count * 3 - 5] = this.positions[this.count * 3 - 2];
+        this.positions[this.count * 3 - 4] = this.positions[this.count * 3 - 1];
+
+        this.positions[this.count * 3 - 3] = 0;
+        this.positions[this.count * 3 - 2] = 0;
+        this.positions[this.count * 3 - 1] = 0;
+
+        this.positionsRect[this.count1 * 3 - 9] = this.positionsRect[this.count1 * 3 - 3];
+        this.positionsRect[this.count1 * 3 - 8] = this.positionsRect[this.count1 * 3 - 2];
+        this.positionsRect[this.count1 * 3 - 7] = this.positionsRect[this.count1 * 3 - 1];
+
+        this.positionsRect[this.count1 * 3 - 12] = this.positionsRect[this.count1 * 3 - 6];
+        this.positionsRect[this.count1 * 3 - 11] = this.positionsRect[this.count1 * 3 - 5];
+        this.positionsRect[this.count1 * 3 - 10] = this.positionsRect[this.count1 * 3 - 4];
+
+        this.positionsRect[this.count1 * 3 - 3] = 0;
+        this.positionsRect[this.count1 * 3 - 2] = 0;
+        this.positionsRect[this.count1 * 3 - 1] = 0;
+
+        this.positionsRect[this.count1 * 3 - 6] = 0;
+        this.positionsRect[this.count1 * 3 - 5] = 0;
+        this.positionsRect[this.count1 * 3 - 4] = 0;
+
+        this.positionsDown[this.count1 * 3 - 9] = this.positionsDown[this.count1 * 3 - 3];
+        this.positionsDown[this.count1 * 3 - 8] = this.positionsDown[this.count1 * 3 - 2];
+        this.positionsDown[this.count1 * 3 - 7] = this.positionsDown[this.count1 * 3 - 1];
+
+        this.positionsDown[this.count1 * 3 - 12] = this.positionsDown[this.count1 * 3 - 6];
+        this.positionsDown[this.count1 * 3 - 11] = this.positionsDown[this.count1 * 3 - 5];
+        this.positionsDown[this.count1 * 3 - 10] = this.positionsDown[this.count1 * 3 - 4];
+
+        this.positionsDown[this.count1 * 3 - 3] = 0;
+        this.positionsDown[this.count1 * 3 - 2] = 0;
+        this.positionsDown[this.count1 * 3 - 1] = 0;
+
+        this.positionsDown[this.count1 * 3 - 6] = 0;
+        this.positionsDown[this.count1 * 3 - 5] = 0;
+        this.positionsDown[this.count1 * 3 - 4] = 0;
+
+        this.removeObject(this.groupProportions, this.mapProportions.get(((this.count - 2)*2).toString() + "_" + this.numWalls.toString()));
+        this.mapProportions.delete(((this.count - 2)*2).toString() + "_" + this.numWalls.toString());
+        this.removeObject(this.groupProportions, this.mapProportions.get(((this.count-2)*2+1 ).toString() + "_" + this.numWalls.toString()));
+        this.mapProportions.delete(((this.count-2)*2+1 ).toString() + "_" + this.numWalls.toString());
+
+        this.count--;
+        this.count1 -= 2;
+
+        var currentWall = {
+            x0: this.positions[this.count * 3 - 9],
+            y0: this.positions[this.count * 3 - 8],
+            z0: this.positions[this.count * 3 - 7],
+            x1: this.positions[this.count * 3 - 6],
+            y1: this.positions[this.count * 3 - 5],
+            z1: this.positions[this.count * 3 - 4],
+        };
+
+        var vectors = this.getVectors(currentWall, this.widthWall * this.scalePlane);
+
+        this.tempCoord.x = vectors.c.x;
+        this.tempCoord.y = vectors.c.y;
+
+        this.updateLine(new THREE.Vector3(this.positions[this.count * 3 - 3], this.positions[this.count * 3 - 2], this.positions[this.count * 3 - 1]));
+        this.line.geometry.setDrawRange(0, this.count);
+        this.lineRect.geometry.setDrawRange(0, this.count1);
+        this.lineDown.geometry.setDrawRange(0, this.count1);
+    }
+};
+
+ControlDesigner.prototype.clearPointsPosition = function (){
+    this.positions = [];
+    this.positionsRect = [];
+    this.positionsDown = [];
+
+    this.count = 0;
+    this.count1 = 0;
+
+    this.removeLines(this.groupLines);
+
+    this.addLines();
+};
+
+ControlDesigner.prototype.positionProportions = function (start, end, num, numWalls) {
+
+    var lengthVector = new THREE.Vector2(start.x - end.x, start.y - end.y).length();
+
+    if (lengthVector > 0) {
+        var angle;
+
+        var vector = {
+            x0: start.x,
+            y0: start.y,
+            z0: start.z,
+            x1: end.x,
+            y1: end.y,
+            z1: end.z,
+        };
+
+        var v = this.getVectors(vector, 10);
+        var a = v.b;
+        var b = v.d;
+        var middle = new THREE.Vector3((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2);
+
+        if (start.x > end.x) {
+            if (start.y < end.y) {
+                angle = this.getAngle(
+                    new THREE.Vector2(1, 0),
+                    new THREE.Vector2(start.x - end.x, start.y - end.y)
+                );
+                angle = Math.acos(angle);
+            } else  if (start.y > end.y) {
+
+                angle = this.getAngle(
+                    new THREE.Vector2(1, 0),
+                    new THREE.Vector2(end.x - start.x, end.y - start.y)
+                );
+                angle = Math.acos(angle) + Math.PI;
+            } else  if (start.y === end.y) {
+                angle = 0;
+            }
+        } else if (start.x < end.x) {
+            if (start.y < end.y) {
+                angle = this.getAngle(
+                    new THREE.Vector2(1, 0),
+                    new THREE.Vector2(start.x - end.x, start.y - end.y)
+                );
+                angle = Math.acos(angle) + Math.PI;
+            } else if (start.y > end.y){
+
+                angle = this.getAngle(
+                    new THREE.Vector2(1, 0),
+                    new THREE.Vector2(end.x - start.x, end.y - start.y)
+                );
+                angle = Math.acos(angle);
+            } else  if (start.y === end.y) {
+                angle = 0;
+            }
+
+        } else if (start.x === end.x) {
+
+
+            angle = -Math.PI / 2 ;
+
+        }
+
+        var spritey = this.makeTextSprite( Math.round(lengthVector / this.scalePlane), {
+            fontsize: 12,
+            backgroundColor: {r: 255, g: 0, b: 0, a: 1.0}
+        }, angle, num, numWalls);
+        spritey.position.copy(middle);
+        if (lengthVector <= 30) {
+            spritey.visible = false;
+        }
+        this.groupProportions.add(spritey);
+        this.mapProportions.set(spritey.name, spritey);
+    }
+};
+
+ControlDesigner.prototype.makeTextSprite = function ( message, parameters, angle, num, numWalls){
+    function roundRect(ctx, w, h)
+    {
+        ctx.beginPath();
+        ctx.moveTo(w, h);
+        ctx.lineTo(2*w, h);
+        ctx.lineTo(2*w, -h);
+        ctx.lineTo(w, -h);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    if ( parameters === undefined ) parameters = {};
+
+    var fontface = parameters.hasOwnProperty("fontface") ?
+        parameters["fontface"] : "Arial";
+
+    var fontsize = parameters.hasOwnProperty("fontsize") ?
+        parameters["fontsize"] : 18;
+
+    var backgroundColor = parameters.hasOwnProperty("backgroundColor") ?
+        parameters["backgroundColor"] : { r:255, g:255, b:255, a:1.0 };
+
+    var canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 32;
+    var context = canvas.getContext('2d');
+    context.font = fontsize + "px " + fontface;
+
+    // background color
+    context.fillStyle   = "rgba(" + backgroundColor.r + "," + backgroundColor.g + ","
+        + backgroundColor.b + "," + backgroundColor.a + ")";
+
+    roundRect(context, canvas.width,  canvas.height);
+
+    // text color
+    context.fillStyle = "rgba(0, 0, 0, 1.0)";
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText( message, canvas.width / 2, canvas.height / 2);
+
+    // canvas contents will be used for a texture
+    var texture = new THREE.Texture(canvas);
+    texture.needsUpdate = true;
+
+    var spriteMaterial = new THREE.SpriteMaterial(
+        { rotation: -angle, map: texture } );
+    var sprite = new THREE.Sprite( spriteMaterial );
+    sprite.name = num.toString() + "_" + numWalls ;
+    sprite.scale.set(80,40,1.0);
+    return sprite;
+};
+
+                // Create Wall
+ControlDesigner.prototype.addPointObject = function (x, y ,z, num) {
+    var pointGeometry = new THREE.SphereBufferGeometry( 4, 8, 8 );
+    var pointMaterial = new THREE.MeshBasicMaterial( { color: '#ff0000', /*opacity: 0.5,*/ transparent: true } );
+    var point = new THREE.Mesh( pointGeometry, pointMaterial );
+    point.name = num.toString() + "_" + this.numWalls;
+    point.position.set(x, y ,z);
+    this.mapX.set(Math.round(x), point.position);
+    this.mapY.set(Math.round(y), point.position);
+    this.groupPoints.add(point);
+    this.mapPointObjects.set(point.name, point);
+    this.objects.push(point);
+    transformControl.attach( point );
 };
 
 ControlDesigner.prototype.updateObject = function (object) {
@@ -279,14 +845,14 @@ ControlDesigner.prototype.updateObject = function (object) {
     objectlines.geometry.attributes.position.needsUpdate = true;
     objectlines.material.needsUpdate = true;
 
-   /* this.removeObject(this.groupLinesUpdate, this.mapLines.get("line_" + this.updatedWall.toString()));
-    var pathPts = [];
-    for (var i = 0; i < length; i++) {
-          pathPts.push(new THREE.Vector2(position[i * 3 + 0], position[i * 3 + 1]));
-    }
-    var inputShape = new THREE.Shape(pathPts);
-    var extrudeSettings = {depth: this.heightWall * this.scalePlane, bevelEnabled: false, steps: 1};
-    this.addLineShape(inputShape, extrudeSettings, "#d70003", 0, 0, 0, 0, 0, 0, 1, this.updatedWall);*/
+    /* this.removeObject(this.groupLinesUpdate, this.mapLines.get("line_" + this.updatedWall.toString()));
+     var pathPts = [];
+     for (var i = 0; i < length; i++) {
+           pathPts.push(new THREE.Vector2(position[i * 3 + 0], position[i * 3 + 1]));
+     }
+     var inputShape = new THREE.Shape(pathPts);
+     var extrudeSettings = {depth: this.heightWall * this.scalePlane, bevelEnabled: false, steps: 1};
+     this.addLineShape(inputShape, extrudeSettings, "#d70003", 0, 0, 0, 0, 0, 0, 1, this.updatedWall);*/
 };
 
 ControlDesigner.prototype.deletePointObject = function (object) {
@@ -428,614 +994,174 @@ ControlDesigner.prototype.deletePointObject = function (object) {
     }
 };
 
-ControlDesigner.prototype.addScaleLine = function () {
-    var geometry = new THREE.BufferGeometry();
-    this.positionsScale = new Float32Array(2 * 3);
-    geometry.addAttribute('position', new THREE.BufferAttribute(this.positionsScale, 3));
-    var material = new THREE.LineBasicMaterial({
-        color: '#ff0200',
-        linewidth: 20,
-        // transparent: true,
-    });
-    this.lineScale = new THREE.Line(geometry, material);
-    this.lineScale.name = "lineScale";
-    this.groupLinesScale.add(this.lineScale);
+
+                // help lines
+ControlDesigner.prototype.addHelperLine = function () {
+    var geometryH = new THREE.BufferGeometry();
+    var h = new Float32Array(2 * 3);
+    geometryH.addAttribute('position', new THREE.BufferAttribute(h, 3));
+    /* var material = new THREE.LineBasicMaterial({
+         color: '#00ff0c',
+         linewidth: 20,
+         // transparent: true,
+     });*/
+    var material = new THREE.LineDashedMaterial( {
+        color: '#009a09',
+        dashSize: 10,
+        gapSize: 5,
+        transparent: true } );
+    this.lineHorizontal = new THREE.LineSegments(geometryH, material);
+    this.lineHorizontal.computeLineDistances();
+    this.lineHorizontal.geometry.lineDistancesNeedUpdate = true;
+    this.lineHorizontal.name = "lineHorizontal";
+    this.add(this.lineHorizontal);
+
+    var geometryV = new THREE.BufferGeometry();
+    var v = new Float32Array(2 * 3);
+    geometryV.addAttribute('position', new THREE.BufferAttribute(v, 3));
+    this.lineVertical = new THREE.LineSegments(geometryV, material);
+    this.lineVertical.computeLineDistances();
+    this.lineVertical.geometry.lineDistancesNeedUpdate = true;
+    this.lineVertical.name = "lineVertical";
+    this.add(this.lineVertical);
 };
 
-ControlDesigner.prototype.addLines = function () {
-// LINE
-// geometry
-    var geometry = new THREE.BufferGeometry();
-    var MAX_POINTS = 500;
-    this.positions = new Float32Array(MAX_POINTS * 3);
-    geometry.addAttribute('position', new THREE.BufferAttribute(this.positions, 3));
+ControlDesigner.prototype.updateHelperLines = function (object) {
+    if (this.boolMagnet) {
+        var posHor = this.lineHorizontal.geometry.attributes.position.array;
+        var posVert = this.lineVertical.geometry.attributes.position.array;
+        if (this.mapX.has(Math.round(object.position.x))) {
+            object.position.x = Math.round(object.position.x);
 
-// material
-    var material = new THREE.LineBasicMaterial({
-        color: '#2b3f8b',
-        linewidth: 20,
-        transparent: true
-    });
+            posVert[0] = object.position.x;
 
-// this.line
-    this.line = new THREE.Line(geometry, material);
-    this.line.name = "line";
-    this.groupLines.add(this.line);
+            this.magnetX = posVert[0];
 
-/////////////////////////
-    var geometry = new THREE.BufferGeometry();
-    this.positionsRect = new Float32Array(MAX_POINTS * 3);
-    geometry.addAttribute('position', new THREE.BufferAttribute(this.positionsRect, 3));
+            var pX = this.mapX.get(Math.round(object.position.x));
+            posVert[3] = pX.x;
+            posVert[4] = pX.y;
+            posVert[5] = pX.z + 20;
+        }
 
-// material
-    var material = new THREE.LineBasicMaterial({
-        color: '#2b3f8b',
-        linewidth: 20,
-        transparent: true
-    });
+        if (this.mapY.has(Math.round(object.position.y))) {
+            object.position.y = Math.round(object.position.y);
 
-// this.line
-    this.lineRect = new THREE.Line(geometry, material);
-    this.lineRect.name = "lineRect";
-    this.groupLines.add(this.lineRect);
+            posHor[1] = object.position.y;
 
-//////////////////////////
-    var geometry = new THREE.BufferGeometry();
-    this.positionsDown = new Float32Array(MAX_POINTS * 3);
-    geometry.addAttribute('position', new THREE.BufferAttribute(this.positionsDown, 3));
+            this.magnetY = posHor[1];
 
-// material
-    var material = new THREE.LineBasicMaterial({
-        color: '#2b3f8b',
-        linewidth: 20,
-        transparent: true
-    });
+            var pY = this.mapY.get(Math.round(object.position.y));
+            posHor[3] = pY.x;
+            posHor[4] = pY.y;
+            posHor[5] = pY.z + 20;
+        }
 
-// this.line
-    this.lineDown = new THREE.LineSegments(geometry, material);
-    this.lineDown.name = "lineDown";
-    this.groupLines.add(this.lineDown);
-};
-
-ControlDesigner.prototype.addPointObject = function (x, y ,z, num) {
-    var pointGeometry = new THREE.SphereBufferGeometry( 4, 8, 8 );
-    var pointMaterial = new THREE.MeshBasicMaterial( { color: '#ff0000', /*opacity: 0.5,*/ transparent: true } );
-    var point = new THREE.Mesh( pointGeometry, pointMaterial );
-    point.name = num.toString() + "_" + this.numWalls;
-    point.position.set(x, y ,z);
-    this.mapX.set(Math.round(x), point.position);
-    this.mapY.set(Math.round(y), point.position);
-    this.groupPoints.add(point);
-    this.mapPointObjects.set(point.name, point);
-    this.objects.push(point);
-    transformControl.attach( point );
-};
-
-ControlDesigner.prototype.updateLine = function (coord) {
-    if(event.shiftKey) {
-        if (Math.abs(this.positions[this.count * 3 - 6] - coord.x) <= Math.abs(this.positions[this.count * 3 - 5] - coord.y)) {
-            this.positions[this.count * 3 - 3] = this.positions[this.count * 3 - 6];
-            this.positions[this.count * 3 - 2] = coord.y;
-            this.positions[this.count * 3 - 1] = coord.z;
-            this.posMouse.set(this.positions[this.count * 3 - 3], this.positions[this.count * 3 - 2], this.positions[this.count * 3 - 1])
+        if (object.position.x >= this.magnetX - this.sensitivity && object.position.x <= this.magnetX + this.sensitivity) {
+            object.position.x = this.magnetX;
+            this.lineVertical.visible = true;
+            posVert[0] = object.position.x;
+            if (this.lineHorizontal.visible) {
+                posVert[1] = posHor[1];
+            } else {
+                posVert[1] = object.position.y;
+            }
+            posVert[2] = object.position.z + 20;
         } else {
-            this.positions[this.count * 3 - 3] = coord.x;
-            this.positions[this.count * 3 - 2] = this.positions[this.count * 3 - 5];
-            this.positions[this.count * 3 - 1] = coord.z;
-            this.posMouse.set(this.positions[this.count * 3 - 3], this.positions[this.count * 3 - 2], this.positions[this.count * 3 - 1])
+            this.lineVertical.visible = false;
         }
-    } /*else if(event.ctrlKey) {
-        if ((this.positions[this.count * 3 - 6] - coord.x) <= 0) {
-            this.positions[this.count * 3 - 3] = coord.y;
-            this.positions[this.count * 3 - 2] = coord.y;
-            this.positions[this.count * 3 - 1] = coord.z;
-            rollOverMesh.position.set(this.positions[this.count * 3 - 3], this.positions[this.count * 3 - 2], this.positions[this.count * 3 - 1])
+
+        if (object.position.y >= this.magnetY - this.sensitivity && object.position.y <= this.magnetY + this.sensitivity) {
+            object.position.y = this.magnetY;
+            this.lineHorizontal.visible = true;
+            posHor[0] = object.position.x;
+            posHor[1] = object.position.y;
+            posHor[2] = object.position.z + 20;
         } else {
-            this.positions[this.count * 3 - 3] = coord.x;
-            this.positions[this.count * 3 - 2] = coord.x;
-            this.positions[this.count * 3 - 1] = coord.z;
-            rollOverMesh.position.set(this.positions[this.count * 3 - 3], this.positions[this.count * 3 - 2], this.positions[this.count * 3 - 1])
+            this.lineHorizontal.visible = false;
         }
-    }*/ else {
-        this.positions[this.count * 3 - 3] = coord.x;
-        this.positions[this.count * 3 - 2] = coord.y;
-        this.positions[this.count * 3 - 1] = coord.z;
-        this.posMouse.set(this.positions[this.count * 3 - 3], this.positions[this.count * 3 - 2], this.positions[this.count * 3 - 1])
+        this.lineHorizontal.geometry.attributes.position.needsUpdate = true;
+        this.lineVertical.geometry.attributes.position.needsUpdate = true;
+        this.lineVertical.computeLineDistances();
+        this.lineVertical.geometry.lineDistancesNeedUpdate = true;
+        this.lineHorizontal.computeLineDistances();
+        this.lineHorizontal.geometry.lineDistancesNeedUpdate = true;
     }
-
-    this.line.geometry.attributes.position.needsUpdate = true;
-    // console.log("this.positions", this.positions);
-    this.updateRectangle( this.posMouse, this.widthWall * this.scalePlane);
+    return object.position;
 };
 
-ControlDesigner.prototype.updateLineScale = function (coord) {
+/////////////// 3D
+ControlDesigner.prototype.extrudePath = function () {
 
-    if(event.shiftKey) {
-        if (Math.abs(this.positionsScale[this.countScale * 3 - 6] - coord.x) <= Math.abs(this.positionsScale[this.countScale * 3 - 5] - coord.y)) {
-            this.positionsScale[this.countScale * 3 - 3] = this.positionsScale[this.countScale * 3 - 6];
-            this.positionsScale[this.countScale * 3 - 2] = coord.y;
-            this.positionsScale[this.countScale * 3 - 1] = coord.z;
+    // this.crossingWalls();
+
+    var num = 0;
+    var pathPts = [];
+
+    for (var i = 0; i < this.count; i++) {
+        pathPts.push( new THREE.Vector2 ( this.positions[i * 3 + 0], this.positions[i * 3 + 1] ) );
+        this.addPointObject(this.positions[i * 3 + 0], this.positions[i * 3 + 1], this.positions[i * 3 + 2], num);
+        if (i !== 0) {
+            this.removeObject(this.groupProportions, this.mapProportions.get((num-1).toString()+ "_" + this.numWalls.toString()));
+            var start = new THREE.Vector2(this.positions[i * 3 - 3], this.positions[i * 3 - 2], this.positions[i * 3 - 1]);
+            var end = new THREE.Vector2(this.positions[i * 3 + 0], this.positions[i * 3 + 1], this.positions[i * 3 + 2]);
+            this.positionProportions(start, end, num-1, this.numWalls.toString());
+        }
+        num++;
+    }
+
+    for (var i = this.count1 - 1; i > -1; i--) {
+
+        if (i !== this.count1 - 1) {
+            if (
+                this.positionsRect[i * 3 + 0] === this.positionsRect[i * 3 + 3] &&
+                this.positionsRect[i * 3 + 1] === this.positionsRect[i * 3 + 4] &&
+                this.positionsRect[i * 3 + 2] === this.positionsRect[i * 3 + 5]
+            ) {
+                if (i === 0) {
+                    this.removeObject(this.groupProportions, this.mapProportions.get((pathPts.length - 1).toString()+ "_" + this.numWalls.toString()));
+                    var start = new THREE.Vector2(pathPts[pathPts.length - 1].x, pathPts[pathPts.length - 1].y, pathPts[pathPts.length - 1].z);
+                    var end = new THREE.Vector2(pathPts[0].x, pathPts[0].y, pathPts[0].z);
+                    this.positionProportions(start, end, pathPts.length - 1, this.numWalls.toString());
+                }
+            } else {
+                pathPts.push(new THREE.Vector2(this.positionsRect[i * 3 + 0], this.positionsRect[i * 3 + 1]));
+                this.addPointObject(this.positionsRect[i * 3 + 0], this.positionsRect[i * 3 + 1], this.positionsRect[i * 3 + 2], num);
+                if (i !== 0) {
+                    this.removeObject(this.groupProportions, this.mapProportions.get((pathPts.length - 2).toString()+ "_" + this.numWalls.toString()));
+                    var start = new THREE.Vector2(pathPts[pathPts.length - 2].x, pathPts[pathPts.length - 2].y, pathPts[pathPts.length - 2].z);
+                    var end = new THREE.Vector2(pathPts[pathPts.length - 1].x, pathPts[pathPts.length - 1].y, pathPts[pathPts.length - 1].z);
+                    this.positionProportions(start, end, pathPts.length - 2, this.numWalls.toString());
+                }
+                num++;
+            }
         } else {
-            this.positionsScale[this.countScale * 3 - 3] = coord.x;
-            this.positionsScale[this.countScale * 3 - 2] = this.positionsScale[this.countScale * 3 - 5];
-            this.positionsScale[this.countScale * 3 - 1] = coord.z;
-        }
-    } else {
-        this.positionsScale[this.countScale * 3 - 3] = coord.x;
-        this.positionsScale[this.countScale * 3 - 2] = coord.y;
-        this.positionsScale[this.countScale * 3 - 1] = coord.z;
-    }
-
-    this.lineScale.geometry.attributes.position.needsUpdate = true;
-    for (var i = 0; i < this.groupPointsScale.length; i++) {
-        this.groupPointsScale[i].geometry.attributes.position.needsUpdate = true;
-    }
-};
-
-ControlDesigner.prototype.addPoint = function (coord){
-
-    this.posMouse.copy(coord)
-    if (this.count !== 0) {
-        this.mapX.set(Math.round(this.positions[this.count * 3 - 3]), new THREE.Vector3(this.positions[this.count * 3 - 3], this.positions[this.count * 3 - 2], this.positions[this.count * 3 - 1]));
-        this.mapY.set(Math.round(this.positions[this.count * 3 - 2]), new THREE.Vector3(this.positions[this.count * 3 - 3], this.positions[this.count * 3 - 2], this.positions[this.count * 3 - 1]));
-    }
-
-    this.positions[this.count * 3 + 0] = coord.x;
-    this.positions[this.count * 3 + 1] = coord.y;
-    this.positions[this.count * 3 + 2] = coord.z;
-    this.count++;
-
-    this.line.geometry.setDrawRange(0, this.count);
-    this.updateLine(coord);
-
-    if ( this.count !== 0) {
-        this.addRectangle(coord, this.widthWall * this.scalePlane);
-    }
-};
-
-ControlDesigner.prototype.addPointScale = function (coord){
-    this.positionsScale[this.countScale * 3 + 0] = coord.x;
-    this.positionsScale[this.countScale * 3 + 1] = coord.y;
-    this.positionsScale[this.countScale * 3 + 2] = coord.z;
-    this.countScale++;
-    if (this.countScale >= 2) {
-        this.countScale = 2;
-    }
-    this.lineScale.geometry.setDrawRange(0, this.countScale);
-    this.updateLineScale(coord);
-
-    var geometry = new THREE.BufferGeometry();
-    geometry.addAttribute('position', new THREE.BufferAttribute(this.positionsScale, 3));
-    var pointsMaterial = new THREE.PointsMaterial( {
-        map: this.textureSpritePointScale,
-        color: '#ffffff',
-        size: 50,
-        alphaTest: 0.5,
-    } );
-    var points = new THREE.Points( geometry, pointsMaterial );
-    // points.position.z += 1;
-    points.name = "points";
-    this.groupPointsScale.push( points );
-
-    this.groupLinesScale.add( points );
-};
-
-ControlDesigner.prototype.clearPointsPosition = function (){
-    this.positions = [];
-    this.positionsRect = [];
-    this.positionsDown = [];
-
-    this.count = 0;
-    this.count1 = 0;
-
-    this.removeLines(this.groupLines);
-
-    this.addLines();
-};
-
-ControlDesigner.prototype.clearPointsScalePosition = function (){
-    this.positionsScale[0] = 0;
-    this.positionsScale[1] = 0;
-    this.positionsScale[2] = 0;
-    this.positionsScale[3] = 0;
-    this.positionsScale[4] = 0;
-    this.positionsScale[5] = 0;
-    this.countScale = 0;
-    this.lineScale.geometry.attributes.position.needsUpdate = true;
-    for (var i = 0; i < this.groupPointsScale.length; i++) {
-        this.groupPointsScale[i].geometry.attributes.position.needsUpdate = true;
-        this.groupPointsScale[i].visible = false;
-    }
-};
-
-ControlDesigner.prototype.clearLastPointsPosition = function (){
-    if ( this.count <= 2) {
-        this.removeObject(this.groupProportions, this.mapProportions.get(((this.count - 2)*2).toString() + "_" + this.numWalls.toString()));
-        this.mapProportions.delete(((this.count - 2)*2).toString() + "_" + this.numWalls.toString());
-        this.removeObject(this.groupProportions, this.mapProportions.get(((this.count-2)*2+1 ).toString() + "_" + this.numWalls.toString()));
-        this.mapProportions.delete(((this.count-2)*2+1 ).toString() + "_" + this.numWalls.toString());
-
-        this.clearPointsPosition();
-    } else {
-        this.mapX.delete(Math.round(this.positions[this.count * 3 - 6]));
-        this.mapY.delete(Math.round(this.positions[this.count * 3 - 5]));
-
-        this.positions[this.count * 3 - 6] = this.positions[this.count * 3 - 3];
-        this.positions[this.count * 3 - 5] = this.positions[this.count * 3 - 2];
-        this.positions[this.count * 3 - 4] = this.positions[this.count * 3 - 1];
-
-        this.positions[this.count * 3 - 3] = 0;
-        this.positions[this.count * 3 - 2] = 0;
-        this.positions[this.count * 3 - 1] = 0;
-
-        this.positionsRect[this.count1 * 3 - 9] = this.positionsRect[this.count1 * 3 - 3];
-        this.positionsRect[this.count1 * 3 - 8] = this.positionsRect[this.count1 * 3 - 2];
-        this.positionsRect[this.count1 * 3 - 7] = this.positionsRect[this.count1 * 3 - 1];
-
-        this.positionsRect[this.count1 * 3 - 12] = this.positionsRect[this.count1 * 3 - 6];
-        this.positionsRect[this.count1 * 3 - 11] = this.positionsRect[this.count1 * 3 - 5];
-        this.positionsRect[this.count1 * 3 - 10] = this.positionsRect[this.count1 * 3 - 4];
-
-        this.positionsRect[this.count1 * 3 - 3] = 0;
-        this.positionsRect[this.count1 * 3 - 2] = 0;
-        this.positionsRect[this.count1 * 3 - 1] = 0;
-
-        this.positionsRect[this.count1 * 3 - 6] = 0;
-        this.positionsRect[this.count1 * 3 - 5] = 0;
-        this.positionsRect[this.count1 * 3 - 4] = 0;
-
-        this.positionsDown[this.count1 * 3 - 9] = this.positionsDown[this.count1 * 3 - 3];
-        this.positionsDown[this.count1 * 3 - 8] = this.positionsDown[this.count1 * 3 - 2];
-        this.positionsDown[this.count1 * 3 - 7] = this.positionsDown[this.count1 * 3 - 1];
-
-        this.positionsDown[this.count1 * 3 - 12] = this.positionsDown[this.count1 * 3 - 6];
-        this.positionsDown[this.count1 * 3 - 11] = this.positionsDown[this.count1 * 3 - 5];
-        this.positionsDown[this.count1 * 3 - 10] = this.positionsDown[this.count1 * 3 - 4];
-
-        this.positionsDown[this.count1 * 3 - 3] = 0;
-        this.positionsDown[this.count1 * 3 - 2] = 0;
-        this.positionsDown[this.count1 * 3 - 1] = 0;
-
-        this.positionsDown[this.count1 * 3 - 6] = 0;
-        this.positionsDown[this.count1 * 3 - 5] = 0;
-        this.positionsDown[this.count1 * 3 - 4] = 0;
-
-        this.removeObject(this.groupProportions, this.mapProportions.get(((this.count - 2)*2).toString() + "_" + this.numWalls.toString()));
-        this.mapProportions.delete(((this.count - 2)*2).toString() + "_" + this.numWalls.toString());
-        this.removeObject(this.groupProportions, this.mapProportions.get(((this.count-2)*2+1 ).toString() + "_" + this.numWalls.toString()));
-        this.mapProportions.delete(((this.count-2)*2+1 ).toString() + "_" + this.numWalls.toString());
-
-        this.count--;
-        this.count1 -= 2;
-
-        var currentWall = {
-            x0: this.positions[this.count * 3 - 9],
-            y0: this.positions[this.count * 3 - 8],
-            z0: this.positions[this.count * 3 - 7],
-            x1: this.positions[this.count * 3 - 6],
-            y1: this.positions[this.count * 3 - 5],
-            z1: this.positions[this.count * 3 - 4],
-        };
-
-        var vectors = this.getVectors(currentWall, this.widthWall * this.scalePlane);
-
-        this.tempCoord.x = vectors.c.x;
-        this.tempCoord.y = vectors.c.y;
-
-        this.updateLine(new THREE.Vector3(this.positions[this.count * 3 - 3], this.positions[this.count * 3 - 2], this.positions[this.count * 3 - 1]));
-        this.line.geometry.setDrawRange(0, this.count);
-        this.lineRect.geometry.setDrawRange(0, this.count1);
-        this.lineDown.geometry.setDrawRange(0, this.count1);
-    }
-};
-
-ControlDesigner.prototype.addRectangle = function (coord, depth) {
-
-    var currentWall = {
-        x0: this.positions[this.count * 3 - 6],
-        y0: this.positions[this.count * 3 - 5],
-        z0: this.positions[this.count * 3 - 4],
-        x1: coord.x,
-        y1: coord.y,
-        z1: coord.z,
-    };
-
-    var vectors = this.getVectors(currentWall, depth);
-
-    this.positionsRect[this.count1 * 3 + 0] = vectors.c.x;
-    this.positionsRect[this.count1 * 3 + 1] = vectors.c.y;
-    this.positionsRect[this.count1 * 3 + 2] = coord.z;
-
-    this.tempCoord.x = this.positionsRect[this.count1 * 3 - 3];
-    this.tempCoord.y = this.positionsRect[this.count1 * 3 - 2];
-
-    this.positionsDown[this.count1 * 3 + 0] = vectors.c.x;
-    this.positionsDown[this.count1 * 3 + 1] = vectors.c.y;
-    this.positionsDown[this.count1 * 3 + 2] = coord.z;
-
-    this.positionsDown[this.count1 * 3 + 3] = vectors.c.x;
-    this.positionsDown[this.count1 * 3 + 4] = vectors.c.y;
-    this.positionsDown[this.count1 * 3 + 5] = coord.z;
-
-    this.count1++;
-    this.positionsRect[this.count1 * 3 + 0] = vectors.c.x;
-    this.positionsRect[this.count1 * 3 + 1] = vectors.c.y;
-    this.positionsRect[this.count1 * 3 + 2] = coord.z;
-
-    this.positionsDown[this.count1 * 3 + 0] = vectors.c.x;
-    this.positionsDown[this.count1 * 3 + 1] = vectors.c.y;
-    this.positionsDown[this.count1 * 3 + 2] = coord.z;
-
-    this.positionsDown[this.count1 * 3 + 3] = vectors.c.x;
-    this.positionsDown[this.count1 * 3 + 4] = vectors.c.y;
-    this.positionsDown[this.count1 * 3 + 5] = coord.z;
-
-    this.count1++;
-    this.lineRect.geometry.setDrawRange(0, this.count1);
-    this.lineDown.geometry.setDrawRange(0, this.count1);
-};
-
-ControlDesigner.prototype.updateRectangle = function (coord, depth) {
-    var previousWall = {
-        x0: this.positions[this.count * 3 - 9],
-        y0: this.positions[this.count * 3 - 8],
-        z0: this.positions[this.count * 3 - 7],
-        x1: this.positions[this.count * 3 - 6],
-        y1: this.positions[this.count * 3 - 5],
-        z1: this.positions[this.count * 3 - 4],
-    };
-    var currentWall = {
-        x0: this.positions[this.count * 3 - 6],
-        y0: this.positions[this.count * 3 - 5],
-        z0: this.positions[this.count * 3 - 4],
-        x1: coord.x,
-        y1: coord.y,
-        z1: coord.z,
-    };
-
-    var angle = this.getAngle(
-        new THREE.Vector2(previousWall.x0 - previousWall.x1, previousWall.y0 - previousWall.y1),
-        new THREE.Vector2(currentWall.x0 - currentWall.x1, currentWall.y0 - currentWall.y1)
-    );
-    // console.log("angle", angle);
-    //2.5 <
-
-    var vectors = this.getVectors(currentWall, depth);
-    var vectors1 = this.getVectors(previousWall, depth);
-    var xcv = (vectors.NvectorA.dot( vectors1.NvectorA ));
-    // console.log("xcv", xcv);
-
-    var f = new THREE.Vector2(
-        (this.positions[this.count * 3 - 6] - ((this.tempCoord.x) ? (this.tempCoord.x + vectors.a.x) / 2 : vectors.a.x)),
-        (this.positions[this.count * 3 - 5] - ((this.tempCoord.y) ? (this.tempCoord.y + vectors.a.y) / 2 : vectors.a.y))
-    );
-    f = f.normalize();
-    // console.log("f", f);
-
-    var mLen = depth / (f.dot( vectors.NvectorA ));
-    // console.log("mLen = "+mLen);
-
-    var nS1 = f.multiplyScalar(mLen * depth);
-
-    var O = new THREE.Vector2();
-    O.subVectors(new THREE.Vector2(this.positions[this.count * 3 - 6], this.positions[this.count * 3 - 5]), nS1);
-
-    if (vectors.NvectorA.length()) {
-        if (Math.acos(angle) <= 2.5) {
-            this.positionsRect[this.count1 * 3 - 3] = vectors.c.x;
-            this.positionsRect[this.count1 * 3 - 2] = vectors.c.y;
-            this.positionsRect[this.count1 * 3 - 1] = coord.z;
-
-            this.positionsRect[this.count1 * 3 - 6] = vectors.c.x;
-            this.positionsRect[this.count1 * 3 - 5] = vectors.c.y;
-            this.positionsRect[this.count1 * 3 - 4] = coord.z;
-
-            this.positionsRect[this.count1 * 3 - 9] = O.x;
-            this.positionsRect[this.count1 * 3 - 8] = O.y;
-            this.positionsRect[this.count1 * 3 - 7] = coord.z;
-
-            this.positionsRect[this.count1 * 3 - 12] = O.x;
-            this.positionsRect[this.count1 * 3 - 11] = O.y;
-            this.positionsRect[this.count1 * 3 - 10] = coord.z;
-
-            this.positionsDown[this.count1 * 3 - 12] = O.x;
-            this.positionsDown[this.count1 * 3 - 11] = O.y;
-            this.positionsDown[this.count1 * 3 - 10] = coord.z;
-
-            this.positionsDown[this.count1 * 3 - 9] = currentWall.x0;
-            this.positionsDown[this.count1 * 3 - 8] = currentWall.y0;
-            this.positionsDown[this.count1 * 3 - 7] = coord.z;
-
-            this.positionsDown[this.count1 * 3 - 6] = vectors.c.x;
-            this.positionsDown[this.count1 * 3 - 5] = vectors.c.y;
-            this.positionsDown[this.count1 * 3 - 4] = coord.z;
-
-            this.positionsDown[this.count1 * 3 - 3] = currentWall.x1;
-            this.positionsDown[this.count1 * 3 - 2] = currentWall.y1;
-            this.positionsDown[this.count1 * 3 - 1] = coord.z;
-        } else {
-            this.positionsRect[this.count1 * 3 - 3] = vectors.c.x;
-            this.positionsRect[this.count1 * 3 - 2] = vectors.c.y;
-            this.positionsRect[this.count1 * 3 - 1] = coord.z;
-
-            this.positionsRect[this.count1 * 3 - 6] = vectors.c.x;
-            this.positionsRect[this.count1 * 3 - 5] = vectors.c.y;
-            this.positionsRect[this.count1 * 3 - 4] = coord.z;
-
-            /////
-            /* this.positionsRect[this.count1 * 3 - 9] = vectors.a.x;
-             this.positionsRect[this.count1 * 3 - 8] = vectors.a.y;
-             this.positionsRect[this.count1 * 3 - 7] = coord.z;
-
-             this.positionsRect[this.count1 * 3 - 12] = vectors1.c.x;
-             this.positionsRect[this.count1 * 3 - 11] = vectors1.c.y;
-             this.positionsRect[this.count1 * 3 - 10] = coord.z;*/
-
-            this.positionsRect[this.count1 * 3 - 9] = O.x;
-            this.positionsRect[this.count1 * 3 - 8] = O.y;
-            this.positionsRect[this.count1 * 3 - 7] = coord.z;
-
-            this.positionsRect[this.count1 * 3 - 12] = O.x;
-            this.positionsRect[this.count1 * 3 - 11] = O.y;
-            this.positionsRect[this.count1 * 3 - 10] = coord.z;
-
-            this.positionsDown[this.count1 * 3 - 12] = O.x;
-            this.positionsDown[this.count1 * 3 - 11] = O.y;
-            this.positionsDown[this.count1 * 3 - 10] = coord.z;
-
-            this.positionsDown[this.count1 * 3 - 9] = currentWall.x0;
-            this.positionsDown[this.count1 * 3 - 8] = currentWall.y0;
-            this.positionsDown[this.count1 * 3 - 7] = coord.z;
-
-            this.positionsDown[this.count1 * 3 - 6] = vectors.c.x;
-            this.positionsDown[this.count1 * 3 - 5] = vectors.c.y;
-            this.positionsDown[this.count1 * 3 - 4] = coord.z;
-
-            this.positionsDown[this.count1 * 3 - 3] = currentWall.x1;
-            this.positionsDown[this.count1 * 3 - 2] = currentWall.y1;
-            this.positionsDown[this.count1 * 3 - 1] = coord.z;
-
-        }
-    } else {
-
-        /* this.positionsDown[this.count * 3 - 3] = this.positionsDown[this.count * 3 - 6];
-         this.positionsDown[this.count * 3 - 2] = this.positionsDown[this.count * 3 - 5];
-         this.positionsDown[this.count * 3 - 1] = this.positionsDown[this.count * 3 - 4];*/
-
-        /* this.positionsRect[this.count1 * 3 - 3] = this.positionsRect[this.count1 * 3 - 6];
-         this.positionsRect[this.count1 * 3 - 2] = this.positionsRect[this.count1 * 3 - 5];
-         this.positionsRect[this.count1 * 3 - 1] = this.positionsRect[this.count1 * 3 - 4];
-
-         this.positionsRect[this.count1 * 3 - 9] = this.positionsRect[this.count1 * 3 - 12];
-         this.positionsRect[this.count1 * 3 - 8] = this.positionsRect[this.count1 * 3 - 11];
-         this.positionsRect[this.count1 * 3 - 7] = this.positionsRect[this.count1 * 3 - 10];*/
-    }
-
-  if (this.count > 1) {
-
-      if (this.positions[this.count * 3 - 6] === this.positions[this.count * 3 - 3] &&
-          this.positions[this.count * 3 - 5] === this.positions[this.count * 3 - 2] &&
-          this.positions[this.count * 3 - 4] === this.positions[this.count * 3 - 1]) {
-
-      } else {
-          this.removeObject(this.groupProportions, this.mapProportions.get(((this.count - 2)*2).toString() + "_" + this.numWalls.toString()));
-          var start = new THREE.Vector2(this.positions[this.count * 3 - 6], this.positions[this.count * 3 - 5], this.positions[this.count * 3 - 4]);
-          var end = new THREE.Vector2(this.positions[this.count * 3 - 3], this.positions[this.count * 3 - 2], this.positions[this.count * 3 - 1]);
-          this.positionProportions(start, end, (this.count - 2)*2, this.numWalls.toString());
-
-     /*     this.removeObject(this.groupProportions, this.mapProportions.get(((this.count - 2) * 4 + 1).toString() + "_" + this.numWalls.toString()));
-          var end = new THREE.Vector2(this.positionsDown[this.count1 * 3 - 6], this.positionsDown[this.count1 * 3 - 5], this.positionsDown[this.count1 * 3 - 4]);
-          var start = new THREE.Vector2(this.positionsDown[this.count1 * 3 - 3], this.positionsDown[this.count1 * 3 - 2], this.positionsDown[this.count1 * 3 - 1]);
-          this.positionProportions(start, end, (this.count - 2) * 4 + 1, this.numWalls.toString());*/
-
-          this.removeObject(this.groupProportions, this.mapProportions.get(((this.count-2)*2+1 ).toString() + "_" + this.numWalls.toString()));
-          var end = new THREE.Vector2(this.positionsRect[this.count1 * 3 - 9], this.positionsRect[this.count1 * 3 - 8], this.positionsRect[this.count1 * 3 - 7]);
-          var start = new THREE.Vector2(this.positionsRect[this.count1 * 3 - 3], this.positionsRect[this.count1 * 3 - 2], this.positionsRect[this.count1 * 3 - 1]);
-          this.positionProportions(start, end, (this.count-2)*2+1 , this.numWalls.toString());
-
-      /*    this.removeObject(this.groupProportions, this.mapProportions.get(((this.count - 2) * 4 + 3).toString() + "_" + this.numWalls.toString()));
-          var start = new THREE.Vector2(this.positionsDown[this.count1 * 3 - 12], this.positionsDown[this.count1 * 3 - 11], this.positionsDown[this.count1 * 3 - 10]);
-          var end = new THREE.Vector2(this.positionsDown[this.count1 * 3 - 9], this.positionsDown[this.count1 * 3 - 8], this.positionsDown[this.count1 * 3 - 7]);
-          this.positionProportions(start, end, (this.count - 2) * 4 + 3, this.numWalls.toString());*/
-
-             if (this.count > 2) {
-                 this.removeObject(this.groupProportions, this.mapProportions.get(((this.count-2)*2-1).toString() + "_" + this.numWalls.toString()));
-                 var end = new THREE.Vector2(this.positionsRect[this.count1 * 3 - 15], this.positionsRect[this.count1 * 3 - 14], this.positionsRect[this.count1 * 3 - 13]);
-                 var start = new THREE.Vector2(this.positionsRect[this.count1 * 3 - 9], this.positionsRect[this.count1 * 3 - 8], this.positionsRect[this.count1 * 3 - 7]);
-                 this.positionProportions(start, end, (this.count-2)*2-1, this.numWalls.toString());
-             }
-      }
-  }
-
-    this.lineRect.geometry.attributes.position.needsUpdate = true;
-    this.lineDown.geometry.attributes.position.needsUpdate = true;
-};
-
-ControlDesigner.prototype.getAngle = function (v1, v2) {
-    var cosA = v1.dot(v2)/(v1.length() * v2.length());
-    if (cosA) {
-        return cosA;
-    } else {
-        return 0;
-    }
-};
-
-ControlDesigner.prototype.getVectors = function (vector, depth) {
-
-    var NvectorA = new THREE.Vector2(-(vector.y0 - vector.y1), (vector.x0 - vector.x1));
-    NvectorA = NvectorA.normalize();
-
-    var nS = NvectorA.multiplyScalar(depth);
-    var a, b, c, d;
-    var p0 = new THREE.Vector2( vector.x0, vector.y0 );
-    var p1 = new THREE.Vector2( vector.x1, vector.y1 );
-
-    a = new THREE.Vector2();
-    a.subVectors(p0, nS);
-
-    b = new THREE.Vector2();
-    b.addVectors(p0, nS);
-
-    c = new THREE.Vector2();
-    c.subVectors(p1, nS);
-    d = new THREE.Vector2();
-    d.addVectors(p1, nS);
-    return {
-        a: a,
-        b: b,
-        c: c,
-        d: d,
-        NvectorA: NvectorA
-    }
-};
-
-ControlDesigner.prototype.getLength = function (posMouse){
-    var vec = new THREE.Vector3(posMouse[0] - posMouse[3], posMouse[1] - posMouse[4], posMouse[2] - posMouse[5]);
-    var l = vec.length();
-    // console.log("l", l);
-    return l;
-};
-
-ControlDesigner.prototype.removeIntersectObjectsArray = function (array, object) {
-    if (array.length) {
-        var index = array.indexOf(object);
-        if (index !== -1) {
-            array.splice(index, 1);
+            pathPts.push(new THREE.Vector2(this.positionsRect[i * 3 + 0], this.positionsRect[i * 3 + 1]));
+            this.addPointObject(this.positionsRect[i * 3 + 0], this.positionsRect[i * 3 + 1], this.positionsRect[i * 3 + 2], num);
+            this.removeObject(this.groupProportions, this.mapProportions.get((pathPts.length - 2).toString()+ "_" + this.numWalls.toString()));
+            var start = new THREE.Vector2(pathPts[pathPts.length - 2].x, pathPts[pathPts.length - 2].y, pathPts[pathPts.length - 2].z);
+            var end = new THREE.Vector2(pathPts[pathPts.length - 1].x, pathPts[pathPts.length - 1].y, pathPts[pathPts.length - 1].z);
+            this.positionProportions(start, end, pathPts.length - 2, this.numWalls.toString());
+            num++;
         }
     }
-};
+    /*
+        for (var i = 0; i < pathPts.length; i++) {
+            if (i !== 0) {
+                var start = new THREE.Vector2(pathPts[i - 1].x, pathPts[i - 1].y, pathPts[i - 1].z);
+                var end = new THREE.Vector2(pathPts[i].x, pathPts[i].y, pathPts[i].z);
+                this.positionProportions(start, end, i, this.numWalls.toString());
+            } else {
+                var start = new THREE.Vector2(pathPts[pathPts.length - 1].x, pathPts[pathPts.length - 1].y, pathPts[pathPts.length - 1].z);
+                var end = new THREE.Vector2(pathPts[i].x, pathPts[i].y, pathPts[i].z);
+                this.positionProportions(start, end, i, this.numWalls.toString());
+            }
+        }*/
 
-ControlDesigner.prototype.removeObject = function ( groupObject, object ) {
-    //groupObject.remove(object);
-    if (object) {
-        groupObject.remove(groupObject.getObjectByName(object.name));
-    }
-  /*  if (object.geometry) {
-        object.geometry.dispose();
-    }*/
-  /*  if (object.material) {
-        object.material.dispose();
-    }
-    if (object.texture) {
-        object.texture.dispose();
-    }*/
-};
-
-ControlDesigner.prototype.removeLines = function ( groupObject ) {
-    for (var i = 0; i < groupObject.children.length; i++) {
-        var obj = groupObject.children[i];
-        groupObject.remove(obj);
-        if (obj.geometry) {
-            obj.geometry.dispose();
-        }
-        if (obj.material) {
-            obj.material.dispose();
-        }
-        if (obj.texture) {
-            obj.texture.dispose();
-        }
-    }
-    groupObject.children = [];
+    var inputShape = new THREE.Shape( pathPts );
+    var extrudeSettings = { depth: this.heightWall * this.scalePlane, bevelEnabled: false, steps: 1 };
+    this.addShape( inputShape, extrudeSettings, "#9cc2d7", "#39424e", 0, 0, 0, 0, 0, 0, this.scalePlane, this.numWalls );
+    this.addLineShape( inputShape, extrudeSettings, "#d70003", 0, 0, 0, 0, 0, 0, 1, this.numWalls );
+    this.numWalls++;
 };
 
 ControlDesigner.prototype.updateExtrudePath = function (position) {
@@ -1078,6 +1204,136 @@ ControlDesigner.prototype.updateExtrudePath = function (position) {
         this.addShape(inputShape, extrudeSettings, "#9cc2d7", "#39424e", 0, 0, 0, 0, 0, 0, this.scalePlane, this.updatedWall);
         this.addLineShape(inputShape, extrudeSettings, "#d70003", 0, 0, 0, 0, 0, 0, 1, this.updatedWall);
     }
+};
+
+ControlDesigner.prototype.addLineShape = function ( shape, extrudeSettings, color, x, y, z, rx, ry, rz, s, nameWall ) {
+    // lines
+    shape.autoClose = true;
+    var points = shape.getPoints();
+    var geometryPoints = new THREE.BufferGeometry().setFromPoints( points );
+    // solid this.line
+    var line = new THREE.Line( geometryPoints, new THREE.LineBasicMaterial( { color: color, linewidth: 10/*, transparent: true */} ) );
+    line.position.set( x, y, z + 500 );
+    line.rotation.set( rx, ry, rz );
+    line.scale.set( s, s, s );
+    line.name = "line_" + nameWall.toString();
+    this.mapLines.set(line.name, line);
+    this.groupLinesUpdate.add( line );
+};
+
+ControlDesigner.prototype.addShape = function ( shape, extrudeSettings, colorCup, colorWall, x, y, z, rx, ry, rz, s, nameWall ) {
+    // extruded shape
+    var geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
+    geometry.rotateX(-Math.PI / 2);
+    var mesh = new THREE.Mesh( geometry, new THREE.MeshPhongMaterial( { color: colorWall/*, transparent: true*/, side: THREE.DoubleSide } ) );
+    mesh.position.set( x, y, z );
+    mesh.rotation.set( rx, ry, rz );
+    mesh.scale.set( s, s, s );
+    mesh.name = "walls_" + nameWall.toString();
+    // mesh.castShadow = true;
+    this.mapWalls.set(mesh.name, mesh);
+    this.objects.push(mesh);
+    this.groupExtrude.add( mesh );
+    // flat shape
+    var geometry = new THREE.ShapeBufferGeometry( shape );
+    var mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { color: colorCup/*, wireframe: true*/ } ) );
+    mesh.position.set( x, y, z + 700 );
+    mesh.rotation.set( rx, ry, rz );
+    mesh.scale.set( 1, 1, 1 );
+    mesh.name = "wallsCup_" + nameWall.toString();
+    this.mapWallsCup.set(mesh.name, mesh);
+    this.objects.push(mesh);
+    this.groupPlane.add( mesh );
+    //points
+};
+
+ControlDesigner.prototype.booleanOperation = function ( obj1, obj2 ){
+
+    var mat = new THREE.MeshBasicMaterial( { color: '#15ff00', side: THREE.DoubleSide } );
+
+    var obj1BSP = new ThreeBSP( obj1 );
+    var obj2BSP = new ThreeBSP( obj2 );
+
+    var newSubtractBSP = obj1BSP.subtract( obj2BSP ).toGeometry();
+    var newUnionBSP = obj1BSP.union( obj2BSP ).toGeometry();
+    var newIntersectBSP = obj1BSP.intersect( obj2BSP ).toGeometry();
+
+    var mesh = new THREE.Mesh( newSubtractBSP, obj1.material );
+    mesh.geometry.computeFaceNormals();
+    return mesh;
+};
+
+ControlDesigner.prototype.createDoor = function (){
+
+    if (this.window) {
+        this.removeObject(this.groupExtrude, this.window);
+        this.window = undefined;
+    }
+
+    var geom = new THREE.BoxGeometry( 1, 1, 1 );
+    var mat = new THREE.MeshPhongMaterial({color: "#ff00fa"});
+    this.door = new THREE.Mesh( geom, mat );
+    this.door.scale.set(this.widthDoor, this.heightDoor, this.depthDoor);
+    this.door.name = "door";
+    this.groupExtrude.add(this.door);
+};
+
+ControlDesigner.prototype.createWindow = function (){
+
+    if (this.door) {
+        this.removeObject(this.groupExtrude, this.door);
+        this.door = undefined;
+    }
+
+    var geom = new THREE.BoxGeometry( 1, 1, 1 );
+    var mat = new THREE.MeshPhongMaterial({color: "#ff00fa"});
+    this.window = new THREE.Mesh( geom, mat );
+    this.window.scale.set(this.widthWindow, this.heightWindow, this.depthWindow);
+    this.window.name = "window";
+    this.groupExtrude.add(this.window);
+};
+
+/////////////// help function
+ControlDesigner.prototype.removeIntersectObjectsArray = function (array, object) {
+    if (array.length) {
+        var index = array.indexOf(object);
+        if (index !== -1) {
+            array.splice(index, 1);
+        }
+    }
+};
+
+ControlDesigner.prototype.removeObject = function ( groupObject, object ) {
+    //groupObject.remove(object);
+    if (object) {
+        groupObject.remove(groupObject.getObjectByName(object.name));
+    }
+    /*  if (object.geometry) {
+          object.geometry.dispose();
+      }*/
+    /*  if (object.material) {
+          object.material.dispose();
+      }
+      if (object.texture) {
+          object.texture.dispose();
+      }*/
+};
+
+ControlDesigner.prototype.removeLines = function ( groupObject ) {
+    for (var i = 0; i < groupObject.children.length; i++) {
+        var obj = groupObject.children[i];
+        groupObject.remove(obj);
+        if (obj.geometry) {
+            obj.geometry.dispose();
+        }
+        if (obj.material) {
+            obj.material.dispose();
+        }
+        if (obj.texture) {
+            obj.texture.dispose();
+        }
+    }
+    groupObject.children = [];
 };
 
 ControlDesigner.prototype.crossingWalls = function () {
@@ -1250,197 +1506,6 @@ ControlDesigner.prototype.crossSection = function (start1, end1, start2, end2) {
     return ret;
 };
 
-ControlDesigner.prototype.positionProportions = function (start, end, num, numWalls) {
-
-    var lengthVector = new THREE.Vector2(start.x - end.x, start.y - end.y).length();
-
-    if (lengthVector > 0) {
-        var angle;
-
-        var vector = {
-            x0: start.x,
-            y0: start.y,
-            z0: start.z,
-            x1: end.x,
-            y1: end.y,
-            z1: end.z,
-        };
-
-        var v = this.getVectors(vector, 10);
-        var a = v.b;
-        var b = v.d;
-        var middle = new THREE.Vector3((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2);
-
-        if (start.x > end.x) {
-            if (start.y < end.y) {
-                angle = this.getAngle(
-                    new THREE.Vector2(1, 0),
-                    new THREE.Vector2(start.x - end.x, start.y - end.y)
-                );
-                angle = Math.acos(angle);
-            } else  if (start.y > end.y) {
-
-                angle = this.getAngle(
-                    new THREE.Vector2(1, 0),
-                    new THREE.Vector2(end.x - start.x, end.y - start.y)
-                );
-                angle = Math.acos(angle) + Math.PI;
-            } else  if (start.y === end.y) {
-                angle = 0;
-            }
-        } else if (start.x < end.x) {
-            if (start.y < end.y) {
-                angle = this.getAngle(
-                    new THREE.Vector2(1, 0),
-                    new THREE.Vector2(start.x - end.x, start.y - end.y)
-                );
-                angle = Math.acos(angle) + Math.PI;
-            } else if (start.y > end.y){
-
-                angle = this.getAngle(
-                    new THREE.Vector2(1, 0),
-                    new THREE.Vector2(end.x - start.x, end.y - start.y)
-                );
-                angle = Math.acos(angle);
-            } else  if (start.y === end.y) {
-                angle = 0;
-            }
-
-        } else if (start.x === end.x) {
-
-
-            angle = -Math.PI / 2 ;
-
-        }
-
-        var spritey = this.makeTextSprite( Math.round(lengthVector / this.scalePlane), {
-            fontsize: 12,
-            backgroundColor: {r: 255, g: 0, b: 0, a: 1.0}
-        }, angle, num, numWalls);
-        spritey.position.copy(middle);
-        if (lengthVector <= 30) {
-            spritey.visible = false;
-        }
-        this.groupProportions.add(spritey);
-        this.mapProportions.set(spritey.name, spritey);
-    }
-};
-
-ControlDesigner.prototype.extrudePath = function () {
-
-    // this.crossingWalls();
-
-    var num = 0;
-    var pathPts = [];
-
-    for (var i = 0; i < this.count; i++) {
-        pathPts.push( new THREE.Vector2 ( this.positions[i * 3 + 0], this.positions[i * 3 + 1] ) );
-        this.addPointObject(this.positions[i * 3 + 0], this.positions[i * 3 + 1], this.positions[i * 3 + 2], num);
-        if (i !== 0) {
-            this.removeObject(this.groupProportions, this.mapProportions.get((num-1).toString()+ "_" + this.numWalls.toString()));
-            var start = new THREE.Vector2(this.positions[i * 3 - 3], this.positions[i * 3 - 2], this.positions[i * 3 - 1]);
-            var end = new THREE.Vector2(this.positions[i * 3 + 0], this.positions[i * 3 + 1], this.positions[i * 3 + 2]);
-            this.positionProportions(start, end, num-1, this.numWalls.toString());
-        }
-        num++;
-    }
-
-    for (var i = this.count1 - 1; i > -1; i--) {
-
-        if (i !== this.count1 - 1) {
-            if (
-                this.positionsRect[i * 3 + 0] === this.positionsRect[i * 3 + 3] &&
-                this.positionsRect[i * 3 + 1] === this.positionsRect[i * 3 + 4] &&
-                this.positionsRect[i * 3 + 2] === this.positionsRect[i * 3 + 5]
-            ) {
-                if (i === 0) {
-                    this.removeObject(this.groupProportions, this.mapProportions.get((pathPts.length - 1).toString()+ "_" + this.numWalls.toString()));
-                    var start = new THREE.Vector2(pathPts[pathPts.length - 1].x, pathPts[pathPts.length - 1].y, pathPts[pathPts.length - 1].z);
-                    var end = new THREE.Vector2(pathPts[0].x, pathPts[0].y, pathPts[0].z);
-                    this.positionProportions(start, end, pathPts.length - 1, this.numWalls.toString());
-                }
-            } else {
-                pathPts.push(new THREE.Vector2(this.positionsRect[i * 3 + 0], this.positionsRect[i * 3 + 1]));
-                this.addPointObject(this.positionsRect[i * 3 + 0], this.positionsRect[i * 3 + 1], this.positionsRect[i * 3 + 2], num);
-                if (i !== 0) {
-                    this.removeObject(this.groupProportions, this.mapProportions.get((pathPts.length - 2).toString()+ "_" + this.numWalls.toString()));
-                    var start = new THREE.Vector2(pathPts[pathPts.length - 2].x, pathPts[pathPts.length - 2].y, pathPts[pathPts.length - 2].z);
-                    var end = new THREE.Vector2(pathPts[pathPts.length - 1].x, pathPts[pathPts.length - 1].y, pathPts[pathPts.length - 1].z);
-                    this.positionProportions(start, end, pathPts.length - 2, this.numWalls.toString());
-                }
-                num++;
-            }
-        } else {
-            pathPts.push(new THREE.Vector2(this.positionsRect[i * 3 + 0], this.positionsRect[i * 3 + 1]));
-            this.addPointObject(this.positionsRect[i * 3 + 0], this.positionsRect[i * 3 + 1], this.positionsRect[i * 3 + 2], num);
-            this.removeObject(this.groupProportions, this.mapProportions.get((pathPts.length - 2).toString()+ "_" + this.numWalls.toString()));
-            var start = new THREE.Vector2(pathPts[pathPts.length - 2].x, pathPts[pathPts.length - 2].y, pathPts[pathPts.length - 2].z);
-            var end = new THREE.Vector2(pathPts[pathPts.length - 1].x, pathPts[pathPts.length - 1].y, pathPts[pathPts.length - 1].z);
-            this.positionProportions(start, end, pathPts.length - 2, this.numWalls.toString());
-            num++;
-        }
-    }
-/*
-    for (var i = 0; i < pathPts.length; i++) {
-        if (i !== 0) {
-            var start = new THREE.Vector2(pathPts[i - 1].x, pathPts[i - 1].y, pathPts[i - 1].z);
-            var end = new THREE.Vector2(pathPts[i].x, pathPts[i].y, pathPts[i].z);
-            this.positionProportions(start, end, i, this.numWalls.toString());
-        } else {
-            var start = new THREE.Vector2(pathPts[pathPts.length - 1].x, pathPts[pathPts.length - 1].y, pathPts[pathPts.length - 1].z);
-            var end = new THREE.Vector2(pathPts[i].x, pathPts[i].y, pathPts[i].z);
-            this.positionProportions(start, end, i, this.numWalls.toString());
-        }
-    }*/
-
-    var inputShape = new THREE.Shape( pathPts );
-    var extrudeSettings = { depth: this.heightWall * this.scalePlane, bevelEnabled: false, steps: 1 };
-    this.addShape( inputShape, extrudeSettings, "#9cc2d7", "#39424e", 0, 0, 0, 0, 0, 0, this.scalePlane, this.numWalls );
-    this.addLineShape( inputShape, extrudeSettings, "#d70003", 0, 0, 0, 0, 0, 0, 1, this.numWalls );
-    this.numWalls++;
-};
-
-ControlDesigner.prototype.addLineShape = function ( shape, extrudeSettings, color, x, y, z, rx, ry, rz, s, nameWall ) {
-    // lines
-    shape.autoClose = true;
-    var points = shape.getPoints();
-    var geometryPoints = new THREE.BufferGeometry().setFromPoints( points );
-    // solid this.line
-    var line = new THREE.Line( geometryPoints, new THREE.LineBasicMaterial( { color: color, linewidth: 10/*, transparent: true */} ) );
-    line.position.set( x, y, z + 500 );
-    line.rotation.set( rx, ry, rz );
-    line.scale.set( s, s, s );
-    line.name = "line_" + nameWall.toString();
-    this.mapLines.set(line.name, line);
-    this.groupLinesUpdate.add( line );
-};
-
-ControlDesigner.prototype.addShape = function ( shape, extrudeSettings, colorCup, colorWall, x, y, z, rx, ry, rz, s, nameWall ) {
-    // extruded shape
-    var geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
-    geometry.rotateX(-Math.PI / 2);
-    var mesh = new THREE.Mesh( geometry, new THREE.MeshPhongMaterial( { color: colorWall/*, transparent: true*/, side: THREE.DoubleSide } ) );
-    mesh.position.set( x, y, z );
-    mesh.rotation.set( rx, ry, rz );
-    mesh.scale.set( s, s, s );
-    mesh.name = "walls_" + nameWall.toString();
-    // mesh.castShadow = true;
-    this.mapWalls.set(mesh.name, mesh);
-    this.objects.push(mesh);
-    this.groupExtrude.add( mesh );
-    // flat shape
-    var geometry = new THREE.ShapeBufferGeometry( shape );
-    var mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { color: colorCup/*, wireframe: true*/ } ) );
-    mesh.position.set( x, y, z + 700 );
-    mesh.rotation.set( rx, ry, rz );
-    mesh.scale.set( 1, 1, 1 );
-    mesh.name = "wallsCup_" + nameWall.toString();
-    this.mapWallsCup.set(mesh.name, mesh);
-    this.objects.push(mesh);
-    this.groupPlane.add( mesh );
-    //points
-};
-
 ControlDesigner.prototype.unselectObject = function (object) {
     if (object) {
         var name = object.name.split('_');
@@ -1504,6 +1569,52 @@ ControlDesigner.prototype.calculateScale = function (posMouse){
     }
 };
 
+ControlDesigner.prototype.getAngle = function (v1, v2) {
+    var cosA = v1.dot(v2)/(v1.length() * v2.length());
+    if (cosA) {
+        return cosA;
+    } else {
+        return 0;
+    }
+};
+
+ControlDesigner.prototype.getVectors = function (vector, depth) {
+
+    var NvectorA = new THREE.Vector2(-(vector.y0 - vector.y1), (vector.x0 - vector.x1));
+    NvectorA = NvectorA.normalize();
+
+    var nS = NvectorA.multiplyScalar(depth);
+    var a, b, c, d;
+    var p0 = new THREE.Vector2( vector.x0, vector.y0 );
+    var p1 = new THREE.Vector2( vector.x1, vector.y1 );
+
+    a = new THREE.Vector2();
+    a.subVectors(p0, nS);
+
+    b = new THREE.Vector2();
+    b.addVectors(p0, nS);
+
+    c = new THREE.Vector2();
+    c.subVectors(p1, nS);
+    d = new THREE.Vector2();
+    d.addVectors(p1, nS);
+    return {
+        a: a,
+        b: b,
+        c: c,
+        d: d,
+        NvectorA: NvectorA
+    }
+};
+
+ControlDesigner.prototype.getLength = function (posMouse){
+    var vec = new THREE.Vector3(posMouse[0] - posMouse[3], posMouse[1] - posMouse[4], posMouse[2] - posMouse[5]);
+    var l = vec.length();
+    // console.log("l", l);
+    return l;
+};
+
+/////////////// Mouse event
 ControlDesigner.prototype.mouseMove = function (posMouse){
     this.posMouse.copy( posMouse );
     if (this.selectedInstr) {
@@ -1702,8 +1813,6 @@ ControlDesigner.prototype.mouseMoveDoor = function ( posMouse, intersect ){
     }
 };
 
-
-
 ControlDesigner.prototype.mouseMoveWindow = function ( posMouse, intersect ){
     var arr = intersect.object.name.split('_');
 
@@ -1730,103 +1839,4 @@ ControlDesigner.prototype.mouseMoveWindow = function ( posMouse, intersect ){
             this.window.position.y = +this.fromFloorWindow + this.heightWindow / 2;
         }
     }
-};
-
-ControlDesigner.prototype.makeTextSprite = function ( message, parameters, angle, num, numWalls){
-    function roundRect(ctx, w, h)
-    {
-        ctx.beginPath();
-        ctx.moveTo(w, h);
-        ctx.lineTo(2*w, h);
-        ctx.lineTo(2*w, -h);
-        ctx.lineTo(w, -h);
-        ctx.closePath();
-        ctx.fill();
-    }
-
-    if ( parameters === undefined ) parameters = {};
-
-    var fontface = parameters.hasOwnProperty("fontface") ?
-        parameters["fontface"] : "Arial";
-
-    var fontsize = parameters.hasOwnProperty("fontsize") ?
-        parameters["fontsize"] : 18;
-
-    var backgroundColor = parameters.hasOwnProperty("backgroundColor") ?
-        parameters["backgroundColor"] : { r:255, g:255, b:255, a:1.0 };
-
-    var canvas = document.createElement('canvas');
-    canvas.width = 64;
-    canvas.height = 32;
-    var context = canvas.getContext('2d');
-    context.font = fontsize + "px " + fontface;
-
-    // background color
-    context.fillStyle   = "rgba(" + backgroundColor.r + "," + backgroundColor.g + ","
-        + backgroundColor.b + "," + backgroundColor.a + ")";
-
-    roundRect(context, canvas.width,  canvas.height);
-
-    // text color
-    context.fillStyle = "rgba(0, 0, 0, 1.0)";
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillText( message, canvas.width / 2, canvas.height / 2);
-
-    // canvas contents will be used for a texture
-    var texture = new THREE.Texture(canvas);
-    texture.needsUpdate = true;
-
-    var spriteMaterial = new THREE.SpriteMaterial(
-        { rotation: -angle, map: texture } );
-    var sprite = new THREE.Sprite( spriteMaterial );
-    sprite.name = num.toString() + "_" + numWalls ;
-    sprite.scale.set(80,40,1.0);
-    return sprite;
-};
-
-ControlDesigner.prototype.booleanOperation = function ( obj1, obj2 ){
-
-    var mat = new THREE.MeshBasicMaterial( { color: '#15ff00', side: THREE.DoubleSide } );
-
-    var obj1BSP = new ThreeBSP( obj1 );
-    var obj2BSP = new ThreeBSP( obj2 );
-
-    var newSubtractBSP = obj1BSP.subtract( obj2BSP ).toGeometry();
-    var newUnionBSP = obj1BSP.union( obj2BSP ).toGeometry();
-    var newIntersectBSP = obj1BSP.intersect( obj2BSP ).toGeometry();
-
-    var mesh = new THREE.Mesh( newSubtractBSP, obj1.material );
-    mesh.geometry.computeFaceNormals();
-    return mesh;
-};
-
-ControlDesigner.prototype.createDoor = function (){
-
-    if (this.window) {
-        this.removeObject(this.groupExtrude, this.window);
-        this.window = undefined;
-    }
-
-    var geom = new THREE.BoxGeometry( 1, 1, 1 );
-    var mat = new THREE.MeshPhongMaterial({color: "#ff00fa"});
-    this.door = new THREE.Mesh( geom, mat );
-    this.door.scale.set(this.widthDoor, this.heightDoor, this.depthDoor);
-    this.door.name = "door";
-    this.groupExtrude.add(this.door);
-};
-
-ControlDesigner.prototype.createWindow = function (){
-
-    if (this.door) {
-        this.removeObject(this.groupExtrude, this.door);
-        this.door = undefined;
-    }
-
-    var geom = new THREE.BoxGeometry( 1, 1, 1 );
-    var mat = new THREE.MeshPhongMaterial({color: "#ff00fa"});
-    this.window = new THREE.Mesh( geom, mat );
-    this.window.scale.set(this.widthWindow, this.heightWindow, this.depthWindow);
-    this.window.name = "window";
-    this.groupExtrude.add(this.window);
 };
