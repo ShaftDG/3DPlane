@@ -231,10 +231,20 @@ function init() {
     width.addEventListener('change', function (ev) {
         if (designer.boolDoor) {
             designer.widthDoor = width.value;
-            designer.door.scale.x = designer.widthDoor;
+            if (designer.door) {
+                designer.door.scale.x = designer.widthDoor;
+            }
+            if (designer.door2D) {
+                designer.door2D.scale.x = designer.widthDoor;
+            }
         } else if (designer.boolWindow) {
             designer.widthWindow = width.value;
-            designer.window.scale.x = designer.widthWindow;
+            if (designer.window) {
+                designer.window.scale.x = designer.widthWindow;
+            }
+            if (designer.window2D) {
+                designer.window2D.scale.x = designer.widthWindow;
+            }
         }
     }, false);
 
@@ -246,10 +256,14 @@ function init() {
     height.addEventListener('change', function (ev) {
         if (designer.boolDoor) {
             designer.heightDoor = height.value;
-            designer.door.scale.y = designer.heightDoor;
+            if (designer.door) {
+                designer.door.scale.y = designer.heightDoor;
+            }
         } else if (designer.boolWindow) {
             designer.heightWindow = height.value;
-            designer.window.scale.y = designer.heightWindow;
+            if (designer.window) {
+                designer.window.scale.y = designer.heightWindow;
+            }
         }
     }, false);
 
@@ -261,10 +275,20 @@ function init() {
     depth.addEventListener('change', function (ev) {
         if (designer.boolDoor) {
             designer.depthDoor = depth.value;
-            designer.door.scale.z = designer.depthDoor;
+            if (designer.door) {
+                designer.door.scale.z = designer.depthDoor;
+            }
+            if (designer.door2D) {
+                designer.door2D.scale.y = designer.widthDoor;
+            }
         } else if (designer.boolWindow) {
             designer.depthWindow = depth.value;
-            designer.door.scale.z = designer.depthWindow;
+            if (designer.window) {
+                designer.window.scale.z = designer.depthWindow;
+            }
+            if (designer.window2D) {
+                designer.window2D.scale.y = designer.depthWindow;
+            }
         }
     }, false);
 
@@ -458,12 +482,18 @@ function onDocumentMouseMove( event ) {
                     position: posMouse
                 };
                 posMouse = designer.updateHelperLines(obj);
+            } else {
+                if (designer.boolDoor) {
+                    designer.mouseMoveDoor2D(posMouse, intersect);
+                } else if (designer.boolWindow) {
+                    designer.mouseMoveWindow2D(posMouse, intersect);
+                }
             }
         } else if (camera.isPerspectiveCamera) {
             if (designer.boolDoor) {
-                designer.mouseMoveDoor(posMouse, intersect);
+                designer.mouseMoveDoor3D(posMouse, intersect);
             } else if (designer.boolWindow) {
-                designer.mouseMoveWindow(posMouse, intersect);
+                designer.mouseMoveWindow3D(posMouse, intersect);
             }
         }
         designer.mouseMove(posMouse);
@@ -482,12 +512,17 @@ function leftClick( event ) {
     if (intersects.length > 0) {
         var intersect = intersects[0];
         if (camera.isOrthographicCamera) {
-            designer.mouseClickOrtho( intersect );
+            designer.mouseClick2D( intersect );
+            if (designer.boolDoor) {
+                designer.mouseClickDoor2D(intersect);
+            } else if (designer.boolWindow) {
+                designer.mouseClickWindow2D(intersect);
+            }
         } else if (camera.isPerspectiveCamera) {
             if (designer.boolDoor) {
-                designer.mouseClickDoor(intersect);
+                designer.mouseClickDoor3D(intersect);
             } else if (designer.boolWindow) {
-                designer.mouseClickWindow(intersect);
+                designer.mouseClickWindow3D(intersect);
             }
         }
     } else {
@@ -549,7 +584,7 @@ function changeMagnet(){
 }
 
 function changeDoor(){
-    if (camera.isPerspectiveCamera) {
+    // if (camera.isPerspectiveCamera) {
 
         width.value = designer.widthDoor;
         height.value = designer.heightDoor;
@@ -561,11 +596,11 @@ function changeDoor(){
             designer.boolWindow = false;
         }
         changeColorButton();
-    }
+    // }
 }
 
 function changeWindow(){
-    if (camera.isPerspectiveCamera) {
+    // if (camera.isPerspectiveCamera) {
 
         width.value = designer.widthWindow;
         height.value = designer.heightWindow;
@@ -577,7 +612,7 @@ function changeWindow(){
             designer.boolDoor = false;
         }
         changeColorButton();
-    }
+    // }
 }
 
 function changeScale(){
@@ -720,9 +755,9 @@ function setDefaultPerspectiveCameraPosition () {
 function onKeyDown ( event ) {
     switch ( event.keyCode ) {
         case 82: // r
-            console.log(" designer.mapX",  designer.mapX);
-            console.log(" designer.mapY",  designer.mapY);
-            // console.log(" designer.mapProportions",  designer.mapProportions);
+            // console.log(" designer.mapX",  designer.mapX);
+            // console.log(" designer.mapY",  designer.mapY);
+            console.log(" designer.mapLinesWalls",  designer.mapLinesWalls);
             break;
         case 83: // s
             break;
