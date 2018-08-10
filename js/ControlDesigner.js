@@ -1654,6 +1654,7 @@ ControlDesigner.prototype.getAngleDoorAndWindow = function (start, end) {
 
 ControlDesigner.prototype.getVectors = function (vector, depth) {
 
+    var mainVector = new THREE.Vector2(vector.x1 - vector.x0, vector.y1 - vector.y0);
     var NvectorA = new THREE.Vector2(-(vector.y0 - vector.y1), (vector.x0 - vector.x1));
     NvectorA = NvectorA.normalize();
 
@@ -1698,7 +1699,8 @@ ControlDesigner.prototype.getVectors = function (vector, depth) {
         b: b,
         c: c,
         d: d,
-        NvectorA: NvectorA
+        NvectorA: NvectorA,
+        mainVector: mainVector
     }
 };
 
@@ -1735,7 +1737,6 @@ ControlDesigner.prototype.middleWall = function ( f, posMouse ){
         if (f.a.x !== f.c.x) {
             if (Math.abs(new THREE.Vector2(f.c.x - f.a.x, f.c.y).length()) >
                 Math.abs(new THREE.Vector2(f.c.x, f.c.y - f.a.y).length()) ) {
-
 
                 if (f.a.y < f.c.y) {
                     if (f.a.x < f.c.x) {
@@ -1869,12 +1870,15 @@ ControlDesigner.prototype.mouseClickDoor2D = function (intersect){
             if (v) {
                 var angle = this.getAngleDoorAndWindow(v.start, v.end);
 
+                var d = new THREE.Vector2(-(v.end.x - v.start.x), -(v.end.y - v.start.y));
+                d = d.normalize();
+
                 var vector = {
-                    x0: v.start.x,
-                    y0: v.start.y,
+                    x0: v.start.x - d.x * this.widthWindow / 2,
+                    y0: v.start.y - d.y * this.widthWindow / 2,
                     z0: 0,
-                    x1: v.end.x,
-                    y1: v.end.y,
+                    x1: v.end.x + d.x * this.widthWindow / 2,
+                    y1: v.end.y + d.y * this.widthWindow / 2,
                     z1: 0,
                 };
                 var f = this.getVectors(vector, (this.widthWall / 2) * this.scalePlane);
@@ -1882,11 +1886,12 @@ ControlDesigner.prototype.mouseClickDoor2D = function (intersect){
                 var cross = this.middleWall(f, intersect.point);
 
                 this.createDoor2D();
-
+                this.door2D.rotation.z = angle;
                 if (cross.overlapping) {
-                    this.door2D.rotation.z = angle;
                     this.door2D.position.copy(new THREE.Vector3(cross.x, cross.y, intersect.point.z));
                     // this.door2D.position.y = +this.fromFloorDoor + this.heightDoor / 2;
+                } else {
+                    this.door2D.position.copy(this.getLastPosition(f, intersect.point));
                 }
             }
         } else if (this.door2D && arr[0] === "wallsCup") {
@@ -1908,6 +1913,55 @@ ControlDesigner.prototype.mouseClickDoor2D = function (intersect){
     }
 };
 
+ControlDesigner.prototype.getLastPosition = function ( f, posMouse ){
+    if (f.a.x !== f.c.x) {
+        if (Math.abs(new THREE.Vector2(f.c.x - f.a.x, f.c.y).length()) >
+            Math.abs(new THREE.Vector2(f.c.x, f.c.y - f.a.y).length()) ) {
+            if (f.a.x < f.c.x) {
+                if (posMouse.x >= f.c.x) {
+                    return (new THREE.Vector3(f.c.x, f.c.y, posMouse.z));
+                } else {
+                    return (new THREE.Vector3(f.a.x, f.a.y, posMouse.z));
+                }
+            } else {
+                if (posMouse.x <= f.c.x) {
+                    return (new THREE.Vector3(f.c.x, f.c.y, posMouse.z));
+                } else {
+                    return (new THREE.Vector3(f.a.x, f.a.y, posMouse.z));
+                }
+            }
+        } else {
+            if (f.a.y < f.c.y) {
+                if (posMouse.y >= f.c.y) {
+                    return (new THREE.Vector3(f.c.x, f.c.y, posMouse.z));
+                } else if (posMouse.y <= f.a.y) {
+                    return (new THREE.Vector3(f.a.x, f.a.y, posMouse.z));
+                }
+            } else {
+                if (posMouse.y <= f.c.y) {
+                    return (new THREE.Vector3(f.c.x, f.c.y, posMouse.z));
+                } else if (posMouse.y >= f.a.y) {
+                    return (new THREE.Vector3(f.a.x, f.a.y, posMouse.z));
+                }
+            }
+        }
+    } else {
+        if (f.a.y < f.c.y) {
+            if (posMouse.y >= f.c.y) {
+                return (new THREE.Vector3(f.c.x, f.c.y, posMouse.z));
+            } else if (posMouse.y <= f.a.y) {
+                return (new THREE.Vector3(f.a.x, f.a.y, posMouse.z));
+            }
+        } else {
+            if (posMouse.y <= f.c.y) {
+                return (new THREE.Vector3(f.c.x, f.c.y, posMouse.z));
+            } else if (posMouse.y >= f.a.y) {
+                return (new THREE.Vector3(f.a.x, f.a.y, posMouse.z));
+            }
+        }
+    }
+};
+
 ControlDesigner.prototype.mouseMoveDoor2D = function ( posMouse, intersect ){
     var arr = intersect.object.name.split('_');
     if (this.boolDoor && this.door2D /*&& arr[0] === "wallsCup"*/) {
@@ -1919,22 +1973,26 @@ ControlDesigner.prototype.mouseMoveDoor2D = function ( posMouse, intersect ){
         if (v) {
             var angle = this.getAngleDoorAndWindow(v.start, v.end);
 
+            var d = new THREE.Vector2(-(v.end.x - v.start.x), -(v.end.y - v.start.y));
+            d = d.normalize();
+
             var vector = {
-                x0: v.start.x,
-                y0: v.start.y,
+                x0: v.start.x - d.x * this.widthDoor / 2,
+                y0: v.start.y - d.y * this.widthDoor / 2,
                 z0: 0,
-                x1: v.end.x,
-                y1: v.end.y,
+                x1: v.end.x + d.x * this.widthDoor / 2,
+                y1: v.end.y + d.y * this.widthDoor / 2,
                 z1: 0,
             };
             var f = this.getVectors(vector, (this.widthWall / 2) * this.scalePlane);
 
             var cross = this.middleWall(f, posMouse);
-
+            this.door2D.rotation.z = angle;
             if (cross.overlapping) {
-                this.door2D.rotation.z = angle;
                 this.door2D.position.copy(new THREE.Vector3(cross.x, cross.y, posMouse.z));
                 // this.door2D.position.y = +this.fromFloorDoor + this.heightDoor / 2;
+            } else {
+                this.door2D.position.copy(this.getLastPosition(f, posMouse));
             }
         }
     }
@@ -1952,12 +2010,15 @@ ControlDesigner.prototype.mouseClickWindow2D = function (intersect){
             if (v) {
                 var angle = this.getAngleDoorAndWindow(v.start, v.end);
 
+                var d = new THREE.Vector2(-(v.end.x - v.start.x), -(v.end.y - v.start.y));
+                d = d.normalize();
+
                 var vector = {
-                    x0: v.start.x,
-                    y0: v.start.y,
+                    x0: v.start.x - d.x * this.widthWindow / 2,
+                    y0: v.start.y - d.y * this.widthWindow / 2,
                     z0: 0,
-                    x1: v.end.x,
-                    y1: v.end.y,
+                    x1: v.end.x + d.x * this.widthWindow / 2,
+                    y1: v.end.y + d.y * this.widthWindow / 2,
                     z1: 0,
                 };
                 var f = this.getVectors(vector, (this.widthWall / 2) * this.scalePlane);
@@ -1965,11 +2026,12 @@ ControlDesigner.prototype.mouseClickWindow2D = function (intersect){
                 var cross = this.middleWall(f, intersect.point);
 
                 this.createWindow2D();
-
+                this.window2D.rotation.z = angle;
                 if (cross.overlapping) {
-                    this.window2D.rotation.z = angle;
                     this.window2D.position.copy(new THREE.Vector3(cross.x, cross.y, intersect.point.z));
                     // this.door2D.position.y = +this.fromFloorDoor + this.heightDoor / 2;
+                } else {
+                    this.window2D.position.copy(this.getLastPosition(f, intersect.point));
                 }
             }
         } else if (this.window2D && arr[0] === "wallsCup") {
@@ -2002,22 +2064,26 @@ ControlDesigner.prototype.mouseMoveWindow2D = function ( posMouse, intersect ){
         if (v) {
             var angle = this.getAngleDoorAndWindow(v.start, v.end);
 
+            var d = new THREE.Vector2(-(v.end.x - v.start.x), -(v.end.y - v.start.y));
+            d = d.normalize();
+
             var vector = {
-                x0: v.start.x,
-                y0: v.start.y,
+                x0: v.start.x - d.x * this.widthWindow / 2,
+                y0: v.start.y - d.y * this.widthWindow / 2,
                 z0: 0,
-                x1: v.end.x,
-                y1: v.end.y,
+                x1: v.end.x + d.x * this.widthWindow / 2,
+                y1: v.end.y + d.y * this.widthWindow / 2,
                 z1: 0,
             };
             var f = this.getVectors(vector, (this.widthWall / 2) * this.scalePlane);
 
             var cross = this.middleWall(f, posMouse);
-
+            this.window2D.rotation.z = angle;
             if (cross.overlapping) {
-                this.window2D.rotation.z = angle;
                 this.window2D.position.copy(new THREE.Vector3(cross.x, cross.y, posMouse.z));
                 // this.door2D.position.y = +this.fromFloorDoor + this.heightDoor / 2;
+            } else {
+                this.window2D.position.copy(this.getLastPosition(f, posMouse));
             }
         }
     }
