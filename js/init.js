@@ -594,6 +594,9 @@ function changeDoor(){
         designer.boolDoor = !designer.boolDoor;
         if (designer.boolDoor) {
             designer.boolWindow = false;
+            designer.removeCursorWindow2D();
+        } else {
+            designer.removeCursorDoor2D();
         }
         changeColorButton();
     // }
@@ -610,6 +613,9 @@ function changeWindow(){
         designer.boolWindow = !designer.boolWindow;
         if (designer.boolWindow) {
             designer.boolDoor = false;
+            designer.removeCursorDoor2D();
+        }  else {
+            designer.removeCursorWindow2D();
         }
         changeColorButton();
     // }
@@ -690,6 +696,10 @@ function changeCamera(event){
         designer.groupLines.visible = true;
         designer.groupPoints.visible = true;
         designer.groupProportions.visible = true;
+        designer.groupSubtractDoors.visible = true;
+        designer.groupSubtractWindows.visible = true;
+        designer.groupDoors.visible = false;
+        designer.groupWindows.visible = false;
         transformControl.enabled = true;
         transformControl.visible = true;
 
@@ -711,14 +721,26 @@ function changeCamera(event){
         designer.group.rotation.x = -Math.PI / 2;
         designer.group.scale.set(designer.scalePlane, designer.scalePlane, designer.scalePlane);
     //    designer.groupExtrude.rotation.x = designer.group.rotation.x;
+    //     designer.groupSubtractDoors.rotation.x = designer.group.rotation.x;
+    //     designer.groupSubtractWindows.rotation.x = designer.group.rotation.x;
         designer.groupProportions.rotation.x = designer.group.rotation.x;
+        designer.groupSubtractDoors.visible = false;
+        designer.groupSubtractWindows.visible = false;
+        designer.groupDoors.visible = true;
+        designer.groupWindows.visible = true;
         designer.groupExtrude.visible = true;
         designer.groupPlane.visible = false;
         designer.groupLinesUpdate.visible = false;
         designer.groupLines.visible = false;
 
         designer.selectedScale = false;
+        designer.boolDoor = false;
+        designer.boolWindow = false;
+        designer.selectedInstr = false;
         changeColorButton();
+        designer.removeCursorDoor2D();
+        designer.removeCursorWindow2D();
+
         designer.groupLinesScale.visible = false;
 
         designer.groupPoints.visible = false;
@@ -729,6 +751,8 @@ function changeCamera(event){
         camera = cameraPerspective;
         setDefaultPerspectiveCameraPosition();
         set3DControl();
+
+        designer.rebuild();
     }
 }
 
@@ -757,7 +781,7 @@ function onKeyDown ( event ) {
         case 82: // r
             // console.log(" designer.mapX",  designer.mapX);
             // console.log(" designer.mapY",  designer.mapY);
-            console.log(" designer.mapLinesWalls",  designer.mapLinesWalls);
+            console.log(" designer.mapLinesWalls",  designer.mapDoors);
             break;
         case 83: // s
             break;
@@ -792,6 +816,24 @@ function onKeyDown ( event ) {
                 }
                 designer.selectedObject = null;
                 designer.clearMap ();
+            } else  if (designer.selectedDoor) {
+                if (transformControl.object) {
+                    transformControl.detach(transformControl.object);
+                }
+
+                designer.removeIntersectObjectsArray(designer.objects, designer.mapDoors.get(designer.selectedDoor.name));
+                designer.removeObject(designer.groupSubtractDoors, designer.mapDoors.get(designer.selectedDoor.name));
+                designer.mapDoors.delete(designer.selectedDoor.name);
+                designer.selectedDoor = null;
+            } else if (designer.selectedWindow) {
+                if (transformControl.object) {
+                    transformControl.detach(transformControl.object);
+                }
+
+                designer.removeIntersectObjectsArray(designer.objects, designer.mapWindows.get(designer.selectedWindow.name));
+                designer.removeObject(designer.groupSubtractWindows, designer.mapWindows.get(designer.selectedWindow.name));
+                designer.mapWindows.delete(designer.selectedWindow.name);
+                designer.selectedWindow = null;
             } else {
                 if (designer.groupPoints.children.length && transformControl.object) {
                     designer.deletePointObject(transformControl.object);
