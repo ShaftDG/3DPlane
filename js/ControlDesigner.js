@@ -1329,8 +1329,16 @@ ControlDesigner.prototype.createWindow = function (){
 
 ControlDesigner.prototype.rebuild = function (){
 
+    if (this.groupSubtractDoors.children.length) {
+        var geom = this.groupSubtractDoors.children[0].geometry;
+    }
+    for (var j = 1; j < this.groupSubtractDoors.children.length; j++) {
+        this.groupSubtractDoors.children[j].geometry.updateMatrix();
+        geom.merge(this.groupSubtractDoors.children[j].geometry, this.groupSubtractDoors.children[j].matrix);
+    }
+
     for (var i = 0; i < this.groupExtrude.children.length; i++) {
-        for (var j = 0; j < this.groupSubtractDoors.children.length; j++) {
+       // for (var j = 0; j < this.groupSubtractDoors.children.length; j++) {
             var pathPts = [];
             var g = this.groupSubtractDoors.children[j].geometry.vertices;
 
@@ -1364,7 +1372,7 @@ ControlDesigner.prototype.rebuild = function (){
             this.mapWalls.set(m.name, m);
             this.objects.push(m);
             this.groupExtrude.children[i] = m;
-        }
+     //   }
         for (var j = 0; j < this.groupSubtractWindows.children.length; j++) {
             var pathPts = [];
             var g = this.groupSubtractWindows.children[j].geometry.vertices;
@@ -2288,9 +2296,9 @@ ControlDesigner.prototype.mouseClick2D = function (intersect){
     }
 
     if (this.selectedInstr) {
-        if (this.positions[this.count * 3 - 6] === this.posMouse.x &&
-            this.positions[this.count * 3 - 5] === this.posMouse.y &&
-            this.positions[this.count * 3 - 4] === this.posMouse.z) {
+        if ( Math.round(this.positions[this.count * 3 - 6]) === Math.round(this.posMouse.x) &&
+             Math.round(this.positions[this.count * 3 - 5]) === Math.round(this.posMouse.y) &&
+             Math.round(this.positions[this.count * 3 - 4]) === Math.round(this.posMouse.z) ) {
 
             this.count--;
             this.count1 -= 2;
@@ -2310,9 +2318,9 @@ ControlDesigner.prototype.mouseClick2D = function (intersect){
             this.addPoint(this.posMouse);
         }
     } else if (this.selectedScale) {
-        if (this.positionsScale[this.countScale * 3 - 3] === this.posMouse.x &&
-            this.positionsScale[this.countScale * 3 - 2] === this.posMouse.y &&
-            this.positionsScale[this.countScale * 3 - 1] === this.posMouse.z) {
+        if ( Math.round(this.positionsScale[this.countScale * 3 - 3]) === Math.round(this.posMouse.x) &&
+             Math.round(this.positionsScale[this.countScale * 3 - 2]) === Math.round(this.posMouse.y) &&
+             Math.round(this.positionsScale[this.countScale * 3 - 1]) === Math.round(this.posMouse.z) ) {
             changeScale();
         } else {
             if (this.countScale === 0) {
