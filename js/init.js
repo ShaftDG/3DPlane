@@ -492,11 +492,11 @@ function onDocumentMouseMove( event ) {
             designer.mouseMove2D(posMouse, intersect);
         } else if (camera.isPerspectiveCamera) {
             designer.mouseMove3D(intersect);
-         /*   if (designer.boolDoor) {
+            if (designer.boolDoor) {
                 designer.mouseMoveDoor3D(posMouse, intersect);
             } else if (designer.boolWindow) {
                 designer.mouseMoveWindow3D(posMouse, intersect);
-            }*/
+            }
         }
         designer.mouseMove(posMouse);
     } else {
@@ -522,11 +522,11 @@ function leftClick( event ) {
             }
         } else if (camera.isPerspectiveCamera) {
             designer.mouseClick3D( intersect );
-          /*  if (designer.boolDoor) {
+            if (designer.boolDoor) {
                 designer.mouseClickDoor3D(intersect);
             } else if (designer.boolWindow) {
                 designer.mouseClickWindow3D(intersect);
-            }*/
+            }
         }
     } else {
         document.body.style.cursor = 'auto';
@@ -695,7 +695,9 @@ function changeCamera(event){
                     designer.groupSubtractDoors.rotation.x = designer.group.rotation.x;
                     designer.groupSubtractWindows.rotation.x = designer.group.rotation.x;
         designer.groupProportions.rotation.x = designer.group.rotation.x;
-        designer.groupExtrude.visible = false;
+
+        // designer.groupExtrude.visible = false;
+        designer.groupFinishedWalls.visible = false;
         designer.groupPlane.visible = true;
         designer.groupLinesUpdate.visible = true;
         designer.groupLines.visible = true;
@@ -718,6 +720,8 @@ function changeCamera(event){
         designer.boolDoor = false;
         designer.boolWindow = false;
         changeColorButton();
+        designer.removeCursorDoor3D();
+        designer.removeCursorWindow3D();
     } else if (event.srcElement.name === "cameraPerspective") {
 
         document.panelCamera.cameraPerspective.classList.add("inputInstrumentSelected");
@@ -733,13 +737,14 @@ function changeCamera(event){
               designer.groupSubtractWindows.rotation.x = designer.group.rotation.x;
         designer.groupProportions.rotation.x = designer.group.rotation.x;
 
-      //  designer.groupSubtractDoors.visible = false;
-      //  designer.groupSubtractWindows.visible = false;
+        designer.groupSubtractDoors.visible = false;
+        designer.groupSubtractWindows.visible = false;
 
         designer.groupDoors.visible = true;
         designer.groupWindows.visible = true;
 
-        designer.groupExtrude.visible = true;
+       // designer.groupExtrude.visible = true;
+        designer.groupFinishedWalls.visible = true;
         designer.groupPlane.visible = false;
         designer.groupLinesUpdate.visible = false;
         designer.groupLines.visible = false;
@@ -832,18 +837,18 @@ function onKeyDown ( event ) {
                     transformControl.detach(transformControl.object);
                 }
 
-                designer.removeIntersectObjectsArray(designer.objects, designer.mapDoors.get(designer.selectedDoor.name));
-                designer.removeObject(designer.groupSubtractDoors, designer.mapDoors.get(designer.selectedDoor.name));
-                designer.mapDoors.delete(designer.selectedDoor.name);
+                designer.removeIntersectObjectsArray(designer.objects, designer.mapSubtractDoors.get(designer.selectedDoor.name));
+                designer.removeObject(designer.groupSubtractDoors, designer.mapSubtractDoors.get(designer.selectedDoor.name));
+                designer.mapSubtractDoors.delete(designer.selectedDoor.name);
                 designer.selectedDoor = null;
             } else if (designer.selectedWindow) {
                 if (transformControl.object) {
                     transformControl.detach(transformControl.object);
                 }
 
-                designer.removeIntersectObjectsArray(designer.objects, designer.mapWindows.get(designer.selectedWindow.name));
-                designer.removeObject(designer.groupSubtractWindows, designer.mapWindows.get(designer.selectedWindow.name));
-                designer.mapWindows.delete(designer.selectedWindow.name);
+                designer.removeIntersectObjectsArray(designer.objects, designer.mapSubtractWindows.get(designer.selectedWindow.name));
+                designer.removeObject(designer.groupSubtractWindows, designer.mapSubtractWindows.get(designer.selectedWindow.name));
+                designer.mapSubtractWindows.delete(designer.selectedWindow.name);
                 designer.selectedWindow = null;
             } else {
                 if (designer.groupPoints.children.length && transformControl.object) {
