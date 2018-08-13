@@ -489,12 +489,14 @@ function onDocumentMouseMove( event ) {
                     designer.mouseMoveWindow2D(posMouse, intersect);
                 }
             }
+            designer.mouseMove2D(posMouse, intersect);
         } else if (camera.isPerspectiveCamera) {
-            if (designer.boolDoor) {
+            designer.mouseMove3D(intersect);
+         /*   if (designer.boolDoor) {
                 designer.mouseMoveDoor3D(posMouse, intersect);
             } else if (designer.boolWindow) {
                 designer.mouseMoveWindow3D(posMouse, intersect);
-            }
+            }*/
         }
         designer.mouseMove(posMouse);
     } else {
@@ -519,11 +521,12 @@ function leftClick( event ) {
                 designer.mouseClickWindow2D(intersect);
             }
         } else if (camera.isPerspectiveCamera) {
-            if (designer.boolDoor) {
+            designer.mouseClick3D( intersect );
+          /*  if (designer.boolDoor) {
                 designer.mouseClickDoor3D(intersect);
             } else if (designer.boolWindow) {
                 designer.mouseClickWindow3D(intersect);
-            }
+            }*/
         }
     } else {
         document.body.style.cursor = 'auto';
@@ -689,6 +692,8 @@ function changeCamera(event){
         designer.group.rotation.x = 0;
         designer.group.scale.set(1, 1, 1);
    //     designer.groupExtrude.rotation.x = designer.group.rotation.x;
+                    designer.groupSubtractDoors.rotation.x = designer.group.rotation.x;
+                    designer.groupSubtractWindows.rotation.x = designer.group.rotation.x;
         designer.groupProportions.rotation.x = designer.group.rotation.x;
         designer.groupExtrude.visible = false;
         designer.groupPlane.visible = true;
@@ -696,10 +701,13 @@ function changeCamera(event){
         designer.groupLines.visible = true;
         designer.groupPoints.visible = true;
         designer.groupProportions.visible = true;
+
         designer.groupSubtractDoors.visible = true;
         designer.groupSubtractWindows.visible = true;
+
         designer.groupDoors.visible = false;
         designer.groupWindows.visible = false;
+
         transformControl.enabled = true;
         transformControl.visible = true;
 
@@ -721,13 +729,16 @@ function changeCamera(event){
         designer.group.rotation.x = -Math.PI / 2;
         designer.group.scale.set(designer.scalePlane, designer.scalePlane, designer.scalePlane);
     //    designer.groupExtrude.rotation.x = designer.group.rotation.x;
-    //     designer.groupSubtractDoors.rotation.x = designer.group.rotation.x;
-    //     designer.groupSubtractWindows.rotation.x = designer.group.rotation.x;
+              designer.groupSubtractDoors.rotation.x = designer.group.rotation.x;
+              designer.groupSubtractWindows.rotation.x = designer.group.rotation.x;
         designer.groupProportions.rotation.x = designer.group.rotation.x;
-        designer.groupSubtractDoors.visible = false;
-        designer.groupSubtractWindows.visible = false;
+
+      //  designer.groupSubtractDoors.visible = false;
+      //  designer.groupSubtractWindows.visible = false;
+
         designer.groupDoors.visible = true;
         designer.groupWindows.visible = true;
+
         designer.groupExtrude.visible = true;
         designer.groupPlane.visible = false;
         designer.groupLinesUpdate.visible = false;
