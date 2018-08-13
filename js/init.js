@@ -521,11 +521,12 @@ function leftClick( event ) {
                 designer.mouseClickWindow2D(intersect);
             }
         } else if (camera.isPerspectiveCamera) {
-            designer.mouseClick3D( intersect );
             if (designer.boolDoor) {
                 designer.mouseClickDoor3D(intersect);
             } else if (designer.boolWindow) {
                 designer.mouseClickWindow3D(intersect);
+            } else {
+                designer.mouseClick3D( intersect );
             }
         }
     } else {
@@ -598,8 +599,10 @@ function changeDoor(){
         if (designer.boolDoor) {
             designer.boolWindow = false;
             designer.removeCursorWindow2D();
+            designer.removeCursorWindow3D();
         } else {
             designer.removeCursorDoor2D();
+            designer.removeCursorDoor3D();
         }
         changeColorButton();
     // }
@@ -617,8 +620,10 @@ function changeWindow(){
         if (designer.boolWindow) {
             designer.boolDoor = false;
             designer.removeCursorDoor2D();
+            designer.removeCursorDoor3D();
         }  else {
             designer.removeCursorWindow2D();
+            designer.removeCursorWindow3D();
         }
         changeColorButton();
     // }
@@ -797,7 +802,7 @@ function onKeyDown ( event ) {
         case 82: // r
             // console.log(" designer.mapX",  designer.mapX);
             // console.log(" designer.mapY",  designer.mapY);
-            console.log(" designer.mapLinesWalls",  designer.mapDoors);
+            console.log(" designer.mapLinesWalls",  designer.objects);
             break;
         case 83: // s
             break;
@@ -840,7 +845,17 @@ function onKeyDown ( event ) {
                 designer.removeIntersectObjectsArray(designer.objects, designer.mapSubtractDoors.get(designer.selectedDoor.name));
                 designer.removeObject(designer.groupSubtractDoors, designer.mapSubtractDoors.get(designer.selectedDoor.name));
                 designer.mapSubtractDoors.delete(designer.selectedDoor.name);
+
+                if (designer.mapDoors.has(designer.selectedDoor.name)) {
+                    designer.removeIntersectObjectsArray(designer.objects, designer.mapDoors.get(designer.selectedDoor.name));
+                    designer.removeObject(designer.groupDoors, designer.mapDoors.get(designer.selectedDoor.name));
+                    designer.mapDoors.delete(designer.selectedDoor.name);
+                    designer.rebuild();
+                }
+
                 designer.selectedDoor = null;
+                designer.removeObject(designer.groupProportions, designer.mapProportions.get("distance_wall"));
+                designer.clearDistanceToPoint();
             } else if (designer.selectedWindow) {
                 if (transformControl.object) {
                     transformControl.detach(transformControl.object);
@@ -849,7 +864,17 @@ function onKeyDown ( event ) {
                 designer.removeIntersectObjectsArray(designer.objects, designer.mapSubtractWindows.get(designer.selectedWindow.name));
                 designer.removeObject(designer.groupSubtractWindows, designer.mapSubtractWindows.get(designer.selectedWindow.name));
                 designer.mapSubtractWindows.delete(designer.selectedWindow.name);
+
+                if (designer.mapWindows.has(designer.selectedWindow.name)) {
+                    designer.removeIntersectObjectsArray(designer.objects, designer.mapWindows.get(designer.selectedWindow.name));
+                    designer.removeObject(designer.groupWindows, designer.mapWindows.get(designer.selectedWindow.name));
+                    designer.mapWindows.delete(designer.selectedWindow.name);
+                    designer.rebuild();
+                }
+
                 designer.selectedWindow = null;
+                designer.removeObject(designer.groupProportions, designer.mapProportions.get("distance_wall"));
+                designer.clearDistanceToPoint();
             } else {
                 if (designer.groupPoints.children.length && transformControl.object) {
                     designer.deletePointObject(transformControl.object);
