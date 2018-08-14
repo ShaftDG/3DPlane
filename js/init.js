@@ -720,6 +720,7 @@ function changeCamera(event){
         designer.groupLines.visible = true;
         designer.groupPoints.visible = true;
         designer.groupProportions.visible = true;
+        designer.groupProportions3D.visible = false;
 
         designer.groupSubtractDoors.visible = true;
         designer.groupSubtractWindows.visible = true;
@@ -779,7 +780,8 @@ function changeCamera(event){
         designer.groupLinesScale.visible = false;
 
         designer.groupPoints.visible = false;
-        //designer.groupProportions.visible = false;
+        designer.groupProportions.visible = false;
+        designer.groupProportions3D.visible = true;
         transformControl.enabled = false;
         transformControl.visible = false;
 

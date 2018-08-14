@@ -129,6 +129,10 @@ function ControlDesigner(textureSpritePointScale) {
     this.groupProportions.name = "groupProportions";
     this.add(this.groupProportions);
 
+    this.groupProportions3D = new THREE.Object3D();
+    this.groupProportions3D.name = "groupProportions3D";
+    this.add(this.groupProportions3D);
+
     this.groupDoors = new THREE.Object3D();
     this.groupDoors.name = "groupDoors";
     this.add(this.groupDoors);
@@ -675,6 +679,83 @@ ControlDesigner.prototype.clearPointsPosition = function (){
     this.addLines();
 };
 
+ControlDesigner.prototype.positionProportions3D = function (start, end, num, numWalls) {
+
+    var lengthVector = new THREE.Vector2(start.x - end.x, start.y - end.y, start.z - end.z).length();
+
+    if (lengthVector > 0) {
+        var angle = 0;
+
+        var vector = {
+            x0: start.x,
+            y0: start.y,
+            z0: start.z,
+            x1: end.x,
+            y1: end.y,
+            z1: end.z,
+        };
+
+        var v = this.getVectors(vector, 50);
+        var a = v.b;
+        var b = v.d;
+        var middle = new THREE.Vector3((a.x + b.x) / 2, 10, -(a.y + b.y) / 2);
+
+      /*  if (start.x > end.x) {
+            if (start.y < end.y) {
+                angle = this.getAngle(
+                    new THREE.Vector2(1, 0),
+                    new THREE.Vector2(start.x - end.x, start.y - end.y)
+                );
+                angle = Math.acos(angle);
+            } else  if (start.y > end.y) {
+
+                angle = this.getAngle(
+                    new THREE.Vector2(1, 0),
+                    new THREE.Vector2(end.x - start.x, end.y - start.y)
+                );
+                angle = Math.acos(angle) + Math.PI;
+            } else  if (start.y === end.y) {
+                angle = 0;
+            }
+        } else if (start.x < end.x) {
+            if (start.y < end.y) {
+                angle = this.getAngle(
+                    new THREE.Vector2(1, 0),
+                    new THREE.Vector2(start.x - end.x, start.y - end.y)
+                );
+                angle = Math.acos(angle) + Math.PI;
+            } else if (start.y > end.y){
+
+                angle = this.getAngle(
+                    new THREE.Vector2(1, 0),
+                    new THREE.Vector2(end.x - start.x, end.y - start.y)
+                );
+                angle = Math.acos(angle);
+            } else  if (start.y === end.y) {
+                angle = 0;
+            }
+
+        } else if (start.x === end.x) {
+
+
+            angle = -Math.PI / 2 ;
+
+        }*/
+
+        var spritey = this.makeTextSprite( Math.round(lengthVector), {
+            fontsize: 24,
+            backgroundColor: {r: 255, g: 255, b: 255, a: 1.0},
+            borderColor: {r: 50, g: 175, b: 50, a: 1.0}
+        }, angle, num, numWalls, "3D");
+        spritey.position.copy(middle);
+        /*  if (lengthVector <= 30) {
+              spritey.visible = false;
+          }*/
+        this.groupProportions3D.add(spritey);
+        this.mapProportions.set(spritey.name, spritey);
+    }
+};
+
 ControlDesigner.prototype.positionProportions = function (start, end, num, numWalls) {
 
     var lengthVector = new THREE.Vector2(start.x - end.x, start.y - end.y, start.z - end.z).length();
@@ -740,8 +821,8 @@ ControlDesigner.prototype.positionProportions = function (start, end, num, numWa
 
         var spritey = this.makeTextSprite( Math.round(lengthVector), {
             fontsize: 12,
-            backgroundColor: {r: 255, g: 0, b: 0, a: 1.0}
-        }, angle, num, numWalls);
+            backgroundColor: {r: 255, g: 255, b: 255, a: 0.0}
+        }, angle, num, numWalls, "2D");
         spritey.position.copy(middle);
       /*  if (lengthVector <= 30) {
             spritey.visible = false;
@@ -751,8 +832,8 @@ ControlDesigner.prototype.positionProportions = function (start, end, num, numWa
     }
 };
 
-ControlDesigner.prototype.makeTextSprite = function ( message, parameters, angle, num, numWalls){
-    function roundRect(ctx, w, h)
+ControlDesigner.prototype.makeTextSprite = function ( message, parameters, angle, num, numWalls, view){
+/*    function roundRect(ctx, w, h)
     {
         ctx.beginPath();
         ctx.moveTo(w, h);
@@ -761,8 +842,22 @@ ControlDesigner.prototype.makeTextSprite = function ( message, parameters, angle
         ctx.lineTo(w, -h);
         ctx.closePath();
         ctx.fill();
+        ctx.stroke();
+    }*/
+    function roundRect(ctx, x, y, w, h)
+    {
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x+w, y);
+        ctx.lineTo(x+w, y+h);
+        ctx.lineTo(x, y+h);
+        ctx.lineTo(x, y);
+        ctx.closePath();
+        ctx.fill();
+        if (view === "3D") {
+            ctx.stroke();
+        }
     }
-
     if ( parameters === undefined ) parameters = {};
 
     var fontface = parameters.hasOwnProperty("fontface") ?
@@ -770,6 +865,12 @@ ControlDesigner.prototype.makeTextSprite = function ( message, parameters, angle
 
     var fontsize = parameters.hasOwnProperty("fontsize") ?
         parameters["fontsize"] : 18;
+
+    var borderThickness = parameters.hasOwnProperty("borderThickness") ?
+        parameters["borderThickness"] : 4;
+
+    var borderColor = parameters.hasOwnProperty("borderColor") ?
+        parameters["borderColor"] : { r:0, g:0, b:0, a:1.0 };
 
     var backgroundColor = parameters.hasOwnProperty("backgroundColor") ?
         parameters["backgroundColor"] : { r:255, g:255, b:255, a:1.0 };
@@ -784,8 +885,13 @@ ControlDesigner.prototype.makeTextSprite = function ( message, parameters, angle
     context.fillStyle   = "rgba(" + backgroundColor.r + "," + backgroundColor.g + ","
         + backgroundColor.b + "," + backgroundColor.a + ")";
 
-    roundRect(context, canvas.width,  canvas.height);
-
+    if (view === "3D") {
+        // border color
+        context.strokeStyle = "rgba(" + borderColor.r + "," + borderColor.g + ","
+            + borderColor.b + "," + borderColor.a + ")";
+        context.lineWidth = borderThickness;
+        roundRect(context, borderThickness / 2, borderThickness / 2, canvas.width - borderThickness, canvas.height - borderThickness);
+    }
     // text color
     context.fillStyle = "rgba(0, 0, 0, 1.0)";
     context.textAlign = "center";
@@ -797,10 +903,10 @@ ControlDesigner.prototype.makeTextSprite = function ( message, parameters, angle
     texture.needsUpdate = true;
 
     var spriteMaterial = new THREE.SpriteMaterial(
-        { rotation: -angle, map: texture, transparent: true } );
+        { rotation: -angle, map: texture, depthTest: false } );
     var sprite = new THREE.Sprite( spriteMaterial );
     sprite.name = num.toString() + "_" + numWalls ;
-    sprite.scale.set(80,40,1.0);
+    sprite.scale.set(80,40,40);
     return sprite;
 };
 
@@ -1301,7 +1407,7 @@ ControlDesigner.prototype.createCursorDoor3D = function (){
 ControlDesigner.prototype.removeCursorDoor3D = function (){
     this.removeObject(this, this.door);
     this.door = undefined;
-    this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
+    this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
     this.clearDistanceToPoint();
 };
 
@@ -1323,7 +1429,7 @@ ControlDesigner.prototype.createCursorWindow3D = function (){
 ControlDesigner.prototype.removeCursorWindow3D = function (){
     this.removeObject(this, this.window);
     this.window = undefined;
-    this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
+    this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
     this.clearDistanceToPoint();
 };
 
@@ -2017,13 +2123,13 @@ ControlDesigner.prototype.getLastPosition = function ( f, posMouse ){
     }
 };
 
-ControlDesigner.prototype.getDistanceToPoint3D = function ( start, end ){
+ControlDesigner.prototype.getDistanceToPoint3D = function ( start0, start, end, end0 ){
     if (!this.lineDistance) {
         var geometry = new THREE.BufferGeometry();
-        var positionsDistance = new Float32Array(2 * 3);
+        var positionsDistance = new Float32Array(4 * 3);
         geometry.addAttribute('position', new THREE.BufferAttribute(positionsDistance, 3));
         var material = new THREE.LineBasicMaterial({
-            color: '#1cff00',
+            color: '#18c500',
             linewidth: 20,
             // transparent: true,
         });
@@ -2036,25 +2142,33 @@ ControlDesigner.prototype.getDistanceToPoint3D = function ( start, end ){
 
         var pos = this.lineDistance.geometry.attributes.position.array;
 
-        pos[0] = start.x;
+        pos[0] = end0.x;
         pos[1] = 10;
-        pos[2] = -start.y;
+        pos[2] = -end0.y;
 
-        pos[3] = end.x;
+        pos[3] = start.x;
         pos[4] = 10;
-        pos[5] = -end.y;
+        pos[5] = -start.y;
+
+        pos[6] = end.x;
+        pos[7] = 10;
+        pos[8] = -end.y;
+
+        pos[9] = start0.x;
+        pos[10] = 10;
+        pos[11] = -start0.y;
 
         this.lineDistance.geometry.attributes.position.needsUpdate = true;
     }
 };
 
-ControlDesigner.prototype.getDistanceToPoint2D = function ( start, end ){
+ControlDesigner.prototype.getDistanceToPoint2D = function ( start0, start, end, end0 ){
     if (!this.lineDistance) {
         var geometry = new THREE.BufferGeometry();
-        var positionsDistance = new Float32Array(2 * 3);
+        var positionsDistance = new Float32Array(4 * 3);
         geometry.addAttribute('position', new THREE.BufferAttribute(positionsDistance, 3));
         var material = new THREE.LineBasicMaterial({
-            color: '#1cff00',
+            color: '#18c500',
             linewidth: 20,
             // transparent: true,
         });
@@ -2067,13 +2181,21 @@ ControlDesigner.prototype.getDistanceToPoint2D = function ( start, end ){
 
         var pos = this.lineDistance.geometry.attributes.position.array;
 
-        pos[0] = start.x;
-        pos[1] = start.y;
-        pos[2] = 701;
+        pos[0] = end0.x;
+        pos[1] = end0.y;
+        pos[2] = 700;
 
-        pos[3] = end.x;
-        pos[4] = end.y;
-        pos[5] = 701;
+        pos[3] = start.x;
+        pos[4] = start.y;
+        pos[5] = 700;
+
+        pos[6] = end.x;
+        pos[7] = end.y;
+        pos[8] = 700;
+
+        pos[9] = start0.x;
+        pos[10] = start0.y;
+        pos[11] = 700;
 
         this.lineDistance.geometry.attributes.position.needsUpdate = true;
     }
@@ -2085,9 +2207,18 @@ ControlDesigner.prototype.clearDistanceToPoint = function ( start, end ){
         pos[0] = 0;
         pos[1] = 0;
         pos[2] = 0;
+
         pos[3] = 0;
         pos[4] = 0;
         pos[5] = 0;
+
+        pos[6] = 0;
+        pos[7] = 0;
+        pos[8] = 0;
+
+        pos[9] = 0;
+        pos[10] = 0;
+        pos[11] = 0;
         this.lineDistance.geometry.attributes.position.needsUpdate = true;
     }
 };
@@ -2111,7 +2242,7 @@ ControlDesigner.prototype.mouseMove = function (posMouse){
 
 ControlDesigner.prototype.mouseMove2D = function (posMouse, intersect){
 // console.log(intersect.object.name);
-    posMouse.z = 702;
+    posMouse.z = 710;
     if (this.selectedWindow) {
         var arr = this.selectedWindow.name.split('_');
         var line = this.mapLinesWalls.get(arr[1]);
@@ -2151,7 +2282,7 @@ ControlDesigner.prototype.mouseMove2D = function (posMouse, intersect){
                     z1: 0,
                 };
                 f = this.getVectors(vector, (this.widthWall*1.5));
-                this.getDistanceToPoint2D(f.d, f.b);
+                this.getDistanceToPoint2D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthWindow / 2), cross.y + d.y * (this.widthWindow / 2),cross.z));
                 this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
                 this.positionProportions(f.b, f.d, "distance", "wall");
             } else {
@@ -2199,7 +2330,7 @@ ControlDesigner.prototype.mouseMove2D = function (posMouse, intersect){
                     z1: 0,
                 };
                 f = this.getVectors(vector, (this.widthWall*1.5));
-                this.getDistanceToPoint2D(f.d, f.b);
+                this.getDistanceToPoint2D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthDoor / 2), cross.y + d.y * (this.widthDoor / 2),cross.z));
                 this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
                 this.positionProportions(f.b, f.d, "distance", "wall");
 //
@@ -2256,7 +2387,7 @@ ControlDesigner.prototype.mouseClickDoor2D = function (intersect){
                         z1: 0,
                     };
                     f = this.getVectors(vector, (this.widthWall*1.5));
-                    this.getDistanceToPoint2D(f.d, f.b);
+                    this.getDistanceToPoint2D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthDoor / 2), cross.y + d.y * (this.widthDoor / 2),cross.z));
                     this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
                     this.positionProportions(f.b, f.d, "distance", "wall");
                 } else {
@@ -2314,7 +2445,7 @@ ControlDesigner.prototype.mouseMoveDoor2D = function ( posMouse, intersect ){
                     z1: 0,
                 };
                 f = this.getVectors(vector, (this.widthWall*1.5));
-                this.getDistanceToPoint2D(f.d, f.b);
+                this.getDistanceToPoint2D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthDoor / 2), cross.y + d.y * (this.widthDoor / 2),cross.z));
                 this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
                 this.positionProportions(f.b, f.d, "distance", "wall");
             } else {
@@ -2370,7 +2501,7 @@ ControlDesigner.prototype.mouseClickWindow2D = function (intersect){
                         z1: 0,
                     };
                     f = this.getVectors(vector, (this.widthWall*1.5));
-                    this.getDistanceToPoint2D(f.d, f.b);
+                    this.getDistanceToPoint2D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthWall / 2), cross.y + d.y * (this.widthWall / 2),cross.z));
                     this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
                     this.positionProportions(f.b, f.d, "distance", "wall");
                 } else {
@@ -2429,7 +2560,7 @@ ControlDesigner.prototype.mouseMoveWindow2D = function ( posMouse, intersect ){
                     z1: 0,
                 };
                 f = this.getVectors(vector, (this.widthWall*1.5));
-                this.getDistanceToPoint2D(f.d, f.b);
+                this.getDistanceToPoint2D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthWall / 2), cross.y + d.y * (this.widthWall / 2),cross.z));
                 this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
                 this.positionProportions(f.b, f.d, "distance", "wall");
             } else {
@@ -2488,7 +2619,7 @@ ControlDesigner.prototype.addDoor3D = function (object, nameDoor, nameWall){
     door3D.heightDoor = this.heightDoor;
     door3D.fromFloorDoor = this.fromFloorDoor;
     this.mapSubtractDoors.set(door3D.name, door3D);
-   // this.objects.push(door3D);
+    this.objects.push(door3D);
     this.groupSubtractDoors.add(door3D);
 };
 
@@ -2519,7 +2650,7 @@ ControlDesigner.prototype.addWindow3D = function (object, nameWindow, nameWall){
     window3D.heightWindow = this.heightWindow;
     window3D.fromFloorWindow = this.fromFloorWindow;
     this.mapSubtractWindows.set(window3D.name, window3D);
-   // this.objects.push(window3D);
+    this.objects.push(window3D);
     this.groupSubtractWindows.add(window3D);
 };
 
@@ -2711,7 +2842,7 @@ ControlDesigner.prototype.mouseClick3D = function (intersect){
                 this.unselectWindow(this.selectedWindow);
                 this.selectedWindow.scale.z = 1.0;
                 this.selectedWindow = null;
-                this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
+                this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
                 this.clearDistanceToPoint();
                 this.rebuild();
             }
@@ -2741,7 +2872,7 @@ ControlDesigner.prototype.mouseClick3D = function (intersect){
                 this.unselectDoor(this.selectedDoor);
                 this.selectedDoor.scale.z = 1.0;
                 this.selectedDoor = null;
-                this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
+                this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
                 this.clearDistanceToPoint();
                 this.rebuild();
             }
@@ -2792,14 +2923,14 @@ ControlDesigner.prototype.mouseClickDoor3D = function (intersect){
                     y1: cross.y + d.y * (this.widthDoor / 2),
                     z1: 0,
                 };
-                f = this.getVectors(vector, (this.widthWall*1.5));
-                this.getDistanceToPoint3D(f.d, f.b);
-                this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
-                this.positionProportions(f.b, f.d, "distance", "wall");
+                f = this.getVectors(vector, (this.widthWall*2));
+                this.getDistanceToPoint3D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthDoor / 2), cross.y + d.y * (this.widthDoor / 2),cross.z));
+                this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
+                this.positionProportions3D(f.b, f.d, "distance", "wall");
             } else {
                 var pos = this.getLastPosition(f, new THREE.Vector3(intersect.point.x, -intersect.point.z, 0));
                 this.door.position.copy(new THREE.Vector3(pos.x, (this.heightDoor/2 + this.fromFloorDoor), -pos.y ));
-                this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
+                this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
                 this.clearDistanceToPoint();
             }
         }
@@ -2851,13 +2982,13 @@ ControlDesigner.prototype.mouseClickWindow3D = function (intersect){
                     z1: 0,
                 };
                 f = this.getVectors(vector, (this.widthWall*1.5));
-                this.getDistanceToPoint2D(f.d, f.b);
-                this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
-                this.positionProportions(f.b, f.d, "distance", "wall");
+                this.getDistanceToPoint2D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthWall / 2), cross.y + d.y * (this.widthWall / 2),cross.z));
+                this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
+                this.positionProportions3D(f.b, f.d, "distance", "wall");
             } else {
                 var pos = this.getLastPosition(f, new THREE.Vector3(intersect.point.x, -intersect.point.z, 0));
                 this.window.position.copy(new THREE.Vector3(pos.x, ((this.heightWindow/2) + this.fromFloorWindow), -pos.y ));
-                this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
+                this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
                 this.clearDistanceToPoint();
             }
         }
@@ -2914,10 +3045,10 @@ ControlDesigner.prototype.mouseMove3D = function ( intersect ){
                     y1: cross.y + d.y * (this.widthWindow / 2),
                     z1: 0,
                 };
-                f = this.getVectors(vector, (this.widthWall*1.5));
-                this.getDistanceToPoint3D(f.d, f.b);
-                this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
-                this.positionProportions(f.b, f.d, "distance", "wall");
+                f = this.getVectors(vector, (this.widthWall*2));
+                this.getDistanceToPoint3D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthWindow / 2), cross.y + d.y * (this.widthWindow / 2),cross.z));
+                this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
+                this.positionProportions3D(f.b, f.d, "distance", "wall");
             } else {
                 var pos = this.getLastPosition(f, new THREE.Vector3(intersect.point.x, -intersect.point.z, 0));
                 this.selectedWindow.position.copy(new THREE.Vector3(pos.x, this.fromFloorWindow, -pos.y ));
@@ -2928,7 +3059,7 @@ ControlDesigner.prototype.mouseMove3D = function ( intersect ){
                 this.selectedWindow = this.mapWindows.get(this.selectedWindow.name);
                 this.selectedWindow.scale.z = 1.05;
                 this.selectWindow(this.selectedWindow);
-                this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
+                this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
                 this.clearDistanceToPoint();
             }
         }
@@ -2977,10 +3108,10 @@ ControlDesigner.prototype.mouseMove3D = function ( intersect ){
                     y1: cross.y + d.y * (this.widthDoor / 2),
                     z1: 0,
                 };
-                f = this.getVectors(vector, (this.widthWall*1.5));
-                this.getDistanceToPoint3D(f.d, f.b);
-                this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
-                this.positionProportions(f.b, f.d, "distance", "wall");
+                f = this.getVectors(vector, (this.widthWall*2));
+                this.getDistanceToPoint3D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthDoor / 2), cross.y + d.y * (this.widthDoor / 2),cross.z));
+                this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
+                this.positionProportions3D(f.b, f.d, "distance", "wall");
             } else {
                 var pos = this.getLastPosition(f, new THREE.Vector3(intersect.point.x, -intersect.point.z, 0));
                 this.selectedDoor.position.copy(new THREE.Vector3(pos.x, this.fromFloorDoor, -pos.y ));
@@ -2991,7 +3122,7 @@ ControlDesigner.prototype.mouseMove3D = function ( intersect ){
                 this.selectedDoor = this.mapDoors.get(this.selectedDoor.name);
                 this.selectedDoor.scale.z = 1.05;
                 this.selectDoor(this.selectedDoor);
-                this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
+                this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
                 this.clearDistanceToPoint();
 
             }
@@ -3037,14 +3168,14 @@ ControlDesigner.prototype.mouseMoveDoor3D = function ( posMouse, intersect ){
                     y1: cross.y + d.y * (this.widthDoor / 2),
                     z1: 0,
                 };
-                f = this.getVectors(vector, (this.widthWall*1.5));
-                this.getDistanceToPoint3D(f.d, f.b);
-                this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
-                this.positionProportions(f.b, f.d, "distance", "wall");
+                f = this.getVectors(vector, (this.widthWall*2));
+                this.getDistanceToPoint3D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthDoor / 2), cross.y + d.y * (this.widthDoor / 2),cross.z));
+                this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
+                this.positionProportions3D(f.b, f.d, "distance", "wall");
             } else {
                 var pos = this.getLastPosition(f, new THREE.Vector3(intersect.point.x, -intersect.point.z, 0));
                 this.door.position.copy(new THREE.Vector3(pos.x, (this.heightDoor/2 + this.fromFloorDoor), -pos.y ));
-                this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
+                this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
                 this.clearDistanceToPoint();
             }
         }
@@ -3090,14 +3221,14 @@ ControlDesigner.prototype.mouseMoveWindow3D = function ( posMouse, intersect ){
                     y1: cross.y + d.y * (this.widthWindow / 2),
                     z1: 0,
                 };
-                f = this.getVectors(vector, (this.widthWall*1.5));
-                this.getDistanceToPoint3D(f.d, f.b);
-                this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
-                this.positionProportions(f.b, f.d, "distance", "wall");
+                f = this.getVectors(vector, (this.widthWall*2));
+                this.getDistanceToPoint3D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthWindow / 2), cross.y + d.y * (this.widthWindow / 2),cross.z));
+                this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
+                this.positionProportions3D(f.b, f.d, "distance", "wall");
             } else {
                 var pos = this.getLastPosition(f, new THREE.Vector3(intersect.point.x, -intersect.point.z, 0));
                 this.window.position.copy(new THREE.Vector3(pos.x, ((this.heightWindow/2) + this.fromFloorWindow), -pos.y));
-                this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
+                this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
                 this.clearDistanceToPoint();
             }
         }
