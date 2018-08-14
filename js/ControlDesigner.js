@@ -2501,7 +2501,7 @@ ControlDesigner.prototype.mouseClickWindow2D = function (intersect){
                         z1: 0,
                     };
                     f = this.getVectors(vector, (this.widthWall*1.5));
-                    this.getDistanceToPoint2D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthWall / 2), cross.y + d.y * (this.widthWall / 2),cross.z));
+                    this.getDistanceToPoint2D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthWindow / 2), cross.y + d.y * (this.widthWindow / 2),cross.z));
                     this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
                     this.positionProportions(f.b, f.d, "distance", "wall");
                 } else {
@@ -2560,7 +2560,7 @@ ControlDesigner.prototype.mouseMoveWindow2D = function ( posMouse, intersect ){
                     z1: 0,
                 };
                 f = this.getVectors(vector, (this.widthWall*1.5));
-                this.getDistanceToPoint2D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthWall / 2), cross.y + d.y * (this.widthWall / 2),cross.z));
+                this.getDistanceToPoint2D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthWindow / 2), cross.y + d.y * (this.widthWindow / 2),cross.z));
                 this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
                 this.positionProportions(f.b, f.d, "distance", "wall");
             } else {
@@ -2982,7 +2982,7 @@ ControlDesigner.prototype.mouseClickWindow3D = function (intersect){
                     z1: 0,
                 };
                 f = this.getVectors(vector, (this.widthWall*1.5));
-                this.getDistanceToPoint2D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthWall / 2), cross.y + d.y * (this.widthWall / 2),cross.z));
+                this.getDistanceToPoint3D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthWindow / 2), cross.y + d.y * (this.widthWindow / 2),cross.z));
                 this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
                 this.positionProportions3D(f.b, f.d, "distance", "wall");
             } else {
