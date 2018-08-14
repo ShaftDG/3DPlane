@@ -4,11 +4,9 @@ var designer;
 
 var camera, cameraOrthographic, cameraPerspective, scene, renderer, controlsO, controlsP, transformControl;
 
-var mouseX = 0, mouseY = 0;
+var human;
 
 var clock = new THREE.Clock();
-
-var wallsObject = [];
 
 var windowHalfX = window.innerWidth / 2;
 var windowHalfY = window.innerHeight / 2;
@@ -134,6 +132,14 @@ function init() {
     dirLight.shadow.camera.far = 3500;
     dirLight.shadow.bias = -0.0001;
 
+      var geom = new THREE.BoxBufferGeometry( 50, 180, 20 );
+  var mat = new THREE.MeshBasicMaterial( { color: '#088277', opacity: 0.5, transparent: true } );
+  human = new THREE.Mesh( geom, mat );
+  human.name = "human";
+  human.position.y = 90;
+  human.visible = false;
+  scene.add( human );
+
     ////
     renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true, precision: "highp" });
     // renderer.sortObjects = false;
@@ -206,6 +212,7 @@ function init() {
     }
     valueSc.addEventListener('change', function (ev) {
         designer.valueScale = valueSc.value;
+        designer.calculateScale(designer.positionsScale);
         // console.log(valueScale);
     }, false);
 
@@ -230,7 +237,7 @@ function init() {
 
     width.addEventListener('change', function (ev) {
         if (designer.boolDoor) {
-            designer.widthDoor = width.value;
+            designer.widthDoor = +width.value;
             if (designer.door) {
                 designer.door.scale.x = designer.widthDoor;
             }
@@ -238,7 +245,7 @@ function init() {
                 designer.door2D.scale.x = designer.widthDoor;
             }
         } else if (designer.boolWindow) {
-            designer.widthWindow = width.value;
+            designer.widthWindow = +width.value;
             if (designer.window) {
                 designer.window.scale.x = designer.widthWindow;
             }
@@ -255,12 +262,12 @@ function init() {
 
     height.addEventListener('change', function (ev) {
         if (designer.boolDoor) {
-            designer.heightDoor = height.value;
+            designer.heightDoor = +height.value;
             if (designer.door) {
                 designer.door.scale.y = designer.heightDoor;
             }
         } else if (designer.boolWindow) {
-            designer.heightWindow = height.value;
+            designer.heightWindow = +height.value;
             if (designer.window) {
                 designer.window.scale.y = designer.heightWindow;
             }
@@ -274,7 +281,7 @@ function init() {
 
     depth.addEventListener('change', function (ev) {
         if (designer.boolDoor) {
-            designer.depthDoor = depth.value;
+            designer.depthDoor = +depth.value;
             if (designer.door) {
                 designer.door.scale.z = designer.depthDoor;
             }
@@ -282,7 +289,7 @@ function init() {
                 designer.door2D.scale.y = designer.widthDoor;
             }
         } else if (designer.boolWindow) {
-            designer.depthWindow = depth.value;
+            designer.depthWindow = +depth.value;
             if (designer.window) {
                 designer.window.scale.z = designer.depthWindow;
             }
@@ -299,9 +306,9 @@ function init() {
 
     fromFloor.addEventListener('change', function (ev) {
         if (designer.boolDoor) {
-            designer.fromFloorDoor = fromFloor.value;
+            designer.fromFloorDoor = +fromFloor.value;
         } else if (designer.boolWindow) {
-            designer.fromFloorWindow = fromFloor.value;
+            designer.fromFloorWindow = +fromFloor.value;
         }
     }, false);
 
@@ -487,15 +494,18 @@ function onDocumentMouseMove( event ) {
                     designer.mouseMoveDoor2D(posMouse, intersect);
                 } else if (designer.boolWindow) {
                     designer.mouseMoveWindow2D(posMouse, intersect);
+                } else {
+                    designer.mouseMove2D(posMouse, intersect);
                 }
             }
-            designer.mouseMove2D(posMouse, intersect);
         } else if (camera.isPerspectiveCamera) {
-            designer.mouseMove3D(intersect);
+
             if (designer.boolDoor) {
                 designer.mouseMoveDoor3D(posMouse, intersect);
             } else if (designer.boolWindow) {
                 designer.mouseMoveWindow3D(posMouse, intersect);
+            } else {
+                designer.mouseMove3D(intersect);
             }
         }
         designer.mouseMove(posMouse);
@@ -577,6 +587,11 @@ function changeInstrument(){
         designer.selectedScale = false;
         designer.groupLinesScale.visible = false;
         changeColorButton();
+        if (designer.count === 0) {
+            if (designer.planeBackground) {
+                designer.planeBackground.scale.set(1 / designer.scalePlane, 1 / designer.scalePlane, 1 / designer.scalePlane);
+            }
+        }
     }
 }
 
@@ -588,8 +603,7 @@ function changeMagnet(){
 }
 
 function changeDoor(){
-    // if (camera.isPerspectiveCamera) {
-
+    if (!designer.selectedDoor && !designer.selectedWindow) {
         width.value = designer.widthDoor;
         height.value = designer.heightDoor;
         depth.value = designer.depthDoor;
@@ -605,12 +619,11 @@ function changeDoor(){
             designer.removeCursorDoor3D();
         }
         changeColorButton();
-    // }
+    }
 }
 
 function changeWindow(){
-    // if (camera.isPerspectiveCamera) {
-
+    if (!designer.selectedDoor && !designer.selectedWindow) {
         width.value = designer.widthWindow;
         height.value = designer.heightWindow;
         depth.value = designer.depthWindow;
@@ -621,12 +634,12 @@ function changeWindow(){
             designer.boolDoor = false;
             designer.removeCursorDoor2D();
             designer.removeCursorDoor3D();
-        }  else {
+        } else {
             designer.removeCursorWindow2D();
             designer.removeCursorWindow3D();
         }
         changeColorButton();
-    // }
+    }
 }
 
 function changeScale(){
@@ -695,7 +708,6 @@ function changeCamera(event){
         document.panelCamera.cameraPerspective.classList.add("inputInstrumentUnselected");
 
         designer.group.rotation.x = 0;
-        designer.group.scale.set(1, 1, 1);
    //     designer.groupExtrude.rotation.x = designer.group.rotation.x;
                     designer.groupSubtractDoors.rotation.x = designer.group.rotation.x;
                     designer.groupSubtractWindows.rotation.x = designer.group.rotation.x;
@@ -718,6 +730,8 @@ function changeCamera(event){
         transformControl.enabled = true;
         transformControl.visible = true;
 
+        human.visible = false;
+
         camera = cameraOrthographic;
         setDefaultOrthographicCameraPosition();
         set2DControl();
@@ -736,7 +750,6 @@ function changeCamera(event){
         document.panelCamera.cameraOrthographic.classList.add("inputInstrumentUnselected");
 
         designer.group.rotation.x = -Math.PI / 2;
-        designer.group.scale.set(designer.scalePlane, designer.scalePlane, designer.scalePlane);
     //    designer.groupExtrude.rotation.x = designer.group.rotation.x;
               designer.groupSubtractDoors.rotation.x = designer.group.rotation.x;
               designer.groupSubtractWindows.rotation.x = designer.group.rotation.x;
@@ -748,6 +761,7 @@ function changeCamera(event){
         designer.groupDoors.visible = true;
         designer.groupWindows.visible = true;
 
+        human.visible = true;
        // designer.groupExtrude.visible = true;
         designer.groupFinishedWalls.visible = true;
         designer.groupPlane.visible = false;
@@ -765,7 +779,7 @@ function changeCamera(event){
         designer.groupLinesScale.visible = false;
 
         designer.groupPoints.visible = false;
-        designer.groupProportions.visible = false;
+        //designer.groupProportions.visible = false;
         transformControl.enabled = false;
         transformControl.visible = false;
 
