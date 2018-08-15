@@ -731,96 +731,99 @@ function changeCamera(event){
     changeColorButton();
     designer.clearPointsPosition();
     if (event.srcElement.name === "cameraOrthographic") {
+        if (!designer.selectedDoor && !designer.selectedWindow) {
+            document.panelCamera.cameraOrthographic.classList.add("inputInstrumentSelected");
+            document.panelCamera.cameraOrthographic.classList.remove("inputInstrumentUnselected");
 
-        document.panelCamera.cameraOrthographic.classList.add("inputInstrumentSelected");
-        document.panelCamera.cameraOrthographic.classList.remove("inputInstrumentUnselected");
+            document.panelCamera.cameraPerspective.classList.remove("inputInstrumentSelected");
+            document.panelCamera.cameraPerspective.classList.add("inputInstrumentUnselected");
 
-        document.panelCamera.cameraPerspective.classList.remove("inputInstrumentSelected");
-        document.panelCamera.cameraPerspective.classList.add("inputInstrumentUnselected");
+            designer.group.rotation.x = 0;
+            //     designer.groupExtrude.rotation.x = designer.group.rotation.x;
+            designer.groupSubtractDoors.rotation.x = designer.group.rotation.x;
+            designer.groupSubtractWindows.rotation.x = designer.group.rotation.x;
+            designer.groupProportions.rotation.x = designer.group.rotation.x;
 
-        designer.group.rotation.x = 0;
-   //     designer.groupExtrude.rotation.x = designer.group.rotation.x;
-                    designer.groupSubtractDoors.rotation.x = designer.group.rotation.x;
-                    designer.groupSubtractWindows.rotation.x = designer.group.rotation.x;
-        designer.groupProportions.rotation.x = designer.group.rotation.x;
+            // designer.groupExtrude.visible = false;
+            designer.groupFinishedWalls.visible = false;
+            designer.groupPlane.visible = true;
+            designer.groupLinesUpdate.visible = true;
+            designer.groupLines.visible = true;
+            designer.groupPoints.visible = true;
+            designer.groupProportions.visible = true;
+            designer.groupProportions3D.visible = false;
 
-        // designer.groupExtrude.visible = false;
-        designer.groupFinishedWalls.visible = false;
-        designer.groupPlane.visible = true;
-        designer.groupLinesUpdate.visible = true;
-        designer.groupLines.visible = true;
-        designer.groupPoints.visible = true;
-        designer.groupProportions.visible = true;
-        designer.groupProportions3D.visible = false;
+            designer.groupSubtractDoors.visible = true;
+            designer.groupSubtractWindows.visible = true;
 
-        designer.groupSubtractDoors.visible = true;
-        designer.groupSubtractWindows.visible = true;
+            designer.groupDoors.visible = false;
+            designer.groupWindows.visible = false;
 
-        designer.groupDoors.visible = false;
-        designer.groupWindows.visible = false;
+            transformControl.enabled = true;
+            transformControl.visible = true;
 
-        transformControl.enabled = true;
-        transformControl.visible = true;
+            human.visible = false;
 
-        human.visible = false;
+            camera = cameraOrthographic;
+            setDefaultOrthographicCameraPosition();
+            set2DControl();
 
-        camera = cameraOrthographic;
-        setDefaultOrthographicCameraPosition();
-        set2DControl();
-
-        designer.boolDoor = false;
-        designer.boolWindow = false;
-        changeColorButton();
-        designer.removeCursorDoor3D();
-        designer.removeCursorWindow3D();
+            designer.boolDoor = false;
+            designer.boolWindow = false;
+            changeColorButton();
+            designer.removeCursorDoor3D();
+            designer.removeCursorWindow3D();
+        }
     } else if (event.srcElement.name === "cameraPerspective") {
 
-        document.panelCamera.cameraPerspective.classList.add("inputInstrumentSelected");
-        document.panelCamera.cameraPerspective.classList.remove("inputInstrumentUnselected");
+        if (!designer.selectedDoor && !designer.selectedWindow) {
+            document.panelCamera.cameraPerspective.classList.add("inputInstrumentSelected");
+            document.panelCamera.cameraPerspective.classList.remove("inputInstrumentUnselected");
 
-        document.panelCamera.cameraOrthographic.classList.remove("inputInstrumentSelected");
-        document.panelCamera.cameraOrthographic.classList.add("inputInstrumentUnselected");
+            document.panelCamera.cameraOrthographic.classList.remove("inputInstrumentSelected");
+            document.panelCamera.cameraOrthographic.classList.add("inputInstrumentUnselected");
 
-        designer.group.rotation.x = -Math.PI / 2;
-    //    designer.groupExtrude.rotation.x = designer.group.rotation.x;
-              designer.groupSubtractDoors.rotation.x = designer.group.rotation.x;
-              designer.groupSubtractWindows.rotation.x = designer.group.rotation.x;
-        designer.groupProportions.rotation.x = designer.group.rotation.x;
+            designer.group.rotation.x = -Math.PI / 2;
+            //    designer.groupExtrude.rotation.x = designer.group.rotation.x;
+            designer.groupSubtractDoors.rotation.x = designer.group.rotation.x;
+            designer.groupSubtractWindows.rotation.x = designer.group.rotation.x;
+            designer.groupProportions.rotation.x = designer.group.rotation.x;
 
-        designer.groupSubtractDoors.visible = false;
-        designer.groupSubtractWindows.visible = false;
+            designer.groupSubtractDoors.visible = false;
+            designer.groupSubtractWindows.visible = false;
 
-        designer.groupDoors.visible = true;
-        designer.groupWindows.visible = true;
+            designer.groupDoors.visible = true;
+            designer.groupWindows.visible = true;
 
-        human.visible = true;
-       // designer.groupExtrude.visible = true;
-        designer.groupFinishedWalls.visible = true;
-        designer.groupPlane.visible = false;
-        designer.groupLinesUpdate.visible = false;
-        designer.groupLines.visible = false;
+            human.visible = true;
+            // designer.groupExtrude.visible = true;
+            designer.groupFinishedWalls.visible = true;
+            designer.groupPlane.visible = false;
+            designer.groupLinesUpdate.visible = false;
+            designer.groupLines.visible = false;
 
-        designer.selectedScale = false;
-        designer.boolDoor = false;
-        designer.boolWindow = false;
-        designer.selectedInstr = false;
-        changeColorButton();
-        designer.removeCursorDoor2D();
-        designer.removeCursorWindow2D();
+            designer.selectedScale = false;
+            designer.boolDoor = false;
+            designer.boolWindow = false;
+            designer.selectedInstr = false;
+            changeColorButton();
+            designer.removeCursorDoor2D();
+            designer.removeCursorWindow2D();
 
-        designer.groupLinesScale.visible = false;
+            designer.groupLinesScale.visible = false;
 
-        designer.groupPoints.visible = false;
-        designer.groupProportions.visible = false;
-        designer.groupProportions3D.visible = true;
-        transformControl.enabled = false;
-        transformControl.visible = false;
+            designer.groupPoints.visible = false;
+            designer.groupProportions.visible = false;
+            designer.groupProportions3D.visible = true;
+            transformControl.enabled = false;
+            transformControl.visible = false;
 
-        camera = cameraPerspective;
-        setDefaultPerspectiveCameraPosition();
-        set3DControl();
+            camera = cameraPerspective;
+            setDefaultPerspectiveCameraPosition();
+            set3DControl();
 
-        designer.rebuild();
+            designer.rebuild();
+        }
     }
 }
 
