@@ -2448,6 +2448,9 @@ ControlDesigner.prototype.mouseClickDoor2D = function (intersect){
                 }
             }
         } else if (this.door2D) {
+            if (arr[0] === "wallsCup") {
+                this.updatedWall = +arr[1];
+            }
             if (+this.door2D.name === this.updatedWall) {
                 this.addDoor2D(this.door2D, this.groupSubtractDoors.children.length, arr[1]);
             }
@@ -2538,6 +2541,9 @@ ControlDesigner.prototype.mouseClickWindow2D = function (intersect){
                 }
             }
         } else if (this.window2D) {
+            if (arr[0] === "wallsCup") {
+                this.updatedWall = +arr[1];
+            }
             if (+this.window2D.name === this.updatedWall) {
                 this.addWindow2D(this.window2D, this.groupSubtractWindows.children.length, arr[1]);
             }

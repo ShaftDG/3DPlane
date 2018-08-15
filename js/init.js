@@ -777,6 +777,21 @@ function changeCamera(event){
     } else if (event.srcElement.name === "cameraPerspective") {
 
         if (!designer.selectedDoor && !designer.selectedWindow) {
+
+            if (transformControl.object) {
+                transformControl.detach(transformControl.object);
+            }
+
+            if (designer.selectedObject) {
+                designer.unselectObject(designer.selectedObject);
+                designer.selectedObject = null;
+            }
+
+            if (designer.selectedPoint) {
+                designer.unselectPointObject(designer.selectedPoint);
+                designer.selectedPoint = null;
+            }
+
             document.panelCamera.cameraPerspective.classList.add("inputInstrumentSelected");
             document.panelCamera.cameraPerspective.classList.remove("inputInstrumentUnselected");
 
