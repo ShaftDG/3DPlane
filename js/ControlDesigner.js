@@ -2138,30 +2138,56 @@ ControlDesigner.prototype.getDistanceToPoint3D = function ( cross, f, v, width )
         this.add(this.lineDistance);
     }
 
-    var d = new THREE.Vector2(-(cross.x - f.a.x), -(cross.y - f.a.y));
-    d = d.normalize();
+    var d, begin, vector, start, start0, end, end0;
+    if (
+        new THREE.Vector3(f.a.x - cross.x, f.a.y - cross.y, f.a.z - cross.z).length() <=
+        new THREE.Vector3(cross.x - f.c.x, cross.y - f.c.y, cross.z - f.c.z).length()
+    ) {
+        begin = f.a;
+        d = new THREE.Vector2(-(cross.x - begin.x), -(cross.y - begin.y));
+        d = d.normalize();
+        vector = {
+            x0: begin.x + d.x * (width / 2),
+            y0: begin.y + d.y * (width / 2),
+            z0: 0,
+            x1: cross.x + d.x * (width / 2),
+            y1: cross.y + d.y * (width / 2),
+            z1: 0,
+        };
+        f = this.getVectors(vector, 30);
 
-    var vector = {
-        x0: f.a.x + d.x * (width / 2),
-        y0: f.a.y + d.y * (width / 2),
-        z0: 0,
-        x1: cross.x + d.x * (width / 2),
-        y1: cross.y + d.y * (width / 2),
-        z1: 0,
-    };
-    f = this.getVectors(vector, 40);
-    var start0 = v.start;
-    var start = f.d;
-    var end = f.b;
-    var end0 = new THREE.Vector3(cross.x + d.x * (width / 2), cross.y + d.y * (width / 2), cross.z);
+        start0 = new THREE.Vector3(cross.x + d.x * (width / 2), cross.y + d.y * (width / 2), cross.z);
+        start = f.d;
+        end = f.b;
+        end0 = v.start;
+    } else {
+        begin = f.c;
+        d = new THREE.Vector2(-(cross.x - begin.x), -(cross.y - begin.y));
+        d = d.normalize();
+        vector = {
+            x0: cross.x + d.x * (width / 2),
+            y0: cross.y + d.y * (width / 2),
+            z0: 0,
+            x1: begin.x + d.x * (width / 2),
+            y1: begin.y + d.y * (width / 2),
+            z1: 0,
+
+        };
+        f = this.getVectors(vector, 30);
+
+        start0 = new THREE.Vector3(cross.x + d.x * (width / 2), cross.y + d.y * (width / 2), cross.z);
+        start = f.b;
+        end = f.d;
+        end0 = v.end;
+    }
 
     if (this.lineDistance) {
 
         var pos = this.lineDistance.geometry.attributes.position.array;
 
-        pos[0] = end0.x;
+        pos[0] = start0.x;
         pos[1] = 10;
-        pos[2] = -end0.y;
+        pos[2] = -start0.y;
 
         pos[3] = start.x;
         pos[4] = 10;
@@ -2171,9 +2197,9 @@ ControlDesigner.prototype.getDistanceToPoint3D = function ( cross, f, v, width )
         pos[7] = 10;
         pos[8] = -end.y;
 
-        pos[9] = start0.x;
+        pos[9] = end0.x;
         pos[10] = 10;
-        pos[11] = -start0.y;
+        pos[11] = -end0.y;
 
         this.lineDistance.geometry.attributes.position.needsUpdate = true;
     }
@@ -2195,30 +2221,55 @@ ControlDesigner.prototype.getDistanceToPoint2D = function ( cross, f, v, width )
         this.add(this.lineDistance);
     }
 
-    var d = new THREE.Vector2(-(cross.x - f.a.x), -(cross.y - f.a.y));
-    d = d.normalize();
+    var d, begin, vector, start, start0, end, end0;
+    if (
+        new THREE.Vector3(f.a.x - cross.x, f.a.y - cross.y, f.a.z - cross.z).length() <=
+        new THREE.Vector3(cross.x - f.c.x, cross.y - f.c.y, cross.z - f.c.z).length()
+    ) {
+        begin = f.a;
+        d = new THREE.Vector2(-(cross.x - begin.x), -(cross.y - begin.y));
+        d = d.normalize();
+        vector = {
+            x0: begin.x + d.x * (width / 2),
+            y0: begin.y + d.y * (width / 2),
+            z0: 0,
+            x1: cross.x + d.x * (width / 2),
+            y1: cross.y + d.y * (width / 2),
+            z1: 0,
+        };
+        f = this.getVectors(vector, 30);
 
-    var vector = {
-        x0: f.a.x + d.x * (width / 2),
-        y0: f.a.y + d.y * (width / 2),
-        z0: 0,
-        x1: cross.x + d.x * (width / 2),
-        y1: cross.y + d.y * (width / 2),
-        z1: 0,
-    };
-    f = this.getVectors(vector, 30);
+        start0 = new THREE.Vector3(cross.x + d.x * (width / 2), cross.y + d.y * (width / 2), cross.z);
+        start = f.d;
+        end = f.b;
+        end0 = v.start;
+    } else {
+        begin = f.c;
+        d = new THREE.Vector2(-(cross.x - begin.x), -(cross.y - begin.y));
+        d = d.normalize();
+        vector = {
+            x0: cross.x + d.x * (width / 2),
+            y0: cross.y + d.y * (width / 2),
+            z0: 0,
+            x1: begin.x + d.x * (width / 2),
+            y1: begin.y + d.y * (width / 2),
+            z1: 0,
 
-    var start0 = v.start;
-    var start = f.d;
-    var end = f.b;
-    var end0 = new THREE.Vector3(cross.x + d.x * (width / 2), cross.y + d.y * (width / 2), cross.z);
+        };
+        f = this.getVectors(vector, 30);
+
+        start0 = new THREE.Vector3(cross.x + d.x * (width / 2), cross.y + d.y * (width / 2), cross.z);
+        start = f.b;
+        end = f.d;
+        end0 = v.end;
+    }
 
     if (this.lineDistance) {
 
         var pos = this.lineDistance.geometry.attributes.position.array;
 
-        pos[0] = end0.x;
-        pos[1] = end0.y;
+        pos[0] = start0.x;
+        pos[1] = start0.y;
         pos[2] = 700;
 
         pos[3] = start.x;
@@ -2229,8 +2280,8 @@ ControlDesigner.prototype.getDistanceToPoint2D = function ( cross, f, v, width )
         pos[7] = end.y;
         pos[8] = 700;
 
-        pos[9] = start0.x;
-        pos[10] = start0.y;
+        pos[9] = end0.x;
+        pos[10] = end0.y;
         pos[11] = 700;
 
         this.lineDistance.geometry.attributes.position.needsUpdate = true;
