@@ -491,19 +491,19 @@ function onDocumentMouseMove( event ) {
                 posMouse = designer.updateHelperLines(obj);
             } else {
                 if (designer.boolDoor) {
-                    designer.mouseMoveDoor2D(posMouse, intersect);
+                    designer.mouseMoveDoor2D(posMouse);
                 } else if (designer.boolWindow) {
-                    designer.mouseMoveWindow2D(posMouse, intersect);
+                    designer.mouseMoveWindow2D(posMouse);
                 } else {
-                    designer.mouseMove2D(posMouse, intersect);
+                    designer.mouseMove2D(posMouse);
                 }
             }
         } else if (camera.isPerspectiveCamera) {
 
             if (designer.boolDoor) {
-                designer.mouseMoveDoor3D(posMouse, intersect);
+                designer.mouseMoveDoor3D(intersect);
             } else if (designer.boolWindow) {
-                designer.mouseMoveWindow3D(posMouse, intersect);
+                designer.mouseMoveWindow3D(intersect);
             } else {
                 designer.mouseMove3D(intersect);
             }
