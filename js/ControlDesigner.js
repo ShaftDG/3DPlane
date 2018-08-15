@@ -2122,6 +2122,7 @@ ControlDesigner.prototype.getLastPosition = function ( f, posMouse ){
         }
     }
 };
+
 ControlDesigner.prototype.getDistanceToPoint3D = function ( cross, f, v, width ){
 
     if (!this.lineDistance) {

@@ -524,11 +524,12 @@ function leftClick( event ) {
     if (intersects.length > 0) {
         var intersect = intersects[0];
         if (camera.isOrthographicCamera) {
-            designer.mouseClick2D( intersect );
             if (designer.boolDoor) {
                 designer.mouseClickDoor2D(intersect);
             } else if (designer.boolWindow) {
                 designer.mouseClickWindow2D(intersect);
+            } else {
+                designer.mouseClick2D( intersect );
             }
         } else if (camera.isPerspectiveCamera) {
             if (designer.boolDoor) {
@@ -582,7 +583,13 @@ function render() {
 }
 
 function changeInstrument(){
-    if (camera.isOrthographicCamera) {
+    if (
+        camera.isOrthographicCamera &&
+        !designer.boolWindow &&
+        !designer.boolDoor &&
+        !designer.selectedWindow &&
+        !designer.selectedDoor
+    ) {
         designer.selectedInstr = !designer.selectedInstr;
         designer.selectedScale = false;
         designer.groupLinesScale.visible = false;
@@ -596,14 +603,26 @@ function changeInstrument(){
 }
 
 function changeMagnet(){
-    if (camera.isOrthographicCamera) {
+    if (
+        camera.isOrthographicCamera &&
+        !designer.boolWindow &&
+        !designer.boolDoor &&
+        !designer.selectedWindow &&
+        !designer.selectedDoor
+    ) {
         designer.boolMagnet = !designer.boolMagnet;
         changeColorButton();
     }
 }
 
 function changeDoor(){
-    if (!designer.selectedDoor && !designer.selectedWindow) {
+    if (
+        !designer.selectedDoor &&
+        !designer.selectedWindow &&
+        !designer.boolMagnet &&
+        !designer.selectedInstr &&
+        !designer.selectedScale
+    ) {
         width.value = designer.widthDoor;
         height.value = designer.heightDoor;
         depth.value = designer.depthDoor;
@@ -623,7 +642,13 @@ function changeDoor(){
 }
 
 function changeWindow(){
-    if (!designer.selectedDoor && !designer.selectedWindow) {
+    if (
+        !designer.selectedDoor &&
+        !designer.selectedWindow &&
+        !designer.boolMagnet &&
+        !designer.selectedInstr &&
+        !designer.selectedScale
+    ) {
         width.value = designer.widthWindow;
         height.value = designer.heightWindow;
         depth.value = designer.depthWindow;
@@ -643,7 +668,13 @@ function changeWindow(){
 }
 
 function changeScale(){
-    if (camera.isOrthographicCamera) {
+    if (
+        camera.isOrthographicCamera &&
+        !designer.boolWindow &&
+        !designer.boolDoor &&
+        !designer.selectedWindow &&
+        !designer.selectedDoor
+    ) {
         designer.groupLinesScale.visible = true;
         designer.selectedScale = !designer.selectedScale;
         designer.selectedInstr = false;
