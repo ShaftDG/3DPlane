@@ -165,7 +165,7 @@ ControlDesigner.prototype.addBackground = function (texture){
         this.removeObject(this.group, this.mapGroup.get("planeBackground"));
     }
     var geometry = new THREE.PlaneGeometry(texture.image.width, texture.image.height);
-    var material = new THREE.MeshBasicMaterial({map: texture, transparent: true, opacity: 0.25});
+    var material = new THREE.MeshBasicMaterial({map: texture, transparent: true, opacity: 0.25, depthTest: false});
     this.planeBackground = new THREE.Mesh(geometry, material);
     this.planeBackground.name = "planeBackground";
     this.planeBackground.position.z = 2;
@@ -1351,7 +1351,7 @@ ControlDesigner.prototype.addShape = function ( shape, extrudeSettings, colorCup
     // extruded shape
     var geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
     geometry.rotateX(-Math.PI / 2);
-    var mesh = new THREE.Mesh( geometry, new THREE.MeshPhongMaterial( { color: colorWall/*, transparent: true*/, side: THREE.DoubleSide } ) );
+    var mesh = new THREE.Mesh( geometry, new THREE.MeshPhongMaterial( { color: colorWall/*, transparent: true, opacity: 0.75, side: THREE.DoubleSide, depthTest: false*/ } ) );
     mesh.position.set( x, y, z );
     mesh.rotation.set( rx, ry, rz );
     mesh.scale.set( s, s, s );
