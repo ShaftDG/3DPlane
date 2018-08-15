@@ -2122,8 +2122,8 @@ ControlDesigner.prototype.getLastPosition = function ( f, posMouse ){
         }
     }
 };
+ControlDesigner.prototype.getDistanceToPoint3D = function ( cross, f, v, width ){
 
-ControlDesigner.prototype.getDistanceToPoint3D = function ( start0, start, end, end0 ){
     if (!this.lineDistance) {
         var geometry = new THREE.BufferGeometry();
         var positionsDistance = new Float32Array(4 * 3);
@@ -2137,6 +2137,23 @@ ControlDesigner.prototype.getDistanceToPoint3D = function ( start0, start, end, 
         this.lineDistance.name = "lineDistance";
         this.add(this.lineDistance);
     }
+
+    var d = new THREE.Vector2(-(cross.x - f.a.x), -(cross.y - f.a.y));
+    d = d.normalize();
+
+    var vector = {
+        x0: f.a.x + d.x * (width / 2),
+        y0: f.a.y + d.y * (width / 2),
+        z0: 0,
+        x1: cross.x + d.x * (width / 2),
+        y1: cross.y + d.y * (width / 2),
+        z1: 0,
+    };
+    f = this.getVectors(vector, 40);
+    var start0 = v.start;
+    var start = f.d;
+    var end = f.b;
+    var end0 = new THREE.Vector3(cross.x + d.x * (width / 2), cross.y + d.y * (width / 2), cross.z);
 
     if (this.lineDistance) {
 
@@ -2160,9 +2177,10 @@ ControlDesigner.prototype.getDistanceToPoint3D = function ( start0, start, end, 
 
         this.lineDistance.geometry.attributes.position.needsUpdate = true;
     }
+    return f;
 };
 
-ControlDesigner.prototype.getDistanceToPoint2D = function ( start0, start, end, end0 ){
+ControlDesigner.prototype.getDistanceToPoint2D = function ( cross, f, v, width ){
     if (!this.lineDistance) {
         var geometry = new THREE.BufferGeometry();
         var positionsDistance = new Float32Array(4 * 3);
@@ -2176,6 +2194,24 @@ ControlDesigner.prototype.getDistanceToPoint2D = function ( start0, start, end, 
         this.lineDistance.name = "lineDistance";
         this.add(this.lineDistance);
     }
+
+    var d = new THREE.Vector2(-(cross.x - f.a.x), -(cross.y - f.a.y));
+    d = d.normalize();
+
+    var vector = {
+        x0: f.a.x + d.x * (width / 2),
+        y0: f.a.y + d.y * (width / 2),
+        z0: 0,
+        x1: cross.x + d.x * (width / 2),
+        y1: cross.y + d.y * (width / 2),
+        z1: 0,
+    };
+    f = this.getVectors(vector, 30);
+
+    var start0 = v.start;
+    var start = f.d;
+    var end = f.b;
+    var end0 = new THREE.Vector3(cross.x + d.x * (width / 2), cross.y + d.y * (width / 2), cross.z);
 
     if (this.lineDistance) {
 
@@ -2199,6 +2235,7 @@ ControlDesigner.prototype.getDistanceToPoint2D = function ( start0, start, end, 
 
         this.lineDistance.geometry.attributes.position.needsUpdate = true;
     }
+    return f;
 };
 
 ControlDesigner.prototype.clearDistanceToPoint = function ( start, end ){
@@ -2269,20 +2306,7 @@ ControlDesigner.prototype.mouseMove2D = function (posMouse, intersect){
             this.selectedWindow.rotation.z = angle;
             if (cross.overlapping) {
                 this.selectedWindow.position.copy(new THREE.Vector3(cross.x, cross.y, posMouse.z));
-
-                d = new THREE.Vector2(-(cross.x - f.a.x), -(cross.y - f.a.y));
-                d = d.normalize();
-
-                vector = {
-                    x0: f.a.x + d.x * (this.widthWindow / 2),
-                    y0: f.a.y + d.y * (this.widthWindow / 2),
-                    z0: 0,
-                    x1: cross.x + d.x * (this.widthWindow / 2),
-                    y1: cross.y + d.y * (this.widthWindow / 2),
-                    z1: 0,
-                };
-                f = this.getVectors(vector, (this.widthWall*1.5));
-                this.getDistanceToPoint2D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthWindow / 2), cross.y + d.y * (this.widthWindow / 2),cross.z));
+                f = this.getDistanceToPoint2D(cross, f, v, this.widthWindow);
                 this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
                 this.positionProportions(f.b, f.d, "distance", "wall");
             } else {
@@ -2317,20 +2341,7 @@ ControlDesigner.prototype.mouseMove2D = function (posMouse, intersect){
             this.selectedDoor.rotation.z = angle;
             if (cross.overlapping) {
                 this.selectedDoor.position.copy(new THREE.Vector3(cross.x, cross.y, posMouse.z));
-
-                d = new THREE.Vector2(-(cross.x - f.a.x), -(cross.y - f.a.y));
-                d = d.normalize();
-
-                vector = {
-                    x0: f.a.x + d.x * (this.widthDoor / 2),
-                    y0: f.a.y + d.y * (this.widthDoor / 2),
-                    z0: 0,
-                    x1: cross.x + d.x * (this.widthDoor / 2),
-                    y1: cross.y + d.y * (this.widthDoor / 2),
-                    z1: 0,
-                };
-                f = this.getVectors(vector, (this.widthWall*1.5));
-                this.getDistanceToPoint2D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthDoor / 2), cross.y + d.y * (this.widthDoor / 2),cross.z));
+                f = this.getDistanceToPoint2D(cross, f, v, this.widthDoor);
                 this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
                 this.positionProportions(f.b, f.d, "distance", "wall");
 //
@@ -2375,19 +2386,7 @@ ControlDesigner.prototype.mouseClickDoor2D = function (intersect){
                 this.door2D.name = this.updatedWall.toString();
                 if (cross.overlapping) {
                     this.door2D.position.copy(new THREE.Vector3(cross.x, cross.y, intersect.point.z));
-                    d = new THREE.Vector2(-(cross.x - f.a.x), -(cross.y - f.a.y));
-                    d = d.normalize();
-
-                    vector = {
-                        x0: f.a.x + d.x * (this.widthDoor / 2),
-                        y0: f.a.y + d.y * (this.widthDoor / 2),
-                        z0: 0,
-                        x1: cross.x + d.x * (this.widthDoor / 2),
-                        y1: cross.y + d.y * (this.widthDoor / 2),
-                        z1: 0,
-                    };
-                    f = this.getVectors(vector, (this.widthWall*1.5));
-                    this.getDistanceToPoint2D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthDoor / 2), cross.y + d.y * (this.widthDoor / 2),cross.z));
+                    f = this.getDistanceToPoint2D(cross, f, v, this.widthDoor);
                     this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
                     this.positionProportions(f.b, f.d, "distance", "wall");
                 } else {
@@ -2433,19 +2432,7 @@ ControlDesigner.prototype.mouseMoveDoor2D = function ( posMouse, intersect ){
             this.door2D.rotation.z = angle;
             if (cross.overlapping) {
                 this.door2D.position.copy(new THREE.Vector3(cross.x, cross.y, posMouse.z));
-                d = new THREE.Vector2(-(cross.x - f.a.x), -(cross.y - f.a.y));
-                d = d.normalize();
-
-                vector = {
-                    x0: f.a.x + d.x * (this.widthDoor / 2),
-                    y0: f.a.y + d.y * (this.widthDoor / 2),
-                    z0: 0,
-                    x1: cross.x + d.x * (this.widthDoor / 2),
-                    y1: cross.y + d.y * (this.widthDoor / 2),
-                    z1: 0,
-                };
-                f = this.getVectors(vector, (this.widthWall*1.5));
-                this.getDistanceToPoint2D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthDoor / 2), cross.y + d.y * (this.widthDoor / 2),cross.z));
+                f = this.getDistanceToPoint2D(cross, f, v, this.widthDoor);
                 this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
                 this.positionProportions(f.b, f.d, "distance", "wall");
             } else {
@@ -2489,19 +2476,7 @@ ControlDesigner.prototype.mouseClickWindow2D = function (intersect){
                 this.window2D.name = this.updatedWall.toString();
                 if (cross.overlapping) {
                     this.window2D.position.copy(new THREE.Vector3(cross.x, cross.y, intersect.point.z));
-                    d = new THREE.Vector2(-(cross.x - f.a.x), -(cross.y - f.a.y));
-                    d = d.normalize();
-
-                    vector = {
-                        x0: f.a.x + d.x * (this.widthWindow / 2),
-                        y0: f.a.y + d.y * (this.widthWindow / 2),
-                        z0: 0,
-                        x1: cross.x + d.x * (this.widthWindow / 2),
-                        y1: cross.y + d.y * (this.widthWindow / 2),
-                        z1: 0,
-                    };
-                    f = this.getVectors(vector, (this.widthWall*1.5));
-                    this.getDistanceToPoint2D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthWindow / 2), cross.y + d.y * (this.widthWindow / 2),cross.z));
+                    f = this.getDistanceToPoint2D(cross, f, v, this.widthWindow);
                     this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
                     this.positionProportions(f.b, f.d, "distance", "wall");
                 } else {
@@ -2548,19 +2523,7 @@ ControlDesigner.prototype.mouseMoveWindow2D = function ( posMouse, intersect ){
             this.window2D.rotation.z = angle;
             if (cross.overlapping) {
                 this.window2D.position.copy(new THREE.Vector3(cross.x, cross.y, posMouse.z));
-                d = new THREE.Vector2(-(cross.x - f.a.x), -(cross.y - f.a.y));
-                d = d.normalize();
-
-                vector = {
-                    x0: f.a.x + d.x * (this.widthWindow / 2),
-                    y0: f.a.y + d.y * (this.widthWindow / 2),
-                    z0: 0,
-                    x1: cross.x + d.x * (this.widthWindow / 2),
-                    y1: cross.y + d.y * (this.widthWindow / 2),
-                    z1: 0,
-                };
-                f = this.getVectors(vector, (this.widthWall*1.5));
-                this.getDistanceToPoint2D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthWindow / 2), cross.y + d.y * (this.widthWindow / 2),cross.z));
+                f = this.getDistanceToPoint2D(cross, f, v, this.widthWindow);
                 this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
                 this.positionProportions(f.b, f.d, "distance", "wall");
             } else {
@@ -2912,19 +2875,7 @@ ControlDesigner.prototype.mouseClickDoor3D = function (intersect){
             this.door.rotation.y = angle;
             if (cross.overlapping) {
                 this.door.position.copy(new THREE.Vector3(cross.x, (this.heightDoor/2 + this.fromFloorDoor), -cross.y));
-                d = new THREE.Vector2(-(cross.x - f.a.x), -(cross.y - f.a.y));
-                d = d.normalize();
-
-                vector = {
-                    x0: f.a.x + d.x * (this.widthDoor / 2),
-                    y0: f.a.y + d.y * (this.widthDoor / 2),
-                    z0: 0,
-                    x1: cross.x + d.x * (this.widthDoor / 2),
-                    y1: cross.y + d.y * (this.widthDoor / 2),
-                    z1: 0,
-                };
-                f = this.getVectors(vector, (this.widthWall*2));
-                this.getDistanceToPoint3D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthDoor / 2), cross.y + d.y * (this.widthDoor / 2),cross.z));
+                f = this.getDistanceToPoint3D(cross, f, v, this.widthDoor);
                 this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
                 this.positionProportions3D(f.b, f.d, "distance", "wall");
             } else {
@@ -2970,19 +2921,7 @@ ControlDesigner.prototype.mouseClickWindow3D = function (intersect){
             this.window.rotation.y = angle;
             if (cross.overlapping) {
                 this.window.position.copy(new THREE.Vector3(cross.x, ((this.heightWindow/2) + this.fromFloorWindow), -cross.y));
-                d = new THREE.Vector2(-(cross.x - f.a.x), -(cross.y - f.a.y));
-                d = d.normalize();
-
-                vector = {
-                    x0: f.a.x + d.x * (this.widthWindow / 2),
-                    y0: f.a.y + d.y * (this.widthWindow / 2),
-                    z0: 0,
-                    x1: cross.x + d.x * (this.widthWindow / 2),
-                    y1: cross.y + d.y * (this.widthWindow / 2),
-                    z1: 0,
-                };
-                f = this.getVectors(vector, (this.widthWall*1.5));
-                this.getDistanceToPoint3D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthWindow / 2), cross.y + d.y * (this.widthWindow / 2),cross.z));
+                f = this.getDistanceToPoint3D(cross, f, v, this.widthWindow);
                 this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
                 this.positionProportions3D(f.b, f.d, "distance", "wall");
             } else {
@@ -3033,20 +2972,7 @@ ControlDesigner.prototype.mouseMove3D = function ( intersect ){
                 this.selectedWindow = this.mapWindows.get(this.selectedWindow.name);
                 this.selectedWindow.scale.z = 1.05;
                 this.selectWindow(this.selectedWindow);
-
-                d = new THREE.Vector2(-(cross.x - f.a.x), -(cross.y - f.a.y));
-                d = d.normalize();
-
-                vector = {
-                    x0: f.a.x + d.x * (this.widthWindow / 2),
-                    y0: f.a.y + d.y * (this.widthWindow / 2),
-                    z0: 0,
-                    x1: cross.x + d.x * (this.widthWindow / 2),
-                    y1: cross.y + d.y * (this.widthWindow / 2),
-                    z1: 0,
-                };
-                f = this.getVectors(vector, (this.widthWall*2));
-                this.getDistanceToPoint3D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthWindow / 2), cross.y + d.y * (this.widthWindow / 2),cross.z));
+                f = this.getDistanceToPoint3D(cross, f, v, this.widthWindow);
                 this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
                 this.positionProportions3D(f.b, f.d, "distance", "wall");
             } else {
@@ -3096,20 +3022,7 @@ ControlDesigner.prototype.mouseMove3D = function ( intersect ){
                 this.selectedDoor = this.mapDoors.get(this.selectedDoor.name);
                 this.selectedDoor.scale.z = 1.05;
                 this.selectDoor(this.selectedDoor);
-
-                d = new THREE.Vector2(-(cross.x - f.a.x), -(cross.y - f.a.y));
-                d = d.normalize();
-
-                vector = {
-                    x0: f.a.x + d.x * (this.widthDoor / 2),
-                    y0: f.a.y + d.y * (this.widthDoor / 2),
-                    z0: 0,
-                    x1: cross.x + d.x * (this.widthDoor / 2),
-                    y1: cross.y + d.y * (this.widthDoor / 2),
-                    z1: 0,
-                };
-                f = this.getVectors(vector, (this.widthWall*2));
-                this.getDistanceToPoint3D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthDoor / 2), cross.y + d.y * (this.widthDoor / 2),cross.z));
+                f = this.getDistanceToPoint3D(cross, f, v, this.widthDoor);
                 this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
                 this.positionProportions3D(f.b, f.d, "distance", "wall");
             } else {
@@ -3157,19 +3070,7 @@ ControlDesigner.prototype.mouseMoveDoor3D = function ( posMouse, intersect ){
             this.door.rotation.y = angle;
             if (cross.overlapping) {
                 this.door.position.copy(new THREE.Vector3(cross.x, (this.heightDoor/2 + this.fromFloorDoor), -cross.y));
-                d = new THREE.Vector2(-(cross.x - f.a.x), -(cross.y - f.a.y));
-                d = d.normalize();
-
-                vector = {
-                    x0: f.a.x + d.x * (this.widthDoor / 2),
-                    y0: f.a.y + d.y * (this.widthDoor / 2),
-                    z0: 0,
-                    x1: cross.x + d.x * (this.widthDoor / 2),
-                    y1: cross.y + d.y * (this.widthDoor / 2),
-                    z1: 0,
-                };
-                f = this.getVectors(vector, (this.widthWall*2));
-                this.getDistanceToPoint3D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthDoor / 2), cross.y + d.y * (this.widthDoor / 2),cross.z));
+                f = this.getDistanceToPoint3D(cross, f, v, this.widthDoor);
                 this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
                 this.positionProportions3D(f.b, f.d, "distance", "wall");
             } else {
@@ -3210,19 +3111,7 @@ ControlDesigner.prototype.mouseMoveWindow3D = function ( posMouse, intersect ){
             this.window.rotation.y = angle;
             if (cross.overlapping) {
                 this.window.position.copy(new THREE.Vector3(cross.x, ((this.heightWindow/2) + this.fromFloorWindow), -cross.y));
-                d = new THREE.Vector2(-(cross.x - f.a.x), -(cross.y - f.a.y));
-                d = d.normalize();
-
-                vector = {
-                    x0: f.a.x + d.x * (this.widthWindow / 2),
-                    y0: f.a.y + d.y * (this.widthWindow / 2),
-                    z0: 0,
-                    x1: cross.x + d.x * (this.widthWindow / 2),
-                    y1: cross.y + d.y * (this.widthWindow / 2),
-                    z1: 0,
-                };
-                f = this.getVectors(vector, (this.widthWall*2));
-                this.getDistanceToPoint3D(v.start, f.d, f.b, new THREE.Vector3(cross.x + d.x * (this.widthWindow / 2), cross.y + d.y * (this.widthWindow / 2),cross.z));
+                f = this.getDistanceToPoint3D(cross, f, v, this.widthWindow);
                 this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
                 this.positionProportions3D(f.b, f.d, "distance", "wall");
             } else {
