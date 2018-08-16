@@ -163,7 +163,9 @@ function init() {
     document.getElementsByTagName("canvas")[0].addEventListener( 'mousemove', onDocumentMouseMove, false );
     window.addEventListener( 'resize', onWindowResize, false );
     document.addEventListener( 'keydown', onKeyDown, false );
-    document.getElementsByTagName("canvas")[0].addEventListener( 'mouseup', onDocumentMouseDown, false );
+    document.getElementsByTagName("canvas")[0].addEventListener( 'mousedown', onDocumentMouseDown, false );
+    document.getElementsByTagName("canvas")[0].addEventListener( 'mouseup', onDocumentMouseCancel, false );
+    document.getElementsByTagName("canvas")[0].addEventListener( 'mouseleave', onDocumentMouseCancel, false );
 
     document.Instruments.changeInstrument.addEventListener("click", changeInstrument);
     document.Instruments.changeScale.addEventListener("click", changeScale);
@@ -427,17 +429,24 @@ function visibilityHelp(event) {
 }
 
 function set2DControl() {
-    controlsO = new THREE.TrackballControls( cameraOrthographic, renderer.domElement );
+    if (!controlsO) {
+        controlsO = new THREE.TrackballControls(cameraOrthographic, renderer.domElement);
+    }
+    controlsO.reset();
+    controlsO.target.set(0,0,0);
     controlsO.noRotate = true;
     controlsO.panSpeed = 2.0;
     controlsO.dynamicDampingFactor = 1.0;
 }
 
 function set3DControl() {
-    controlsP = new THREE.OrbitControls( cameraPerspective, renderer.domElement );
+    if (!controlsP) {
+        controlsP = new THREE.OrbitControls(cameraPerspective, renderer.domElement);
+    }
+    controlsP.reset();
     controlsP.maxPolarAngle = Math.PI / 2.1;
     controlsP.maxDistance = 4000;
-    controlsP.enablePan = false;
+    controlsP.screenSpacePanning = false;
 }
 
 function handleFileSelect(evt) {
@@ -555,6 +564,14 @@ function onDocumentMouseDown( event ) {
     }
 }
 
+
+function onDocumentMouseCancel( event ) {
+
+    event.preventDefault();
+    designer.mouseCancel();
+
+}
+
 function animate() {
     if( RESOURCES_LOADED == false ){
         requestAnimationFrame(animate);
@@ -566,13 +583,8 @@ function animate() {
 
 
     requestAnimationFrame( animate );
-
     if (camera.isOrthographicCamera) {
-        controlsP = null;
         controlsO.update();
-    } else if (camera.isPerspectiveCamera) {
-        controlsO = null;
-        controlsP.update();
     }
     //////
     render();
@@ -765,8 +777,7 @@ function changeCamera(event){
             human.visible = false;
 
             camera = cameraOrthographic;
-            setDefaultOrthographicCameraPosition();
-            set2DControl();
+            setCameraDefaultPosition();
 
             designer.boolDoor = false;
             designer.boolWindow = false;
@@ -834,8 +845,7 @@ function changeCamera(event){
             transformControl.visible = false;
 
             camera = cameraPerspective;
-            setDefaultPerspectiveCameraPosition();
-            set3DControl();
+            setCameraDefaultPosition();
 
             designer.rebuild();
         }
@@ -845,9 +855,13 @@ function changeCamera(event){
 function setCameraDefaultPosition () {
     if (camera.isPerspectiveCamera) {
         setDefaultPerspectiveCameraPosition();
+        camera.position.copy(cameraPerspective.position);
+        camera.rotation.copy(cameraPerspective.rotation);
         set3DControl();
     } else if (camera.isOrthographicCamera) {
         setDefaultOrthographicCameraPosition ();
+        camera.position.copy(cameraOrthographic.position);
+        camera.rotation.copy(cameraOrthographic.rotation);
         set2DControl();
     }
 }

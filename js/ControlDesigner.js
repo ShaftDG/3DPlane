@@ -1773,7 +1773,7 @@ ControlDesigner.prototype.unselectWindow = function (object) {
     }
 };
 
-ControlDesigner.prototype.selectWindow = function (object) {
+ControlDesigner.prototype.selectObject = function (object) {
     if (object) {
             object.material.color = new THREE.Color("#0ec921");
     }
@@ -1782,12 +1782,6 @@ ControlDesigner.prototype.selectWindow = function (object) {
 ControlDesigner.prototype.unselectDoor = function (object) {
     if (object) {
             object.material.color = new THREE.Color("#4145d7");
-    }
-};
-
-ControlDesigner.prototype.selectDoor = function (object) {
-    if (object) {
-            object.material.color = new THREE.Color("#0ec921");
     }
 };
 
@@ -2417,7 +2411,7 @@ ControlDesigner.prototype.positionSelectedObject3D = function ( updatedWall, pos
 
             cursorObject = mapObject.get(cursorObject.name);
             cursorObject.scale.z = 1.05;
-            this.selectWindow(cursorObject);
+            this.selectObject(cursorObject);
             f = this.getDistanceToPoint3D(cross, f, v, width);
             this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
             this.positionProportions3D(f.b, f.d, "distance", "wall");
@@ -2429,7 +2423,7 @@ ControlDesigner.prototype.positionSelectedObject3D = function ( updatedWall, pos
             mapSubtract.get(cursorObject.name).rotation.z = cursorObject.rotation.y;
             cursorObject = mapObject.get(cursorObject.name);
             cursorObject.scale.z = 1.05;
-            this.selectWindow(cursorObject);
+            this.selectObject(cursorObject);
             this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
             this.clearDistanceToPoint();
         }
@@ -2453,13 +2447,15 @@ ControlDesigner.prototype.mouseMove = function (posMouse){
 
 ControlDesigner.prototype.mouseMove2D = function (posMouse){
 
-    posMouse.z = 710;
-    if (this.selectedWindow) {
-        var arr = this.selectedWindow.name.split('_');
-        this.positionCursor2D(arr[1], posMouse, this.selectedWindow, this.widthWindow);
-    } else  if (this.selectedDoor) {
-        var arr = this.selectedDoor.name.split('_');
-        this.positionCursor2D(arr[1], posMouse, this.selectedDoor, this.widthDoor);
+    if (this.enableMouseMove) {
+        posMouse.z = 710;
+        if (this.selectedWindow) {
+            var arr = this.selectedWindow.name.split('_');
+            this.positionCursor2D(arr[1], posMouse, this.selectedWindow, this.widthWindow);
+        } else if (this.selectedDoor) {
+            var arr = this.selectedDoor.name.split('_');
+            this.positionCursor2D(arr[1], posMouse, this.selectedDoor, this.widthDoor);
+        }
     }
 };
 
@@ -2627,21 +2623,6 @@ ControlDesigner.prototype.removeCursorWindow2D = function (){
 ControlDesigner.prototype.mouseClick2D = function (intersect){
     var arr = intersect.object.name.split('_');
 
-    if (intersect.object.name === "floor" && !this.selectedInstr && !this.selectedScale) {
-        this.unselectPointObject(this.selectedPoint);
-        transformControl.detach(this.selectedPoint);
-        this.selectedPoint = null;
-
-        this.unselectObject(this.selectedObject);
-        this.selectedObject = null;
-
-     /*   this.unselectDoor(this.selectedDoor);
-        this.selectedDoor = null;
-
-        this.unselectWindow(this.selectedWindow);
-        this.selectedWindow = null;*/
-    }
-
     if (this.selectedInstr) {
 
         if ( Math.abs( new THREE.Vector2(
@@ -2712,8 +2693,7 @@ ControlDesigner.prototype.mouseClick2D = function (intersect){
     }
 
     if (arr[0].split('-')[0] === "window") {
-
-        if (!this.selectedWindow) {
+            this.enableMouseMove = true;
             this.unselectPointObject(this.selectedPoint);
             transformControl.detach(this.selectedPoint);
             this.selectedPoint = null;
@@ -2726,22 +2706,16 @@ ControlDesigner.prototype.mouseClick2D = function (intersect){
 
             this.unselectWindow(this.selectedWindow);
             this.selectedWindow = intersect.object;
-            this.selectWindow(this.selectedWindow);
-        } else {
-            this.unselectWindow(this.selectedWindow);
-            this.selectedWindow = null;
-            this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
-            this.clearDistanceToPoint();
-        }
-    } /*else {
+            this.selectObject(this.selectedWindow);
+            this.positionCursor2D(arr[1], this.selectedWindow.position, this.selectedWindow, this.widthWindow);
+    } else {
         this.unselectWindow(this.selectedWindow);
         this.selectedWindow = null;
         this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
         this.clearDistanceToPoint();
-    }*/
+    }
     if (arr[0].split('-')[0] === "door") {
-
-        if (!this.selectedDoor) {
+            this.enableMouseMove = true;
             this.unselectPointObject(this.selectedPoint);
             transformControl.detach(this.selectedPoint);
             this.selectedPoint = null;
@@ -2754,27 +2728,20 @@ ControlDesigner.prototype.mouseClick2D = function (intersect){
 
             this.unselectDoor(this.selectedDoor);
             this.selectedDoor = intersect.object;
-            this.selectDoor(this.selectedDoor);
-        } else {
-            this.unselectDoor(this.selectedDoor);
-            this.selectedDoor = null;
-            this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
-            this.clearDistanceToPoint();
-        }
-    } /*else {
+            this.selectObject(this.selectedDoor);
+            this.positionCursor2D(arr[1], this.selectedDoor.position, this.selectedDoor, this.widthDoor);
+    } else {
         this.unselectDoor(this.selectedDoor);
         this.selectedDoor = null;
         this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
         this.clearDistanceToPoint();
-    }*/
+    }
 };
 
 ControlDesigner.prototype.mouseClick3D = function (intersect){
     var arr = intersect.object.name.split('_');
-    console.log(intersect.object.name);
-    if (!this.window && !this.boolWindow) {
         if (arr[0].split('-')[0] === "window") {
-            if (!this.selectedWindow) {
+                this.enableMouseMove = true;
                 this.unselectPointObject(this.selectedPoint);
                 transformControl.detach(this.selectedPoint);
                 this.selectedPoint = null;
@@ -2787,26 +2754,18 @@ ControlDesigner.prototype.mouseClick3D = function (intersect){
 
                 this.unselectWindow(this.selectedWindow);
                 this.selectedWindow = intersect.object;
-                this.selectWindow(this.selectedWindow);
-                this.positionSelectedObject3D(arr[1], intersect.point, this.selectedWindow, this.mapWindows,
+                this.selectObject(this.selectedWindow);
+                this.positionSelectedObject3D(arr[1], this.selectedWindow.position, this.selectedWindow, this.mapWindows,
                     this.mapSubtractWindows, this.widthWindow, this.heightWindow, this.fromFloorWindow);
-            } else {
-                this.unselectWindow(this.selectedWindow);
-                this.selectedWindow.scale.z = 1.0;
-                this.selectedWindow = null;
-                this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
-                this.clearDistanceToPoint();
-                this.rebuild();
-            }
         } else {
-            // this.unselectWindow(this.selectedWindow);
-            // this.selectedWindow = null;
+            this.unselectWindow(this.selectedWindow);
+            this.selectedWindow = null;
+            this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
+            this.clearDistanceToPoint();
         }
-    }
-    if (!this.door && !this.boolDoor) {
-        if (arr[0].split('-')[0] === "door") {
 
-            if (!this.selectedDoor) {
+        if (arr[0].split('-')[0] === "door") {
+                this.enableMouseMove = true;
                 this.unselectPointObject(this.selectedPoint);
                 transformControl.detach(this.selectedPoint);
                 this.selectedPoint = null;
@@ -2819,22 +2778,37 @@ ControlDesigner.prototype.mouseClick3D = function (intersect){
 
                 this.unselectDoor(this.selectedDoor);
                 this.selectedDoor = intersect.object;
-                this.selectDoor(this.selectedDoor);
-                this.positionSelectedObject3D(arr[1], intersect.point, this.selectedDoor, this.mapDoors,
+                this.selectObject(this.selectedDoor);
+                this.positionSelectedObject3D(arr[1], this.selectedDoor.position, this.selectedDoor, this.mapDoors,
                     this.mapSubtractDoors, this.widthDoor, this.heightDoor, this.fromFloorDoor);
-            } else {
-                this.unselectDoor(this.selectedDoor);
-                this.selectedDoor.scale.z = 1.0;
-                this.selectedDoor = null;
-                this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
-                this.clearDistanceToPoint();
-                this.rebuild();
-            }
         } else {
-             // this.unselectDoor(this.selectedDoor);
-             // this.selectedDoor = null;
+            this.unselectWindow(this.selectedDoor);
+            this.selectedDoor = null;
+            this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
+            this.clearDistanceToPoint();
         }
-    }
+};
+
+
+ControlDesigner.prototype.mouseCancel = function (){
+
+            if (this.selectedWindow) {
+                if (camera.isPerspectiveCamera) {
+                    this.rebuild();
+                    this.selectedWindow = this.mapWindows.get(this.selectedWindow.name);
+                    this.selectObject(this.selectedWindow);
+                }
+                this.enableMouseMove = false;
+            }
+
+            if (this.selectedDoor) {
+                if (camera.isPerspectiveCamera) {
+                    this.rebuild();
+                    this.selectedDoor = this.mapDoors.get(this.selectedDoor.name);
+                    this.selectObject(this.selectedDoor);
+                }
+                this.enableMouseMove = false;
+            }
 };
 
 ControlDesigner.prototype.mouseClickDoor3D = function (intersect){
@@ -2861,14 +2835,16 @@ ControlDesigner.prototype.mouseClickWindow3D = function (intersect){
 
 ControlDesigner.prototype.mouseMove3D = function ( intersect ){
     // console.log(intersect.object.name);
-    if (this.selectedWindow) {
-        var arr = this.selectedWindow.name.split('_');
-        this.positionSelectedObject3D(arr[1], intersect.point, this.selectedWindow, this.mapWindows,
-            this.mapSubtractWindows, this.widthWindow, this.heightWindow, this.fromFloorWindow);
-    } else if (this.selectedDoor) {
-        var arr = this.selectedDoor.name.split('_');
-        this.positionSelectedObject3D(arr[1], intersect.point, this.selectedDoor, this.mapDoors,
-            this.mapSubtractDoors, this.widthDoor, this.heightDoor, this.fromFloorDoor);
+    if (this.enableMouseMove) {
+        if (this.selectedWindow) {
+            var arr = this.selectedWindow.name.split('_');
+            this.positionSelectedObject3D(arr[1], intersect.point, this.selectedWindow, this.mapWindows,
+                this.mapSubtractWindows, this.widthWindow, this.heightWindow, this.fromFloorWindow);
+        } else if (this.selectedDoor) {
+            var arr = this.selectedDoor.name.split('_');
+            this.positionSelectedObject3D(arr[1], intersect.point, this.selectedDoor, this.mapDoors,
+                this.mapSubtractDoors, this.widthDoor, this.heightDoor, this.fromFloorDoor);
+        }
     }
 };
 
