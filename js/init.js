@@ -514,6 +514,11 @@ function onDocumentMouseMove( event ) {
             } else if (designer.boolWindow) {
                 designer.mouseMoveWindow3D(intersect);
             } else {
+                if (designer.selectedWindow || designer.selectedDoor) {
+                    controlsP.enableRotate = false;
+                } else {
+                    controlsP.enableRotate = true;
+                }
                 designer.mouseMove3D(intersect);
             }
         }
@@ -538,7 +543,7 @@ function leftClick( event ) {
             } else if (designer.boolWindow) {
                 designer.mouseClickWindow2D(intersect);
             } else {
-                designer.mouseClick2D( intersect );
+                designer.mouseClick2D( intersect, event );
             }
         } else if (camera.isPerspectiveCamera) {
             if (designer.boolDoor) {
@@ -566,10 +571,8 @@ function onDocumentMouseDown( event ) {
 
 
 function onDocumentMouseCancel( event ) {
-
     event.preventDefault();
-    designer.mouseCancel();
-
+    designer.mouseCancel(event);
 }
 
 function animate() {

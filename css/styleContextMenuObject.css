@@ -1,0 +1,80 @@
+.styleMenu {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    background: #e4f4ff;
+    visibility: hidden;
+    border-radius: 10px;
+    border: 0px solid #3997ad;
+    padding: 0px;
+}
+.generalStyleButton {
+    width: 50%;
+    height: 50%;
+    outline: 0;
+    background: #e4f4ff;
+    visibility: inherit;
+    padding: 10%;
+}
+
+.button1 {
+    border-radius: 10px 0px 0px 0px;
+    border-top: 3px solid #3997ad;
+    border-left: 3px solid #3997ad;
+    border-right: 1px solid #3997ad;
+    border-bottom: 1px solid #3997ad;
+}
+.button2 {
+    border-radius: 0px 10px 0px 0px;
+    border-top: 3px solid #3997ad;
+    border-left: 1px solid #3997ad;
+    border-right: 3px solid #3997ad;
+    border-bottom: 1px solid #3997ad;
+}
+.button3 {
+    border-radius: 0px 0px 0px 10px;
+    border-top: 1px solid #3997ad;
+    border-right: 1px solid #3997ad;
+    border-bottom: 3px solid #3997ad;
+    border-left: 3px solid #3997ad;
+}
+.button4 {
+    border-radius: 0px 0px 10px 0px;
+    border-top: 1px solid #3997ad;
+    border-right: 3px solid #3997ad;
+    border-bottom: 3px solid #3997ad;
+    border-left: 1px solid #3997ad;
+}
+
+.button1:hover {
+    border-radius: 10px 0px 0px 0px;
+    background: white;
+    border-top: 3px solid #1fccec;
+    border-left: 3px solid #1fccec;
+    border-right: 1px solid #1fccec;
+    border-bottom: 1px solid #1fccec;
+}
+.button2:hover {
+    border-radius: 0px 10px 0px 0px;
+    background: white;
+    border-top: 3px solid #1fccec;
+    border-left: 1px solid #1fccec;
+    border-right: 3px solid #1fccec;
+    border-bottom: 1px solid #1fccec;
+}
+.button3:hover {
+    border-radius: 0px 0px 0px 10px;
+    background: white;
+    border-top: 1px solid #1fccec;
+    border-right: 1px solid #1fccec;
+    border-bottom: 3px solid #1fccec;
+    border-left: 3px solid #1fccec;
+}
+.button4:hover {
+    border-radius: 0px 0px 10px 0px;
+    background: white;
+    border-top: 1px solid #1fccec;
+    border-right: 3px solid #1fccec;
+    border-bottom: 3px solid #1fccec;
+    border-left: 1px solid #1fccec;
+}
