@@ -514,11 +514,11 @@ function onDocumentMouseMove( event ) {
             } else if (designer.boolWindow) {
                 designer.mouseMoveWindow3D(intersect);
             } else {
-                if (designer.selectedWindow || designer.selectedDoor) {
-                    controlsP.enableRotate = false;
-                } else {
-                    controlsP.enableRotate = true;
-                }
+             //   if (designer.selectedWindow || designer.selectedDoor) {
+
+           //     } else {
+               //     controlsP.enableRotate = true;
+            //    }
                 designer.mouseMove3D(intersect);
             }
         }
@@ -573,6 +573,7 @@ function onDocumentMouseDown( event ) {
 function onDocumentMouseCancel( event ) {
     event.preventDefault();
     designer.mouseCancel(event);
+    controlsP.enableRotate = true;
 }
 
 function animate() {
@@ -850,7 +851,7 @@ function changeCamera(event){
             camera = cameraPerspective;
             setCameraDefaultPosition();
 
-            designer.rebuild();
+            designer.rebuildAll();
         }
     }
 }
@@ -884,7 +885,8 @@ function onKeyDown ( event ) {
         case 82: // r
             // console.log(" designer.mapX",  designer.mapX);
             // console.log(" designer.mapY",  designer.mapY);
-            console.log(" designer.mapLinesWalls",  designer.objects);
+            console.log(" groupSubtractDoors",  designer.groupSubtractDoors);
+            console.log(" groupSubtractWindows",  designer.groupSubtractWindows);
             break;
         case 83: // s
             break;
@@ -923,16 +925,17 @@ function onKeyDown ( event ) {
                 if (transformControl.object) {
                     transformControl.detach(transformControl.object);
                 }
-
+                var arr = designer.selectedDoor.name.split('_');
                 designer.removeIntersectObjectsArray(designer.objects, designer.mapSubtractDoors.get(designer.selectedDoor.name));
                 designer.removeObject(designer.groupSubtractDoors, designer.mapSubtractDoors.get(designer.selectedDoor.name));
+                designer.deleteNumSubtract(designer.groupSubtractDoors, arr[1], designer.selectedDoor.name);
                 designer.mapSubtractDoors.delete(designer.selectedDoor.name);
 
                 if (designer.mapDoors.has(designer.selectedDoor.name)) {
                     designer.removeIntersectObjectsArray(designer.objects, designer.mapDoors.get(designer.selectedDoor.name));
                     designer.removeObject(designer.groupDoors, designer.mapDoors.get(designer.selectedDoor.name));
                     designer.mapDoors.delete(designer.selectedDoor.name);
-                    designer.rebuild();
+                    designer.rebuildWall(arr[1]);
                 }
 
                 designer.selectedDoor = null;
@@ -942,16 +945,17 @@ function onKeyDown ( event ) {
                 if (transformControl.object) {
                     transformControl.detach(transformControl.object);
                 }
-
+                var arr = designer.selectedWindow.name.split('_');
                 designer.removeIntersectObjectsArray(designer.objects, designer.mapSubtractWindows.get(designer.selectedWindow.name));
                 designer.removeObject(designer.groupSubtractWindows, designer.mapSubtractWindows.get(designer.selectedWindow.name));
+                designer.deleteNumSubtract(designer.groupSubtractWindows, arr[1], designer.selectedWindow.name);
                 designer.mapSubtractWindows.delete(designer.selectedWindow.name);
 
                 if (designer.mapWindows.has(designer.selectedWindow.name)) {
                     designer.removeIntersectObjectsArray(designer.objects, designer.mapWindows.get(designer.selectedWindow.name));
                     designer.removeObject(designer.groupWindows, designer.mapWindows.get(designer.selectedWindow.name));
                     designer.mapWindows.delete(designer.selectedWindow.name);
-                    designer.rebuild();
+                    designer.rebuildWall(arr[1]);
                 }
 
                 designer.selectedWindow = null;
