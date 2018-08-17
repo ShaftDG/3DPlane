@@ -1,0 +1,15 @@
+.styleObjectParametersMenu {
+    position: absolute;
+    top: 25%;
+    right: 0;
+    width: 250px;
+    visibility: hidden;
+    background: #e4f4ff;
+    border-radius: 10px;
+    border: 0px solid #3997ad;
+    padding: 1%;
+}
+
+label {
+    width: 50%;
+}

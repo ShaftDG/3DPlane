@@ -483,12 +483,12 @@ function onDocumentMouseMove( event ) {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
     raycaster.setFromCamera( mouse, camera );
-    var intersects = raycaster.intersectObjects(designer.objects, true);
+    var intersects = raycaster.intersectObjects(designer.objects, false);
     if ( intersects.length > 0 ) {
         var intersect = intersects[ 0 ];
-
+// console.log(intersect.object.name);
         var posMouse = new THREE.Vector3();
-        posMouse.copy( intersect.point ).add( intersect.face.normal );
+        posMouse.copy( intersect.point );
         posMouse.divideScalar( 1 ).floor().multiplyScalar( 1 ).addScalar( 1 );
 
         if (camera.isOrthographicCamera) {
@@ -534,7 +534,7 @@ function leftClick( event ) {
     mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
     mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
     raycaster.setFromCamera(mouse, camera);
-    var intersects = raycaster.intersectObjects(designer.objects, true);
+    var intersects = raycaster.intersectObjects(designer.objects, false);
     if (intersects.length > 0) {
         var intersect = intersects[0];
         if (camera.isOrthographicCamera) {
@@ -887,6 +887,7 @@ function onKeyDown ( event ) {
             // console.log(" designer.mapY",  designer.mapY);
             console.log(" groupSubtractDoors",  designer.groupSubtractDoors);
             console.log(" groupSubtractWindows",  designer.groupSubtractWindows);
+            console.log(" objects",  designer.objects);
             break;
         case 83: // s
             break;
