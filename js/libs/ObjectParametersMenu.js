@@ -110,6 +110,12 @@ function ObjectParametersMenu() {
         if (designer.selectedSubtractObject) {
             designer.fromFloorSubtractObject = +inputFromFloor.value;
             designer.selectedSubtractObject.userData.fromFloor = designer.fromFloorSubtractObject;
+            var changedSize = new THREE.Vector3(null, null, null);
+            if (camera.isPerspectiveCamera) {
+                designer.changeSize3D(designer.selectedSubtractObject, changedSize);
+            } else if (camera.isOrthographicCamera) {
+                designer.changeSize2D(designer.selectedSubtractObject, changedSize);
+            }
         }
     }, false);
 
