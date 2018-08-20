@@ -2472,7 +2472,7 @@ ControlDesigner.prototype.changeSize2D = function (object, changedSize) {
          pos[i * 3 + 2] *= point.z;
      }
      object.children[0].geometry.attributes.position.needsUpdate = true;*/
-    this.positionCursor2D(object.name.split('_')[1], object.position, object, this.widthSubtractObject);
+    this.positionCursor2D(object.name.split('_')[1], object.position, object, this.selectedSubtractObject.userData.width);
 };
 
 ControlDesigner.prototype.changeSize3D = function (object, changedSize) {
@@ -2520,7 +2520,7 @@ ControlDesigner.prototype.changeSize3D = function (object, changedSize) {
 
 
     this.positionSelectedObject3D(object.name.split('_')[1], object.position, object, this.mapSubtractObjects,
-            this.mapSubtract, this.widthSubtractObject, this.heightSubtractObject, this.fromFloorSubtractObject);
+            this.mapSubtract, this.selectedSubtractObject.userData.width, this.selectedSubtractObject.userData.height, this.selectedSubtractObject.userData.fromFloor);
 
     this.rebuildWall(object.name.split('_')[1]);
     object = this.mapSubtractObjects.get(object.name);
@@ -2553,7 +2553,7 @@ ControlDesigner.prototype.mouseMove2D = function (posMouse){
         posMouse.z = 710;
         if (this.selectedSubtractObject) {
             var arr = this.selectedSubtractObject.name.split('_');
-            this.positionCursor2D(arr[1], posMouse, this.selectedSubtractObject, this.widthSubtractObject);
+            this.positionCursor2D(arr[1], posMouse, this.selectedSubtractObject, this.selectedSubtractObject.userData.width);
         }
     }
 };
@@ -2754,10 +2754,9 @@ ControlDesigner.prototype.mouseClick2D = function (intersect, event){
 
             this.unselectSubtractObject(this.selectedSubtractObject);
             this.selectedSubtractObject = intersect.object;
-            setValue(this.selectedSubtractObject);
 
             this.selectSubtractObject(this.selectedSubtractObject);
-            this.positionCursor2D(arr[1], this.selectedSubtractObject.position, this.selectedSubtractObject, this.widthSubtractObject);
+            this.positionCursor2D(arr[1], this.selectedSubtractObject.position, this.selectedSubtractObject, this.selectedSubtractObject.userData.width);
             this.menuObject.setPosition(event, this.selectedSubtractObject.position);
             this.objectParametersMenu.setValue(this.selectedSubtractObject);
             this.objectParametersMenu.visibleMenu();
@@ -2786,14 +2785,12 @@ ControlDesigner.prototype.mouseClick3D = function (intersect){
 
                 this.unselectSubtractObject(this.selectedSubtractObject);
                 this.selectedSubtractObject = intersect.object;
-                setValue(this.selectedSubtractObject);
 
                 this.selectSubtractObject(this.selectedSubtractObject);
                 this.positionSelectedObject3D(arr[1], this.selectedSubtractObject.position, this.selectedSubtractObject, this.mapSubtractObjects,
-                    this.mapSubtract, this.widthSubtractObject, this.heightSubtractObject, this.fromFloorSubtractObject);
+                    this.mapSubtract, this.selectedSubtractObject.userData.width, this.selectedSubtractObject.userData.height, this.selectedSubtractObject.userData.fromFloor);
                 this.menuObject.setPosition(event, this.selectedSubtractObject.position);
                 this.objectParametersMenu.setValue(this.selectedSubtractObject);
-                setValue(this.selectedSubtractObject);
                 this.objectParametersMenu.visibleMenu();
         } else {
             // if (!this.selectedWindow) {
@@ -2841,7 +2838,7 @@ ControlDesigner.prototype.mouseMove3D = function ( intersect ){
         if (this.selectedSubtractObject) {
             var arr = this.selectedSubtractObject.name.split('_');
             this.positionSelectedObject3D(arr[1], intersect.point, this.selectedSubtractObject, this.mapSubtractObjects,
-                this.mapSubtract, this.widthSubtractObject, this.heightSubtractObject, this.fromFloorSubtractObject);
+                this.mapSubtract, this.selectedSubtractObject.userData.width, this.selectedSubtractObject.userData.height, this.selectedSubtractObject.userData.fromFloor);
         }
     }
 };

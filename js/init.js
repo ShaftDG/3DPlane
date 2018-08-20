@@ -294,25 +294,6 @@ function init() {
     animate();
 }
 
-function setValue(object) {
-    var box = object.children[0].box;
-
-    var w = Math.round(box.max.x - box.min.x);
-    var h = Math.round(box.max.y - box.min.y);
-    var d = Math.round(box.max.z - box.min.z);
-    var f = object.userData.fromFloor;
-
-    designer.widthSubtractObject = w;
-    designer.heightSubtractObject = h;
-    designer.depthSubtractObject = d;
-    designer.fromFloorSubtractObject = f;
-
-    width.value = w.toString();
-    height.value = h.toString();
-    depth.value = d.toString();
-    fromFloor.value = f.toString();
-};
-
 function setTransformControls() {
     transformControl = new THREE.TransformControls( camera, renderer.domElement, false );
     // transformControl.addEventListener( 'change', render );
