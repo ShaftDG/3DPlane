@@ -254,6 +254,14 @@ function init() {
             if (designer.window2D) {
                 designer.window2D.scale.x = designer.widthWindow;
             }
+        } else if (designer.selectedDoor) {
+            designer.widthDoor = +width.value;
+            var changedSize = new THREE.Vector3(designer.widthDoor, null, null);
+            if (camera.isPerspectiveCamera) {
+                designer.changeSize3D(designer.selectedDoor, changedSize);
+            } else if (camera.isOrthographicCamera) {
+                designer.changeSize2D(designer.selectedDoor, changedSize);
+            }
         }
     }, false);
 
@@ -316,6 +324,25 @@ function init() {
 
     animate();
 }
+
+function setValue(object) {
+    var box = object.children[0].box;
+
+    var w = Math.round(box.max.x - box.min.x);
+    var h = Math.round(box.max.y - box.min.y);
+    var d = Math.round(box.max.z - box.min.z);
+    var f = object.userData.fromFloor;
+
+    designer.widthDoor = w;
+    designer.heightDoor = h;
+    designer.depthDoor = d;
+    designer.fromFloorDoor = f;
+
+    width.value = w.toString();
+    height.value = h.toString();
+    depth.value = d.toString();
+    fromFloor.value = f.toString();
+};
 
 function setTransformControls() {
     transformControl = new THREE.TransformControls( camera, renderer.domElement, false );
@@ -825,7 +852,7 @@ function changeCamera(event){
             designer.groupDoors.visible = true;
             designer.groupWindows.visible = true;
 
-            human.visible = true;
+            human.visible = false;
             // designer.groupExtrude.visible = true;
             designer.groupFinishedWalls.visible = true;
             designer.groupPlane.visible = false;

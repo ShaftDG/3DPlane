@@ -2565,6 +2565,103 @@ ControlDesigner.prototype.deleteNumSubtract = function (group, nameWall, nameObj
     this.removeIntersectObjectsArray(arr, nameObject);
     group.nameSubtractObjects.set(nameWall, arr)
 };
+
+ControlDesigner.prototype.changeSize2D = function (object, changedSize) {
+
+    var box = object.children[0].box;
+    var width = Math.round(box.max.x - box.min.x);
+    var height = Math.round(box.max.y - box.min.y);
+    var depth = Math.round(box.max.z - box.min.z);
+
+    //   object.geometry.applyMatrix(new THREE.Matrix4().makeTranslation(width/2, height/2, depth/2));
+
+    var point = new THREE.Vector3(
+        changedSize.x ? changedSize.x / width : 1,
+        changedSize.y ? changedSize.y / height : 1,
+        changedSize.z ? changedSize.z / depth : 1
+    );
+
+    console.log(box);
+
+    box.max.multiply(point);
+    box.min.multiply(point);
+
+    var oldScale = new THREE.Vector3();
+    oldScale.copy( object.scale );
+
+    /* object.scale.x = oldScale.x * point.x;
+     object.scale.y = oldScale.y * point.y;
+     object.scale.z = oldScale.z * point.z;*/
+
+    for(var i = 0; i < object.geometry.vertices.length; i++) {
+        object.geometry.vertices[i].multiply(point);
+    }
+    object.geometry.verticesNeedUpdate = true;
+
+    /* var pos = object.children[0].geometry.attributes.position.array;
+     for(var i = 0; i < pos.length / 3; i++) {
+         pos[i * 3 + 0] *= point.x;
+         pos[i * 3 + 1] *= point.y;
+         pos[i * 3 + 2] *= point.z;
+     }
+     object.children[0].geometry.attributes.position.needsUpdate = true;*/
+    this.positionCursor2D(object.name.split('_')[1], object.position, object, this.widthDoor);
+};
+
+ControlDesigner.prototype.changeSize3D = function (object, changedSize) {
+
+    var box = object.children[0].box;
+    var width = Math.round(box.max.x - box.min.x);
+    var height = Math.round(box.max.y - box.min.y);
+    var depth = Math.round(box.max.z - box.min.z);
+
+    //   object.geometry.applyMatrix(new THREE.Matrix4().makeTranslation(width/2, height/2, depth/2));
+
+    var point = new THREE.Vector3(
+        changedSize.x ? changedSize.x / width : 1,
+        changedSize.y ? changedSize.y / height : 1,
+        changedSize.z ? changedSize.z / depth : 1
+    );
+
+    console.log(box);
+
+    box.max.multiply(point);
+    box.min.multiply(point);
+
+    var oldScale = new THREE.Vector3();
+    oldScale.copy( object.scale );
+
+    /* object.scale.x = oldScale.x * point.x;
+     object.scale.y = oldScale.y * point.y;
+     object.scale.z = oldScale.z * point.z;*/
+
+    for(var i = 0; i < object.geometry.vertices.length; i++) {
+        object.geometry.vertices[i].multiply(point);
+    }
+    object.geometry.verticesNeedUpdate = true;
+
+    /* var pos = object.children[0].geometry.attributes.position.array;
+     for(var i = 0; i < pos.length / 3; i++) {
+         pos[i * 3 + 0] *= point.x;
+         pos[i * 3 + 1] *= point.y;
+         pos[i * 3 + 2] *= point.z;
+     }
+     object.children[0].geometry.attributes.position.needsUpdate = true;*/
+
+    var changedSize2D = new THREE.Vector3(changedSize.x, changedSize.z, changedSize.y);
+    this.changeSize2D(this.mapSubtractDoors.get(object.name), changedSize2D);
+
+
+    this.positionSelectedObject3D(object.name.split('_')[1], object.position, object, this.mapDoors,
+            this.mapSubtractDoors, this.widthDoor, this.heightDoor, this.fromFloorDoor);
+
+    this.rebuildWall(object.name.split('_')[1]);
+    object = this.mapDoors.get(object.name);
+    this.selectSubtractObject(object);
+    this.selectedDoor = object;
+
+};
+
 /////////////// Mouse event
 ControlDesigner.prototype.mouseMove = function (posMouse){
     this.posMouse.copy( posMouse );
@@ -2760,7 +2857,11 @@ ControlDesigner.prototype.addWindow3D = function (object, nameWindow, nameWall){
 
 ControlDesigner.prototype.addHelper = function (mesh) {
 
-    var helper = new THREE.BoxHelper(mesh, "#ffff00");
+    var box = new THREE.Box3();
+    box.setFromObject(mesh);
+    var helper = new THREE.Box3Helper(box, "#ffff00");
+
+    // var helper = new THREE.BoxHelper(mesh, "#ffff00");
 
    /* var material = new THREE.LineDashedMaterial( {
         color: '#009a09',
@@ -2916,6 +3017,8 @@ ControlDesigner.prototype.mouseClick2D = function (intersect, event){
 
             this.unselectDoor(this.selectedDoor);
             this.selectedDoor = intersect.object;
+            setValue(this.selectedDoor);
+
             this.selectSubtractObject(this.selectedDoor);
             this.positionCursor2D(arr[1], this.selectedDoor.position, this.selectedDoor, this.widthDoor);
             this.menuObject.setPosition(event, this.selectedDoor.position);
@@ -2980,11 +3083,14 @@ ControlDesigner.prototype.mouseClick3D = function (intersect){
 
                 this.unselectDoor(this.selectedDoor);
                 this.selectedDoor = intersect.object;
+                setValue(this.selectedDoor);
+
                 this.selectSubtractObject(this.selectedDoor);
                 this.positionSelectedObject3D(arr[1], this.selectedDoor.position, this.selectedDoor, this.mapDoors,
                     this.mapSubtractDoors, this.widthDoor, this.heightDoor, this.fromFloorDoor);
                 this.menuObject.setPosition(event, this.selectedDoor.position);
                 this.objectParametersMenu.setValue(this.selectedDoor);
+                setValue(this.selectedDoor);
                 this.objectParametersMenu.visibleMenu();
         } else {
             if (!this.selectedWindow) {
