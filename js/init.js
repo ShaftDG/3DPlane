@@ -232,93 +232,62 @@ function init() {
     }, false);
 */
 
-    // Get the widthDoor input.
+    // Get the widthSubtractObject input.
     width = document.getElementById('width');
-    // designer.widthDoor = 150;
-    // designer.widthWindow = 150;
 
     width.addEventListener('change', function (ev) {
-        if (designer.boolDoor) {
-            designer.widthDoor = +width.value;
-            if (designer.door) {
-                designer.door.scale.x = designer.widthDoor;
+        if (designer.boolCursor) {
+            designer.widthSubtractObject = +width.value;
+            if (designer.cursor3D) {
+                designer.cursor3D.scale.x = designer.widthSubtractObject;
             }
-            if (designer.door2D) {
-                designer.door2D.scale.x = designer.widthDoor;
+            if (designer.cursor2D) {
+                designer.cursor2D.scale.x = designer.widthSubtractObject;
             }
-        } else if (designer.boolWindow) {
-            designer.widthWindow = +width.value;
-            if (designer.window) {
-                designer.window.scale.x = designer.widthWindow;
-            }
-            if (designer.window2D) {
-                designer.window2D.scale.x = designer.widthWindow;
-            }
-        } else if (designer.selectedDoor) {
-            designer.widthDoor = +width.value;
-            var changedSize = new THREE.Vector3(designer.widthDoor, null, null);
+        } else if (designer.selectedSubtractObject) {
+            designer.widthSubtractObject = +width.value;
+            var changedSize = new THREE.Vector3(designer.widthSubtractObject, null, null);
             if (camera.isPerspectiveCamera) {
-                designer.changeSize3D(designer.selectedDoor, changedSize);
+                designer.changeSize3D(designer.selectedSubtractObject, changedSize);
             } else if (camera.isOrthographicCamera) {
-                designer.changeSize2D(designer.selectedDoor, changedSize);
+                designer.changeSize2D(designer.selectedSubtractObject, changedSize);
             }
         }
     }, false);
 
-    // Get the heightDoor input.
+    // Get the heightSubtractObject input.
     height = document.getElementById('height');
-    // designer.heightDoor = 220;
-    // designer.heightWindow = 150;
 
     height.addEventListener('change', function (ev) {
-        if (designer.boolDoor) {
-            designer.heightDoor = +height.value;
-            if (designer.door) {
-                designer.door.scale.y = designer.heightDoor;
-            }
-        } else if (designer.boolWindow) {
-            designer.heightWindow = +height.value;
-            if (designer.window) {
-                designer.window.scale.y = designer.heightWindow;
+        if (designer.boolCursor) {
+            designer.heightSubtractObject = +height.value;
+            if (designer.cursor3D) {
+                designer.cursor3D.scale.y = designer.heightSubtractObject;
             }
         }
     }, false);
 
-    // Get the depthDoor input.
+    // Get the depthSubtractObject input.
     depth = document.getElementById('depth');
-    // designer.depthDoor = 100;
-    // designer.depthWindow = 100;
 
     depth.addEventListener('change', function (ev) {
-        if (designer.boolDoor) {
-            designer.depthDoor = +depth.value;
-            if (designer.door) {
-                designer.door.scale.z = designer.depthDoor;
+        if (designer.boolCursor) {
+            designer.depthSubtractObject = +depth.value;
+            if (designer.cursor3D) {
+                designer.cursor3D.scale.z = designer.depthSubtractObject;
             }
-            if (designer.door2D) {
-                designer.door2D.scale.y = designer.widthDoor;
-            }
-        } else if (designer.boolWindow) {
-            designer.depthWindow = +depth.value;
-            if (designer.window) {
-                designer.window.scale.z = designer.depthWindow;
-            }
-            if (designer.window2D) {
-                designer.window2D.scale.y = designer.depthWindow;
+            if (designer.cursor2D) {
+                designer.cursor2D.scale.y = designer.widthSubtractObject;
             }
         }
     }, false);
 
-    // Get the fromFloorDoor input.
+    // Get the fromFloorSubtractObject input.
     fromFloor = document.getElementById('fromFloor');
-    // designer.fromFloorDoor = 0;
-    // designer.fromFloorWindow = 70;
 
     fromFloor.addEventListener('change', function (ev) {
-        if (designer.boolDoor) {
-            designer.fromFloorDoor = +fromFloor.value;
-        } else if (designer.boolWindow) {
-            designer.fromFloorWindow = +fromFloor.value;
+        if (designer.boolCursor) {
+            designer.fromFloorSubtractObject = +fromFloor.value;
         }
     }, false);
 
@@ -333,10 +302,10 @@ function setValue(object) {
     var d = Math.round(box.max.z - box.min.z);
     var f = object.userData.fromFloor;
 
-    designer.widthDoor = w;
-    designer.heightDoor = h;
-    designer.depthDoor = d;
-    designer.fromFloorDoor = f;
+    designer.widthSubtractObject = w;
+    designer.heightSubtractObject = h;
+    designer.depthSubtractObject = d;
+    designer.fromFloorSubtractObject = f;
 
     width.value = w.toString();
     height.value = h.toString();
@@ -526,26 +495,17 @@ function onDocumentMouseMove( event ) {
                 };
                 posMouse = designer.updateHelperLines(obj);
             } else {
-                if (designer.boolDoor) {
-                    designer.mouseMoveDoor2D(posMouse);
-                } else if (designer.boolWindow) {
-                    designer.mouseMoveWindow2D(posMouse);
+                if (designer.boolCursor) {
+                    designer.mouseMoveCursor2D(posMouse);
                 } else {
                     designer.mouseMove2D(posMouse);
                 }
             }
         } else if (camera.isPerspectiveCamera) {
 
-            if (designer.boolDoor) {
-                designer.mouseMoveDoor3D(intersect);
-            } else if (designer.boolWindow) {
-                designer.mouseMoveWindow3D(intersect);
+            if (designer.boolCursor) {
+                designer.mouseMoveCursor3D(intersect);
             } else {
-             //   if (designer.selectedWindow || designer.selectedDoor) {
-
-           //     } else {
-               //     controlsP.enableRotate = true;
-            //    }
                 designer.mouseMove3D(intersect);
             }
         }
@@ -565,18 +525,14 @@ function leftClick( event ) {
     if (intersects.length > 0) {
         var intersect = intersects[0];
         if (camera.isOrthographicCamera) {
-            if (designer.boolDoor) {
-                designer.mouseClickDoor2D(intersect);
-            } else if (designer.boolWindow) {
-                designer.mouseClickWindow2D(intersect);
+            if (designer.boolCursor) {
+                designer.mouseClickCursor2D(intersect);
             } else {
                 designer.mouseClick2D( intersect, event );
             }
         } else if (camera.isPerspectiveCamera) {
-            if (designer.boolDoor) {
-                designer.mouseClickDoor3D(intersect);
-            } else if (designer.boolWindow) {
-                designer.mouseClickWindow3D(intersect);
+            if (designer.boolCursor) {
+                designer.mouseClickCursor3D(intersect);
             } else {
                 designer.mouseClick3D( intersect );
             }
@@ -595,7 +551,6 @@ function onDocumentMouseDown( event ) {
 
     }
 }
-
 
 function onDocumentMouseCancel( event ) {
     event.preventDefault();
@@ -628,10 +583,8 @@ function render() {
 function changeInstrument(){
     if (
         camera.isOrthographicCamera &&
-        !designer.boolWindow &&
-        !designer.boolDoor &&
-        !designer.selectedWindow &&
-        !designer.selectedDoor
+        !designer.boolCursor &&
+        !designer.selectedSubtractObject
     ) {
         designer.selectedInstr = !designer.selectedInstr;
         designer.selectedScale = false;
@@ -648,10 +601,8 @@ function changeInstrument(){
 function changeMagnet(){
     if (
         camera.isOrthographicCamera &&
-        !designer.boolWindow &&
-        !designer.boolDoor &&
-        !designer.selectedWindow &&
-        !designer.selectedDoor
+        !designer.boolCursor &&
+        !designer.selectedSubtractObject
     ) {
         designer.boolMagnet = !designer.boolMagnet;
         changeColorButton();
@@ -660,63 +611,34 @@ function changeMagnet(){
 
 function changeDoor(){
     if (
-        !designer.selectedDoor &&
-        !designer.selectedWindow &&
+        !designer.selectedSubtractObject &&
         !designer.boolMagnet &&
         !designer.selectedInstr &&
         !designer.selectedScale
     ) {
-        width.value = designer.widthDoor;
-        height.value = designer.heightDoor;
-        depth.value = designer.depthDoor;
-        fromFloor.value = designer.fromFloorDoor;
+        width.value = designer.widthSubtractObject;
+        height.value = designer.heightSubtractObject;
+        depth.value = designer.depthSubtractObject;
+        fromFloor.value = designer.fromFloorSubtractObject;
 
-        designer.boolDoor = !designer.boolDoor;
-        if (designer.boolDoor) {
-            designer.boolWindow = false;
-            designer.removeCursorWindow2D();
-            designer.removeCursorWindow3D();
-        } else {
-            designer.removeCursorDoor2D();
-            designer.removeCursorDoor3D();
+        designer.boolCursor = !designer.boolCursor;
+        if (!designer.boolCursor) {
+            designer.removeCursor2D();
+            designer.removeCursor3D();
         }
         changeColorButton();
     }
 }
 
 function changeWindow(){
-    if (
-        !designer.selectedDoor &&
-        !designer.selectedWindow &&
-        !designer.boolMagnet &&
-        !designer.selectedInstr &&
-        !designer.selectedScale
-    ) {
-        width.value = designer.widthWindow;
-        height.value = designer.heightWindow;
-        depth.value = designer.depthWindow;
-        fromFloor.value = designer.fromFloorWindow;
 
-        designer.boolWindow = !designer.boolWindow;
-        if (designer.boolWindow) {
-            designer.boolDoor = false;
-            designer.removeCursorDoor2D();
-            designer.removeCursorDoor3D();
-        } else {
-            designer.removeCursorWindow2D();
-            designer.removeCursorWindow3D();
-        }
-        changeColorButton();
-    }
 }
 
 function changeScale(){
     if (
         camera.isOrthographicCamera &&
-        !designer.boolWindow &&
-        !designer.boolDoor &&
-        !designer.selectedWindow &&
-        !designer.selectedDoor
+        !designer.boolCursor &&
+        !designer.selectedSubtractObject
     ) {
         designer.groupLinesScale.visible = true;
         designer.selectedScale = !designer.selectedScale;
@@ -752,7 +674,7 @@ function changeColorButton(){
         document.Instruments.changeMagnet.classList.add("inputInstrumentUnselected");
     }
 
-    if (designer.boolDoor) {
+    if (designer.boolCursor) {
         document.Instruments.changeDoor.classList.remove("inputInstrumentUnselected");
         document.Instruments.changeDoor.classList.add("inputInstrumentSelected");
     } else {
@@ -774,7 +696,7 @@ function changeCamera(event){
     changeColorButton();
     designer.clearPointsPosition();
     if (event.srcElement.name === "cameraOrthographic") {
-        if (!designer.selectedDoor && !designer.selectedWindow) {
+        if (!designer.selectedSubtractObject) {
             document.panelCamera.cameraOrthographic.classList.add("inputInstrumentSelected");
             document.panelCamera.cameraOrthographic.classList.remove("inputInstrumentUnselected");
 
@@ -783,8 +705,7 @@ function changeCamera(event){
 
             designer.group.rotation.x = 0;
             //     designer.groupExtrude.rotation.x = designer.group.rotation.x;
-            designer.groupSubtractDoors.rotation.x = designer.group.rotation.x;
-            designer.groupSubtractWindows.rotation.x = designer.group.rotation.x;
+            designer.groupSubtract.rotation.x = designer.group.rotation.x;
             designer.groupProportions.rotation.x = designer.group.rotation.x;
 
             // designer.groupExtrude.visible = false;
@@ -796,11 +717,9 @@ function changeCamera(event){
             designer.groupProportions.visible = true;
             designer.groupProportions3D.visible = false;
 
-            designer.groupSubtractDoors.visible = true;
-            designer.groupSubtractWindows.visible = true;
+            designer.groupSubtract.visible = true;
 
-            designer.groupDoors.visible = false;
-            designer.groupWindows.visible = false;
+            designer.groupSubtractObjects.visible = false;
 
             transformControl.enabled = true;
             transformControl.visible = true;
@@ -810,15 +729,13 @@ function changeCamera(event){
             camera = cameraOrthographic;
             setCameraDefaultPosition();
 
-            designer.boolDoor = false;
-            designer.boolWindow = false;
+            designer.boolCursor = false;
             changeColorButton();
-            designer.removeCursorDoor3D();
-            designer.removeCursorWindow3D();
+            designer.removeCursor3D();
         }
     } else if (event.srcElement.name === "cameraPerspective") {
 
-        if (!designer.selectedDoor && !designer.selectedWindow) {
+        if (!designer.selectedSubtractObject) {
 
             if (transformControl.object) {
                 transformControl.detach(transformControl.object);
@@ -842,15 +759,12 @@ function changeCamera(event){
 
             designer.group.rotation.x = -Math.PI / 2;
             //    designer.groupExtrude.rotation.x = designer.group.rotation.x;
-            designer.groupSubtractDoors.rotation.x = designer.group.rotation.x;
-            designer.groupSubtractWindows.rotation.x = designer.group.rotation.x;
+            designer.groupSubtract.rotation.x = designer.group.rotation.x;
             designer.groupProportions.rotation.x = designer.group.rotation.x;
 
-            designer.groupSubtractDoors.visible = false;
-            designer.groupSubtractWindows.visible = false;
+            designer.groupSubtract.visible = false;
 
-            designer.groupDoors.visible = true;
-            designer.groupWindows.visible = true;
+            designer.groupSubtractObjects.visible = true;
 
             human.visible = false;
             // designer.groupExtrude.visible = true;
@@ -860,12 +774,10 @@ function changeCamera(event){
             designer.groupLines.visible = false;
 
             designer.selectedScale = false;
-            designer.boolDoor = false;
-            designer.boolWindow = false;
+            designer.boolCursor = false;
             designer.selectedInstr = false;
             changeColorButton();
-            designer.removeCursorDoor2D();
-            designer.removeCursorWindow2D();
+            designer.removeCursor2D();
 
             designer.groupLinesScale.visible = false;
 
@@ -912,8 +824,7 @@ function onKeyDown ( event ) {
         case 82: // r
             // console.log(" designer.mapX",  designer.mapX);
             // console.log(" designer.mapY",  designer.mapY);
-            console.log(" groupSubtractDoors",  designer.groupSubtractDoors);
-            console.log(" groupSubtractWindows",  designer.groupSubtractWindows);
+            console.log(" groupSubtract",  designer.groupSubtract);
             console.log(" objects",  designer.objects);
             break;
         case 83: // s
@@ -949,44 +860,24 @@ function onKeyDown ( event ) {
                 }
                 designer.selectedObject = null;
                 designer.clearMap ();
-            } else  if (designer.selectedDoor) {
+            } else  if (designer.selectedSubtractObject) {
                 if (transformControl.object) {
                     transformControl.detach(transformControl.object);
                 }
-                var arr = designer.selectedDoor.name.split('_');
-                designer.removeIntersectObjectsArray(designer.objects, designer.mapSubtractDoors.get(designer.selectedDoor.name));
-                designer.removeObject(designer.groupSubtractDoors, designer.mapSubtractDoors.get(designer.selectedDoor.name));
-                designer.deleteNumSubtract(designer.groupSubtractDoors, arr[1], designer.selectedDoor.name);
-                designer.mapSubtractDoors.delete(designer.selectedDoor.name);
+                var arr = designer.selectedSubtractObject.name.split('_');
+                designer.removeIntersectObjectsArray(designer.objects, designer.mapSubtract.get(designer.selectedSubtractObject.name));
+                designer.removeObject(designer.groupSubtract, designer.mapSubtract.get(designer.selectedSubtractObject.name));
+                designer.deleteNumSubtract(designer.groupSubtract, arr[1], designer.selectedSubtractObject.name);
+                designer.mapSubtract.delete(designer.selectedSubtractObject.name);
 
-                if (designer.mapDoors.has(designer.selectedDoor.name)) {
-                    designer.removeIntersectObjectsArray(designer.objects, designer.mapDoors.get(designer.selectedDoor.name));
-                    designer.removeObject(designer.groupDoors, designer.mapDoors.get(designer.selectedDoor.name));
-                    designer.mapDoors.delete(designer.selectedDoor.name);
+                if (designer.mapSubtractObjects.has(designer.selectedSubtractObject.name)) {
+                    designer.removeIntersectObjectsArray(designer.objects, designer.mapSubtractObjects.get(designer.selectedSubtractObject.name));
+                    designer.removeObject(designer.groupSubtractObjects, designer.mapSubtractObjects.get(designer.selectedSubtractObject.name));
+                    designer.mapSubtractObjects.delete(designer.selectedSubtractObject.name);
                     designer.rebuildWall(arr[1]);
                 }
 
-                designer.selectedDoor = null;
-                designer.removeObject(designer.groupProportions, designer.mapProportions.get("distance_wall"));
-                designer.clearDistanceToPoint();
-            } else if (designer.selectedWindow) {
-                if (transformControl.object) {
-                    transformControl.detach(transformControl.object);
-                }
-                var arr = designer.selectedWindow.name.split('_');
-                designer.removeIntersectObjectsArray(designer.objects, designer.mapSubtractWindows.get(designer.selectedWindow.name));
-                designer.removeObject(designer.groupSubtractWindows, designer.mapSubtractWindows.get(designer.selectedWindow.name));
-                designer.deleteNumSubtract(designer.groupSubtractWindows, arr[1], designer.selectedWindow.name);
-                designer.mapSubtractWindows.delete(designer.selectedWindow.name);
-
-                if (designer.mapWindows.has(designer.selectedWindow.name)) {
-                    designer.removeIntersectObjectsArray(designer.objects, designer.mapWindows.get(designer.selectedWindow.name));
-                    designer.removeObject(designer.groupWindows, designer.mapWindows.get(designer.selectedWindow.name));
-                    designer.mapWindows.delete(designer.selectedWindow.name);
-                    designer.rebuildWall(arr[1]);
-                }
-
-                designer.selectedWindow = null;
+                designer.selectedSubtractObject = null;
                 designer.removeObject(designer.groupProportions, designer.mapProportions.get("distance_wall"));
                 designer.clearDistanceToPoint();
             } else {

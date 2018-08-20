@@ -68,41 +68,49 @@ function ObjectParametersMenu() {
     this.fromFloor = 0;
 
     inputWidth.addEventListener('change', function (ev) {
-        designer.widthDoor = +inputWidth.value;
-        designer.selectedDoor.userData.width = designer.widthDoor;
-        var changedSize = new THREE.Vector3(designer.widthDoor, null, null);
-        if (camera.isPerspectiveCamera) {
-            designer.changeSize3D(designer.selectedDoor, changedSize);
-        } else if (camera.isOrthographicCamera) {
-            designer.changeSize2D(designer.selectedDoor, changedSize);
+        if (designer.selectedSubtractObject) {
+            designer.widthSubtractObject = +inputWidth.value;
+            designer.selectedSubtractObject.userData.width = designer.widthSubtractObject;
+            var changedSize = new THREE.Vector3(designer.widthSubtractObject, null, null);
+            if (camera.isPerspectiveCamera) {
+                designer.changeSize3D(designer.selectedSubtractObject, changedSize);
+            } else if (camera.isOrthographicCamera) {
+                designer.changeSize2D(designer.selectedSubtractObject, changedSize);
+            }
         }
     }, false);
 
     inputHeight.addEventListener('change', function (ev) {
-        designer.heightDoor = +inputHeight.value;
-        designer.selectedDoor.userData.height = designer.heightDoor;
-        var changedSize = new THREE.Vector3(null, designer.heightDoor, null);
-        if (camera.isPerspectiveCamera) {
-            designer.changeSize3D(designer.selectedDoor, changedSize);
+        if (designer.selectedSubtractObject) {
+            designer.heightSubtractObject = +inputHeight.value;
+            designer.selectedSubtractObject.userData.height = designer.heightSubtractObject;
+            var changedSize = new THREE.Vector3(null, designer.heightSubtractObject, null);
+            if (camera.isPerspectiveCamera) {
+                designer.changeSize3D(designer.selectedSubtractObject, changedSize);
+            }
         }
     }, false);
 
     inputDepth.addEventListener('change', function (ev) {
-        designer.depthDoor = +inputDepth.value;
-        designer.selectedDoor.userData.depth = designer.depthDoor;
-        var changedSize;
-        if (camera.isPerspectiveCamera) {
-            changedSize = new THREE.Vector3(null, null, designer.depthDoor);
-            designer.changeSize3D(designer.selectedDoor, changedSize);
-        } else if (camera.isOrthographicCamera) {
-            changedSize = new THREE.Vector3(null, designer.depthDoor, null);
-            designer.changeSize2D(designer.selectedDoor, changedSize);
+        if (designer.selectedSubtractObject) {
+            designer.depthSubtractObject = +inputDepth.value;
+            designer.selectedSubtractObject.userData.depth = designer.depthSubtractObject;
+            var changedSize;
+            if (camera.isPerspectiveCamera) {
+                changedSize = new THREE.Vector3(null, null, designer.depthSubtractObject);
+                designer.changeSize3D(designer.selectedSubtractObject, changedSize);
+            } else if (camera.isOrthographicCamera) {
+                changedSize = new THREE.Vector3(null, designer.depthSubtractObject, null);
+                designer.changeSize2D(designer.selectedSubtractObject, changedSize);
+            }
         }
     }, false);
 
     inputFromFloor.addEventListener('change', function (ev) {
-        designer.fromFloorDoor = +inputFromFloor.value;
-        designer.selectedDoor.userData.fromFloor = designer.fromFloorDoor;
+        if (designer.selectedSubtractObject) {
+            designer.fromFloorSubtractObject = +inputFromFloor.value;
+            designer.selectedSubtractObject.userData.fromFloor = designer.fromFloorSubtractObject;
+        }
     }, false);
 
 }
