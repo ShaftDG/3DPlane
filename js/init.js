@@ -167,9 +167,6 @@ function init() {
     document.getElementsByTagName("canvas")[0].addEventListener( 'mouseup', onDocumentMouseCancel, false );
     document.getElementsByTagName("canvas")[0].addEventListener( 'mouseleave', onDocumentMouseCancel, false );
 
-    document.Instruments.changeInstrument.addEventListener("click", changeInstrument);
-    document.Instruments.changeScale.addEventListener("click", changeScale);
-    document.Instruments.changeMagnet.addEventListener("click", changeMagnet);
     document.Instruments.changeDoor.addEventListener("click", changeDoor);
     document.Instruments.changeWindow.addEventListener("click", changeWindow);
 
@@ -178,33 +175,8 @@ function init() {
     document.panelCamera.cameraDefault.addEventListener("click", setCameraDefaultPosition);
 
     document.getElementById('help').addEventListener('click', visibilityHelp, false);
-    document.getElementById('file').addEventListener('change', handleFileSelect, false);
-    // Get the widthWall input.
-    var w = document.getElementById('widthWall');
-    designer.widthWall = w.value;
-    if (!designer.widthWall) {
-        alert('Error: failed to get the widthWall element!');
-        designer.widthWall = 20;
-        return;
-    }
-    w.addEventListener('change', function (ev) {
-        designer.widthWall = w.value;
-        // console.log(lineWidth);
-    }, false);
 
-    // Get the heightWall input.
-    var h = document.getElementById('heightWall');
-    designer.heightWall = h.value;
-    if (!designer.heightWall) {
-        alert('Error: failed to get the heightWall element!');
-        designer.heightWall = 280;
-        return;
-    }
-    h.addEventListener('change', function (ev) {
-        designer.heightWall = h.value ;
-    }, false);
-
-    // Get the valueScale input.
+  /*  // Get the valueScale input.
     var valueSc = document.getElementById('valueScale');
     designer.valueScale = valueSc.value;
     if (!designer.valueScale) {
@@ -216,7 +188,7 @@ function init() {
         designer.valueScale = valueSc.value;
         designer.calculateScale(designer.positionsScale);
         // console.log(valueScale);
-    }, false);
+    }, false);*/
 
   /*  // Get the sensitivityMagnet input.
     var sensitivityMag = document.getElementById('sensitivityMagnet');
@@ -231,65 +203,6 @@ function init() {
         // console.log(valueScale);
     }, false);
 */
-
-    // Get the widthSubtractObject input.
-    width = document.getElementById('width');
-
-    width.addEventListener('change', function (ev) {
-        if (designer.boolCursor) {
-            designer.widthSubtractObject = +width.value;
-            if (designer.cursor3D) {
-                designer.cursor3D.scale.x = designer.widthSubtractObject;
-            }
-            if (designer.cursor2D) {
-                designer.cursor2D.scale.x = designer.widthSubtractObject;
-            }
-        } else if (designer.selectedSubtractObject) {
-            designer.widthSubtractObject = +width.value;
-            var changedSize = new THREE.Vector3(designer.widthSubtractObject, null, null);
-            if (camera.isPerspectiveCamera) {
-                designer.changeSize3D(designer.selectedSubtractObject, changedSize);
-            } else if (camera.isOrthographicCamera) {
-                designer.changeSize2D(designer.selectedSubtractObject, changedSize);
-            }
-        }
-    }, false);
-
-    // Get the heightSubtractObject input.
-    height = document.getElementById('height');
-
-    height.addEventListener('change', function (ev) {
-        if (designer.boolCursor) {
-            designer.heightSubtractObject = +height.value;
-            if (designer.cursor3D) {
-                designer.cursor3D.scale.y = designer.heightSubtractObject;
-            }
-        }
-    }, false);
-
-    // Get the depthSubtractObject input.
-    depth = document.getElementById('depth');
-
-    depth.addEventListener('change', function (ev) {
-        if (designer.boolCursor) {
-            designer.depthSubtractObject = +depth.value;
-            if (designer.cursor3D) {
-                designer.cursor3D.scale.z = designer.depthSubtractObject;
-            }
-            if (designer.cursor2D) {
-                designer.cursor2D.scale.y = designer.widthSubtractObject;
-            }
-        }
-    }, false);
-
-    // Get the fromFloorSubtractObject input.
-    fromFloor = document.getElementById('fromFloor');
-
-    fromFloor.addEventListener('change', function (ev) {
-        if (designer.boolCursor) {
-            designer.fromFloorSubtractObject = +fromFloor.value;
-        }
-    }, false);
 
     animate();
 }
@@ -426,23 +339,6 @@ function set3DControl() {
     controlsP.screenSpacePanning = false;
 }
 
-function handleFileSelect(evt) {
-    evt.preventDefault();
-    var file = evt.target.files; // FileList object
-    var f = file[0];
-    // console.log(f);
-    // Only process image files.
-    if (!f.type.match('image.*')) {
-        alert("Image only please....");
-    } else {
-        var fileURL = window.URL.createObjectURL(f);
-        textureLoader.load(fileURL, function (texture) {
-                designer.addBackground(texture);
-            }
-        );
-    }
-}
-
 function onWindowResize() {
 
     windowHalfX = window.innerWidth / 2;
@@ -561,35 +457,6 @@ function render() {
     renderer.render( scene, camera );
 }
 
-function changeInstrument(){
-    if (
-        camera.isOrthographicCamera &&
-        !designer.boolCursor &&
-        !designer.selectedSubtractObject
-    ) {
-        designer.selectedInstr = !designer.selectedInstr;
-        designer.selectedScale = false;
-        designer.groupLinesScale.visible = false;
-        changeColorButton();
-        if (designer.count === 0) {
-            if (designer.planeBackground) {
-                designer.planeBackground.scale.set(1 / designer.scalePlane, 1 / designer.scalePlane, 1 / designer.scalePlane);
-            }
-        }
-    }
-}
-
-function changeMagnet(){
-    if (
-        camera.isOrthographicCamera &&
-        !designer.boolCursor &&
-        !designer.selectedSubtractObject
-    ) {
-        designer.boolMagnet = !designer.boolMagnet;
-        changeColorButton();
-    }
-}
-
 function changeDoor(){
     if (
         !designer.selectedSubtractObject &&
@@ -597,16 +464,8 @@ function changeDoor(){
         !designer.selectedInstr &&
         !designer.selectedScale
     ) {
-        width.value = designer.widthSubtractObject;
-        height.value = designer.heightSubtractObject;
-        depth.value = designer.depthSubtractObject;
-        fromFloor.value = designer.fromFloorSubtractObject;
-
         designer.boolCursor = !designer.boolCursor;
-        if (!designer.boolCursor) {
-            designer.removeCursor2D();
-            designer.removeCursor3D();
-        }
+        designer.setPropertiesCursor();
         changeColorButton();
     }
 }
@@ -615,45 +474,7 @@ function changeWindow(){
 
 }
 
-function changeScale(){
-    if (
-        camera.isOrthographicCamera &&
-        !designer.boolCursor &&
-        !designer.selectedSubtractObject
-    ) {
-        designer.groupLinesScale.visible = true;
-        designer.selectedScale = !designer.selectedScale;
-        designer.selectedInstr = false;
-        changeColorButton();
-        if (designer.selectedScale) {
-            designer.clearPointsScalePosition();
-        }
-    }
-}
-
 function changeColorButton(){
-    if (designer.selectedInstr) {
-        document.Instruments.changeInstrument.classList.remove("inputInstrumentUnselected");
-        document.Instruments.changeInstrument.classList.add("inputInstrumentSelected");
-    } else {
-        document.Instruments.changeInstrument.classList.remove("inputInstrumentSelected");
-        document.Instruments.changeInstrument.classList.add("inputInstrumentUnselected");
-    }
-    if (designer.selectedScale) {
-        document.Instruments.changeScale.classList.remove("inputInstrumentUnselected");
-        document.Instruments.changeScale.classList.add("inputInstrumentSelected");
-    } else {
-        document.Instruments.changeScale.classList.remove("inputInstrumentSelected");
-        document.Instruments.changeScale.classList.add("inputInstrumentUnselected");
-    }
-
-    if (designer.boolMagnet) {
-        document.Instruments.changeMagnet.classList.remove("inputInstrumentUnselected");
-        document.Instruments.changeMagnet.classList.add("inputInstrumentSelected");
-    } else {
-        document.Instruments.changeMagnet.classList.remove("inputInstrumentSelected");
-        document.Instruments.changeMagnet.classList.add("inputInstrumentUnselected");
-    }
 
     if (designer.boolCursor) {
         document.Instruments.changeDoor.classList.remove("inputInstrumentUnselected");
@@ -678,6 +499,7 @@ function changeCamera(event){
     designer.clearPointsPosition();
     if (event.srcElement.name === "cameraOrthographic") {
         if (!designer.selectedSubtractObject) {
+            designer.menu2D.visibleMenu();
             document.panelCamera.cameraOrthographic.classList.add("inputInstrumentSelected");
             document.panelCamera.cameraOrthographic.classList.remove("inputInstrumentUnselected");
 
@@ -711,13 +533,12 @@ function changeCamera(event){
             setCameraDefaultPosition();
 
             designer.boolCursor = false;
+            designer.setPropertiesCursor();
             changeColorButton();
-            designer.removeCursor3D();
         }
     } else if (event.srcElement.name === "cameraPerspective") {
-
         if (!designer.selectedSubtractObject) {
-
+            designer.menu2D.hiddenMenu();
             if (transformControl.object) {
                 transformControl.detach(transformControl.object);
             }
@@ -755,10 +576,11 @@ function changeCamera(event){
             designer.groupLines.visible = false;
 
             designer.selectedScale = false;
-            designer.boolCursor = false;
             designer.selectedInstr = false;
+
+            designer.boolCursor = false;
+            designer.setPropertiesCursor();
             changeColorButton();
-            designer.removeCursor2D();
 
             designer.groupLinesScale.visible = false;
 

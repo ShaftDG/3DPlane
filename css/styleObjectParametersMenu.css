@@ -1,15 +1,20 @@
 .styleObjectParametersMenu {
     position: absolute;
-    top: 25%;
+    top: 50%;
     right: 0;
-    width: 250px;
+    width: 290px;
     visibility: hidden;
     background: #e4f4ff;
-    border-radius: 10px;
-    border: 0px solid #3997ad;
+    border-radius: 10px 0px 0px 10px;
+    border: 1px solid #3997ad;
     padding: 1%;
 }
 
-label {
+.labelObjectParametersMenu {
     width: 50%;
+    margin-left: 7%;
+}
+
+.inputObjectParametersMenu {
+    margin-left: 5%;
 }

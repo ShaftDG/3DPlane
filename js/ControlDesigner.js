@@ -4,6 +4,8 @@ function ControlDesigner(textureSpritePointScale) {
 
     this.menuObject = new MenuObject();
     this.objectParametersMenu = new ObjectParametersMenu();
+    this.menu2D = new Menu2D();
+    this.menuScaling = new MenuScaling();
 
     this.textureSpritePointScale = textureSpritePointScale;
 
@@ -50,7 +52,7 @@ function ControlDesigner(textureSpritePointScale) {
     this.updatedWall = 0;
     this.tempCoord = new THREE.Vector2();
     this.widthWall = 20;
-    this.heightWall = 100;
+    this.heightWall = 280;
     this.valueScale = 1;
 
     this.selectedInstr = false;
@@ -2529,6 +2531,17 @@ ControlDesigner.prototype.changeSize3D = function (object, changedSize) {
 
 };
 
+ControlDesigner.prototype.setPropertiesCursor = function () {
+    if (!this.boolCursor) {
+        this.removeCursor2D();
+        this.removeCursor3D();
+        this.objectParametersMenu.hiddenMenu();
+    } else {
+        this.objectParametersMenu.setValue();
+        this.objectParametersMenu.visibleMenu();
+    }
+};
+
 /////////////// Mouse event
 ControlDesigner.prototype.mouseMove = function (posMouse){
     this.posMouse.copy( posMouse );
@@ -2687,7 +2700,7 @@ ControlDesigner.prototype.mouseClick2D = function (intersect, event){
             this.count1 -= 2;
             this.extrudePath();
             this.clearPointsPosition();
-            changeInstrument();
+            this.menu2D.changeInstrument();
             this.selectedObject = null;
             this.selectedPoint = null;
 
@@ -2702,8 +2715,7 @@ ControlDesigner.prototype.mouseClick2D = function (intersect, event){
     } else if (this.selectedScale) {
         if ( Math.round(this.positionsScale[this.countScale * 3 - 3]) === Math.round(this.posMouse.x) &&
              Math.round(this.positionsScale[this.countScale * 3 - 2]) === Math.round(this.posMouse.y) ) {
-            changeScale();
-            this.calculateScale(this.positionsScale);
+            this.menuScaling.changeScale();
         } else {
             if (this.countScale === 0) {
                 this.addPointScale(this.posMouse);
@@ -2758,7 +2770,7 @@ ControlDesigner.prototype.mouseClick2D = function (intersect, event){
             this.selectSubtractObject(this.selectedSubtractObject);
             this.positionCursor2D(arr[1], this.selectedSubtractObject.position, this.selectedSubtractObject, this.selectedSubtractObject.userData.width);
             this.menuObject.setPosition(event, this.selectedSubtractObject.position);
-            this.objectParametersMenu.setValue(this.selectedSubtractObject);
+            this.objectParametersMenu.getObjectProperties(this.selectedSubtractObject);
             this.objectParametersMenu.visibleMenu();
     } else {
         // if (!this.selectedWindow) {
@@ -2790,7 +2802,7 @@ ControlDesigner.prototype.mouseClick3D = function (intersect){
                 this.positionSelectedObject3D(arr[1], this.selectedSubtractObject.position, this.selectedSubtractObject, this.mapSubtractObjects,
                     this.mapSubtract, this.selectedSubtractObject.userData.width, this.selectedSubtractObject.userData.height, this.selectedSubtractObject.userData.fromFloor);
                 this.menuObject.setPosition(event, this.selectedSubtractObject.position);
-                this.objectParametersMenu.setValue(this.selectedSubtractObject);
+                this.objectParametersMenu.getObjectProperties(this.selectedSubtractObject);
                 this.objectParametersMenu.visibleMenu();
         } else {
             // if (!this.selectedWindow) {

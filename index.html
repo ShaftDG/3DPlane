@@ -8,6 +8,8 @@
     <link rel="stylesheet" type="text/css" href="css/style.css">
     <link rel="stylesheet" type="text/css" href="css/styleContextMenuObject.css">
     <link rel="stylesheet" type="text/css" href="css/styleObjectParametersMenu.css">
+    <link rel="stylesheet" type="text/css" href="css/styleMenu2D.css">
+    <link rel="stylesheet" type="text/css" href="css/styleMenuScaling.css">
 
     <script src="js/vendor/three.min.js"></script>
     <script src="js/vendor/csg.js"></script>
@@ -35,6 +37,8 @@
 
     <script src="js/libs/MenuObject.js"></script>
     <script src="js/libs/ObjectParametersMenu.js"></script>
+    <script src="js/libs/Menu2D.js"></script>
+    <script src="js/libs/MenuScaling.js"></script>
    <!-- <style type="text/css">
         body {
             font-family: Monospace;
@@ -53,95 +57,9 @@
 </div>
 <div id="panel" name="panelInstruments" class="controls infopanel-left">
     <form name="Instruments">
-        <p>
-            <!--<label>Загрузить план:</label>-->
-            <!--<input type="file" id="file" name="file" />-->
-            <label for="file" class="custom-file-upload">
-                Загрузить план
-            </label>
-            <input id="file" name="file" type="file"/>
-        </p>
-        <p>
-            <span id="output"></span>
-        </p>
         <div class="div-container-left columns">
             <p style="width: 53px; height: 53px">
-                <button style="width: 54px; height: 53px;"
-                        class="inputInstrumentUnselected"
-                        type="button"
-                        name="changeScale"
-                        value="Масштаб"
-                        title="Установить масштаб"
-                ><img name="changeScale" src="textures/icons/scale.png" width="32" height="32"
-                      class="icon-button">
-                </button>
-            </p>
-            <p  style="height: 53px">
-                <label style="width: 100%;">Значение, (см):</label>
-                <input class="inputHeightWall"
-                       type="number"
-                       step="1"
-                       min="1"
-                       max="1000"
-                       value="1"
-                       id="valueScale"
-                       name="valueScale"/>
-            </p>
-        </div>
-        <div class="div-container-left columns">
-            <p style="width: 53px; height: 100px">
-                <button style="width: 54px; height: 53px; margin-top: calc(100% / 2.3)"
-                        class="inputInstrumentUnselected"
-                        type="button"
-                        name="changeInstrument"
-                        value="Cтена"
-                        title="Рисовать стену"
-                ><img name="changeInstrument" src="textures/icons/plane.png" width="32" height="32"
-                      class="icon-button">
-                </button>
-            </p>
-            <p>
-                    <label style="width: 100%;">Толщина стены, (см):</label>
-                    <input class="inputWidthWall"
-                           type="number"
-                           step="1"
-                           min="1"
-                           max="1000"
-                           value="20"
-                           id="widthWall"
-                           name="widthWall"/>
-                    <!--<span>см</span>-->
-
-                    <label style="width: 100%;">Высота стены, (см):</label>
-                    <input class="inputHeightWall"
-                           type="number"
-                           step="1"
-                           min="1"
-                           max="1000"
-                           value="280"
-                           id="heightWall"
-                           name="heightWall"/>
-                    <!--<span>см</span>-->
-            </p>
-        </div>
-
-        <div class="div-container-left columns">
-            <p style="width: 53px; height: 53px">
-                <button style="height: 53px"
-                        class="inputInstrumentUnselected"
-                        type="button"
-                        name="changeMagnet"
-                        value="Magnet"
-                        title="Притягивание к существующим точкам"
-                ><img name="changeMagnet" src="textures/icons/magnet.png" width="40" height="40"
-                      class="icon-button">
-                </button>
-            </p>
-            <p style="height: 53px"></p>
-        </div>
-        <div class="div-container-left columns">
-            <p style="width: 53px; height: 206px">
-                <button style="height: 53px; margin-top: calc(100% / 1.5)"
+                <button style="height: 53px; margin-top: 20%"
                         class="inputInstrumentUnselected"
                         type="button"
                         name="changeDoor"
@@ -151,7 +69,7 @@
                       class="icon-button">
                 </button>
 
-                <button style="height: 53px; margin-top: calc(100% / 1.5)"
+                <button style="height: 53px; height: 53px; margin-top: 20%"
                         class="inputInstrumentUnselected"
                         type="button"
                         name="changeWindow"
@@ -162,59 +80,9 @@
                 </button>
 
             </p>
-            <p style="height: 206px">
-                <label style="width: 100%;">Ширина, (см):</label>
-                <input class="inputHeightWall"
-                       type="number"
-                       step="1"
-                       min="0"
-                       max="1000"
-                       value="100"
-                       id="width"
-                       name="width"/>
-                <label style="width: 100%;">Высота, (см):</label>
-                <input class="inputHeightWall"
-                       type="number"
-                       step="1"
-                       min="0"
-                       max="1000"
-                       value="210"
-                       id="height"
-                       name="height"/>
-                <label style="width: 100%;">Глубина, (см):</label>
-                <input class="inputHeightWall"
-                       type="number"
-                       step="1"
-                       min="0"
-                       max="1000"
-                       value="20"
-                       id="depth"
-                       name="depth"/>
-                <label style="width: 100%;">От пола, (см):</label>
-                <input class="inputHeightWall"
-                       type="number"
-                       step="1"
-                       min="0"
-                       max="1000"
-                       value="0"
-                       id="fromFloor"
-                       name="fromFloor"/>
-            </p>
+
         </div>
-    <!--    <div class="div-container-left columns">
-            <p style="width: 53px; height: 53px">
-                <button style="height: 53px"
-                        class="inputInstrumentUnselected"
-                        type="button"
-                        name="changeWindow"
-                        value="Window"
-                        title="Окно"
-                ><img name="changeWindow" src="textures/icons/window.png" width="40" height="40"
-                      class="icon-button">
-                </button>
-            </p>
-            <p style="height: 53px"></p>
-        </div>-->
+
     </form>
 
 </div>

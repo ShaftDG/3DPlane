@@ -8,6 +8,7 @@ function ObjectParametersMenu() {
 
     var labelWidth = document.createElement("label");
     labelWidth.innerText = "Ширина, (см):";
+    labelWidth.classList.add("labelObjectParametersMenu");
     container.appendChild(labelWidth);
 
     var inputWidth = document.createElement("input");
@@ -18,10 +19,12 @@ function ObjectParametersMenu() {
     inputWidth.value="20";
     inputWidth.id="w";
     inputWidth.name="w";
+    inputWidth.classList.add("inputObjectParametersMenu");
     container.appendChild(inputWidth);
 
     var labelHeight = document.createElement("label");
     labelHeight.innerText = "Высота, (см):";
+    labelHeight.classList.add("labelObjectParametersMenu");
     container.appendChild(labelHeight);
 
     var inputHeight = document.createElement("input");
@@ -32,10 +35,12 @@ function ObjectParametersMenu() {
     inputHeight.value="20";
     inputHeight.id="h";
     inputHeight.name="h";
+    inputHeight.classList.add("inputObjectParametersMenu");
     container.appendChild(inputHeight);
 
     var labelDepth = document.createElement("label");
     labelDepth.innerText = "Глубина, (см):";
+    labelDepth.classList.add("labelObjectParametersMenu");
     container.appendChild(labelDepth);
 
     var inputDepth = document.createElement("input");
@@ -46,10 +51,12 @@ function ObjectParametersMenu() {
     inputDepth.value="20";
     inputDepth.id="d";
     inputDepth.name="d";
+    inputDepth.classList.add("inputObjectParametersMenu");
     container.appendChild(inputDepth);
 
     var labelFromFloor = document.createElement("label");
     labelFromFloor.innerText = "От пола, (см):";
+    labelFromFloor.classList.add("labelObjectParametersMenu");
     container.appendChild(labelFromFloor);
 
     var inputFromFloor = document.createElement("input");
@@ -60,6 +67,7 @@ function ObjectParametersMenu() {
     inputFromFloor.value="20";
     inputFromFloor.id="f";
     inputFromFloor.name="f";
+    inputFromFloor.classList.add("inputObjectParametersMenu");
     container.appendChild(inputFromFloor);
 
     this.width = 0;
@@ -68,8 +76,19 @@ function ObjectParametersMenu() {
     this.fromFloor = 0;
 
     inputWidth.addEventListener('change', function (ev) {
-        if (designer.selectedSubtractObject) {
-            designer.widthSubtractObject = +inputWidth.value;
+        designer.widthSubtractObject = +inputWidth.value;
+        if (!designer.widthSubtractObject) {
+            alert('Error: failed to get the width element!');
+            designer.widthSubtractObject = 100;
+        }
+        if (designer.boolCursor) {
+            if (designer.cursor3D) {
+                designer.cursor3D.scale.x = designer.widthSubtractObject;
+            }
+            if (designer.cursor2D) {
+                designer.cursor2D.scale.x = designer.widthSubtractObject;
+            }
+        } else if (designer.selectedSubtractObject) {
             designer.selectedSubtractObject.userData.width = designer.widthSubtractObject;
             var changedSize = new THREE.Vector3(designer.widthSubtractObject, null, null);
             if (camera.isPerspectiveCamera) {
@@ -81,8 +100,16 @@ function ObjectParametersMenu() {
     }, false);
 
     inputHeight.addEventListener('change', function (ev) {
-        if (designer.selectedSubtractObject) {
-            designer.heightSubtractObject = +inputHeight.value;
+        designer.heightSubtractObject = +inputHeight.value;
+        if (!designer.heightSubtractObject) {
+            alert('Error: failed to get the height element!');
+            designer.heightSubtractObject = 210;
+        }
+        if (designer.boolCursor) {
+            if (designer.cursor3D) {
+                designer.cursor3D.scale.y = designer.heightSubtractObject;
+            }
+        } else if (designer.selectedSubtractObject) {
             designer.selectedSubtractObject.userData.height = designer.heightSubtractObject;
             var changedSize = new THREE.Vector3(null, designer.heightSubtractObject, null);
             if (camera.isPerspectiveCamera) {
@@ -92,8 +119,19 @@ function ObjectParametersMenu() {
     }, false);
 
     inputDepth.addEventListener('change', function (ev) {
-        if (designer.selectedSubtractObject) {
-            designer.depthSubtractObject = +inputDepth.value;
+        designer.depthSubtractObject = +inputDepth.value;
+        if (!designer.depthSubtractObject) {
+            alert('Error: failed to get the depth element!');
+            designer.depthSubtractObject = 20;
+        }
+        if (designer.boolCursor) {
+            if (designer.cursor3D) {
+                designer.cursor3D.scale.z = designer.depthSubtractObject;
+            }
+            if (designer.cursor2D) {
+                designer.cursor2D.scale.y = designer.depthSubtractObject;
+            }
+        } else if (designer.selectedSubtractObject) {
             designer.selectedSubtractObject.userData.depth = designer.depthSubtractObject;
             var changedSize;
             if (camera.isPerspectiveCamera) {
@@ -107,8 +145,12 @@ function ObjectParametersMenu() {
     }, false);
 
     inputFromFloor.addEventListener('change', function (ev) {
+        designer.fromFloorSubtractObject = +inputFromFloor.value;
+        if (!designer.fromFloorSubtractObject) {
+            alert('Error: failed to get the fromFloor element!');
+            designer.fromFloorSubtractObject = 0;
+        }
         if (designer.selectedSubtractObject) {
-            designer.fromFloorSubtractObject = +inputFromFloor.value;
             designer.selectedSubtractObject.userData.fromFloor = designer.fromFloorSubtractObject;
             var changedSize = new THREE.Vector3(null, null, null);
             if (camera.isPerspectiveCamera) {
@@ -123,7 +165,7 @@ function ObjectParametersMenu() {
 
 ObjectParametersMenu.prototype.constructor = ObjectParametersMenu;
 
-ObjectParametersMenu.prototype.setValue = function (object) {
+ObjectParametersMenu.prototype.getObjectProperties = function (object) {
     var box = object.children[0].box;
     // console.log(object.userData.width, object.userData.height, object.userData.depth);
 
@@ -156,6 +198,18 @@ ObjectParametersMenu.prototype.setValue = function (object) {
     inputHeight.value = this.height.toString();
     inputDepth.value = this.depth.toString();
     inputFromFloor.value = this.fromFloor.toString();
+};
+
+ObjectParametersMenu.prototype.setValue = function () {
+    var inputWidth = document.getElementById("w");
+    var inputHeight = document.getElementById("h");
+    var inputDepth = document.getElementById("d");
+    var inputFromFloor =  document.getElementById("f");
+
+    inputWidth.value = designer.widthSubtractObject.toString();
+    inputHeight.value = designer.heightSubtractObject.toString();
+    inputDepth.value = designer.depthSubtractObject.toString();
+    inputFromFloor.value = designer.fromFloorSubtractObject.toString();
 };
 
 ObjectParametersMenu.prototype.getValue = function () {

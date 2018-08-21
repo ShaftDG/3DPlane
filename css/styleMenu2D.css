@@ -1,0 +1,45 @@
+.styleMenu2D {
+    position: absolute;
+    top: 25%;
+    right: 0;
+    width: 290px;
+    visibility: visible;
+    background: #e4f4ff;
+    border-radius: 10px 0px 0px 10px;
+    border: 1px solid #3997ad;
+    padding: 1%;
+}
+
+div.columnsMenu2D p   {
+    width: calc(100% /1.7);
+    height: 100px;
+    float: left;
+    margin: 0px 0px 10px 10px;
+    padding: 0;
+    text-align: right;
+}
+
+.labelMenu2D {
+    width: 100%;
+    margin-top: 2%;
+    margin-bottom: 2%;
+    text-align: left;
+}
+
+input[type="file"] {
+    display: none;
+}
+.custom-file-uploadMenu2D {
+    text-align: center;
+    width: 91%;
+    background-color: #6fccd4;
+    border: 1px solid #ccc;
+    display: inline-block;
+    padding: 6px 12px;
+    cursor: pointer;
+    color: #363a5e;
+}
+.custom-file-uploadMenu2D:hover {
+    background-color: #4CAF50; /* Green */
+    color: white;
+}

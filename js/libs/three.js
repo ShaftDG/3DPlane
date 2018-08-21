@@ -4709,7 +4709,7 @@
 	 *
 	 * Methods of all nodes except the top-level container:
 	 *
-	 * .setValue( gl, value, [renderer] )
+	 * .getObjectProperties( gl, value, [renderer] )
 	 *
 	 * 		uploads a uniform value(s)
 	 *  	the 'renderer' parameter is needed for sampler uniforms
@@ -4728,7 +4728,7 @@
 	 *
 	 * Methods of the top-level container (renderer factorizations):
 	 *
-	 * .setValue( gl, name, value )
+	 * .getObjectProperties( gl, name, value )
 	 *
 	 * 		sets uniform with  name 'name' to 'value'
 	 *
@@ -38767,7 +38767,7 @@
 			this.getValue( targetArray, offset );
 
 			// Note: This class uses a State pattern on a per-method basis:
-			// 'bind' sets 'this.getValue' / 'setValue' and shadows the
+			// 'bind' sets 'this.getValue' / 'getObjectProperties' and shadows the
 			// prototype version of these methods with one that represents
 			// the bound state. When the property is not found, the methods
 			// become no-ops.
@@ -39022,7 +39022,7 @@
 
 			this.node = null;
 
-			// back to the prototype version of getValue / setValue
+			// back to the prototype version of getValue / getObjectProperties
 			// note: avoiding to mutate the shape of 'this' via 'delete'
 			this.getValue = this._getValue_unbound;
 			this.setValue = this._setValue_unbound;
