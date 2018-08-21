@@ -23,6 +23,8 @@ function ControlDesigner(textureSpritePointScale) {
 
     this.boolCursor = false;
 
+    this.tempPosition = new THREE.Vector3();
+
     this.widthSubtractObject = 100;
     this.heightSubtractObject = 210;
     this.depthSubtractObject = 20;
@@ -127,6 +129,7 @@ function ControlDesigner(textureSpritePointScale) {
 
     this.groupSubtractObjects = new THREE.Object3D();
     this.groupSubtractObjects.name = "groupSubtractObjects";
+    this.groupSubtractObjects.visible = false;
     this.add(this.groupSubtractObjects);
 
     // model
@@ -1266,6 +1269,7 @@ ControlDesigner.prototype.extrudePath = function () {
     var extrudeSettings = { depth: this.heightWall, bevelEnabled: false, steps: 1 };
     this.addShape( inputShape, extrudeSettings, "#9cc2d7", "#39424e", 0, 0, 0, 0, 0, 0, 1, this.numWalls );
     this.addLineShape( inputShape, extrudeSettings, "#d70003", 0, 0, 0, 0, 0, 0, 1, this.numWalls );
+    this.rebuildWall(this.numWalls);
     this.numWalls++;
 };
 
@@ -1316,6 +1320,7 @@ ControlDesigner.prototype.updateExtrudePath = function (position) {
         var extrudeSettings = {depth: this.heightWall, bevelEnabled: false, steps: 1};
         this.addShape(inputShape, extrudeSettings, "#9cc2d7", "#39424e", 0, 0, 0, 0, 0, 0, 1, this.updatedWall);
         this.addLineShape(inputShape, extrudeSettings, "#d70003", 0, 0, 0, 0, 0, 0, 1, this.updatedWall);
+        this.rebuildWall(this.updatedWall);
     }
 };
 
@@ -1414,16 +1419,30 @@ ControlDesigner.prototype.rebuildAll = function (){
             opacity: 0.5
         });
         var mesh = new THREE.Mesh(geometry, mat);
+        mesh.name = this.groupSubtract.children[j].name;
         mesh.userData = this.groupSubtract.children[j].userData;
 
         this.addHelper(mesh);
+
+        if (!this.mapSubtractObjects.has(mesh.name)) {
+            var loaderFBX = new THREE.FBXLoader(loadingManager);
+            loaderFBX.load("models/door.fbx", function (object) {
+                object.traverse(function (child) {
+                    if (child.isMesh) {
+                        object.name = "object";
+                        mesh.add(object);
+                    }
+                });
+            });
+        } else {
+            mesh.add(this.mapSubtractObjects.get(mesh.name).getObjectByName("object"));
+        }
 
         mesh.position.x = this.groupSubtract.children[j].position.x;
         mesh.position.z = -this.groupSubtract.children[j].position.y;
         mesh.position.y = this.groupSubtract.children[j].userData.fromFloor;
         mesh.rotation.y = this.groupSubtract.children[j].rotation.z;
         mesh.updateMatrix();
-        mesh.name = this.groupSubtract.children[j].name;
         this.removeIntersectObjectsArray(this.objects, this.mapSubtractObjects.get(mesh.name));
         this.removeObject(this.groupSubtractObjects, this.mapSubtractObjects.get(mesh.name));
         this.mapSubtractObjects.set(mesh.name, mesh);
@@ -1474,19 +1493,33 @@ ControlDesigner.prototype.rebuildWall = function (nameWall){
             var mat = new THREE.MeshPhongMaterial({
                 color: "#4145d7",
                 transparent: true,
-                opacity: 0.5
+                opacity: 0.0
             });
             var mesh = new THREE.Mesh(geometry, mat);
+            mesh.name = m.name;
             mesh.userData = m.userData;
 
             this.addHelper(mesh);
+
+            if (!this.mapSubtractObjects.has(mesh.name)) {
+                var loaderFBX = new THREE.FBXLoader(loadingManager);
+                loaderFBX.load("models/door.fbx", function (object) {
+                    object.traverse(function (child) {
+                        if (child.isMesh) {
+                            object.name = "object";
+                            mesh.add(object);
+                        }
+                    });
+                });
+            } else {
+                mesh.add(this.mapSubtractObjects.get(mesh.name).getObjectByName("object"));
+            }
 
             mesh.position.x = m.position.x;
             mesh.position.z = -m.position.y;
             mesh.position.y = m.userData.fromFloor;
             mesh.rotation.y = m.rotation.z;
             mesh.updateMatrix();
-            mesh.name = m.name;
             this.removeIntersectObjectsArray(this.objects, this.mapSubtractObjects.get(mesh.name));
             this.removeObject(this.groupSubtractObjects, this.mapSubtractObjects.get(mesh.name));
             this.mapSubtractObjects.set(mesh.name, mesh);
@@ -2444,34 +2477,34 @@ ControlDesigner.prototype.changeSize2D = function (object, changedSize) {
 
     //   object.geometry.applyMatrix(new THREE.Matrix4().makeTranslation(width/2, height/2, depth/2));
 
-    var point = new THREE.Vector3(
+    var scale = new THREE.Vector3(
         changedSize.x ? changedSize.x / width : 1,
         changedSize.y ? changedSize.y / height : 1,
         changedSize.z ? changedSize.z / depth : 1
     );
 
-    console.log(box);
+    // console.log(box);
 
-    box.max.multiply(point);
-    box.min.multiply(point);
+    box.max.multiply(scale);
+    box.min.multiply(scale);
 
     var oldScale = new THREE.Vector3();
     oldScale.copy( object.scale );
 
-    /* object.scale.x = oldScale.x * point.x;
-     object.scale.y = oldScale.y * point.y;
-     object.scale.z = oldScale.z * point.z;*/
+    /* object.scale.x = oldScale.x * scale.x;
+     object.scale.y = oldScale.y * scale.y;
+     object.scale.z = oldScale.z * scale.z;*/
 
     for(var i = 0; i < object.geometry.vertices.length; i++) {
-        object.geometry.vertices[i].multiply(point);
+        object.geometry.vertices[i].multiply(scale);
     }
     object.geometry.verticesNeedUpdate = true;
 
     /* var pos = object.children[0].geometry.attributes.position.array;
      for(var i = 0; i < pos.length / 3; i++) {
-         pos[i * 3 + 0] *= point.x;
-         pos[i * 3 + 1] *= point.y;
-         pos[i * 3 + 2] *= point.z;
+         pos[i * 3 + 0] *= scale.x;
+         pos[i * 3 + 1] *= scale.y;
+         pos[i * 3 + 2] *= scale.z;
      }
      object.children[0].geometry.attributes.position.needsUpdate = true;*/
     this.positionCursor2D(object.name.split('_')[1], object.position, object, this.selectedSubtractObject.userData.width);
@@ -2486,48 +2519,59 @@ ControlDesigner.prototype.changeSize3D = function (object, changedSize) {
 
     //   object.geometry.applyMatrix(new THREE.Matrix4().makeTranslation(width/2, height/2, depth/2));
 
-    var point = new THREE.Vector3(
+    var scale = new THREE.Vector3(
         changedSize.x ? changedSize.x / width : 1,
         changedSize.y ? changedSize.y / height : 1,
         changedSize.z ? changedSize.z / depth : 1
     );
 
-    console.log(box);
+    // console.log(box);
 
-    box.max.multiply(point);
-    box.min.multiply(point);
+    box.max.multiply(scale);
+    box.min.multiply(scale);
 
     var oldScale = new THREE.Vector3();
     oldScale.copy( object.scale );
 
-    /* object.scale.x = oldScale.x * point.x;
-     object.scale.y = oldScale.y * point.y;
-     object.scale.z = oldScale.z * point.z;*/
+    /* object.scale.x = oldScale.x * scale.x;
+     object.scale.y = oldScale.y * scale.y;
+     object.scale.z = oldScale.z * scale.z;*/
 
     for(var i = 0; i < object.geometry.vertices.length; i++) {
-        object.geometry.vertices[i].multiply(point);
+        object.geometry.vertices[i].multiply(scale);
     }
     object.geometry.verticesNeedUpdate = true;
 
     /* var pos = object.children[0].geometry.attributes.position.array;
      for(var i = 0; i < pos.length / 3; i++) {
-         pos[i * 3 + 0] *= point.x;
-         pos[i * 3 + 1] *= point.y;
-         pos[i * 3 + 2] *= point.z;
+         pos[i * 3 + 0] *= scale.x;
+         pos[i * 3 + 1] *= scale.y;
+         pos[i * 3 + 2] *= scale.z;
      }
      object.children[0].geometry.attributes.position.needsUpdate = true;*/
 
     var changedSize2D = new THREE.Vector3(changedSize.x, changedSize.z, 1);
     this.changeSize2D(this.mapSubtract.get(object.name), changedSize2D);
 
-
-    this.positionSelectedObject3D(object.name.split('_')[1], object.position, object, this.mapSubtractObjects,
+    if (camera.isPerspectiveCamera) {
+        this.positionSelectedObject3D(object.name.split('_')[1], object.position, object, this.mapSubtractObjects,
             this.mapSubtract, this.selectedSubtractObject.userData.width, this.selectedSubtractObject.userData.height, this.selectedSubtractObject.userData.fromFloor);
-
+    }
     this.rebuildWall(object.name.split('_')[1]);
     object = this.mapSubtractObjects.get(object.name);
-    this.selectSubtractObject(object);
-    this.selectedSubtractObject = object;
+
+    object.getObjectByName("object").traverse(function (child) {
+        if (child instanceof THREE.Mesh) {
+
+            var pos = child.geometry.attributes.position.array;
+            for(var i = 0; i < pos.length / 3; i++) {
+                pos[i * 3 + 0] *= scale.x;
+                pos[i * 3 + 1] *= scale.y;
+                pos[i * 3 + 2] *= scale.z;
+            }
+            child.geometry.attributes.position.needsUpdate = true;
+        }
+    });
 
 };
 
@@ -2583,12 +2627,14 @@ ControlDesigner.prototype.mouseClickCursor2D = function (intersect){
             if (arr[0] === "wallsCup") {
                 if (this.cursor2D.name === arr[1]) {
                     this.addDoor2D(this.cursor2D, this.groupSubtract.children.length, arr[1]);
+                    this.rebuildWall(this.updatedWall.toString());
                 }
                 this.updatedWall = +arr[1];
                 this.positionCursor2D(this.updatedWall.toString(), intersect.point, this.cursor2D, this.widthSubtractObject);
                 this.cursor2D.name = this.updatedWall.toString();
             } else {
                 this.addDoor2D(this.cursor2D, this.groupSubtract.children.length, this.updatedWall.toString());
+                this.rebuildWall(this.updatedWall.toString());
             }
         }
     }
@@ -2772,6 +2818,8 @@ ControlDesigner.prototype.mouseClick2D = function (intersect, event){
             this.menuObject.setPosition(event, this.selectedSubtractObject.position);
             this.objectParametersMenu.getObjectProperties(this.selectedSubtractObject);
             this.objectParametersMenu.visibleMenu();
+
+            this.tempPosition.copy(this.selectedSubtractObject.position);
     } else {
         // if (!this.selectedWindow) {
             this.menuObject.hiddenMenu();
@@ -2804,6 +2852,8 @@ ControlDesigner.prototype.mouseClick3D = function (intersect){
                 this.menuObject.setPosition(event, this.selectedSubtractObject.position);
                 this.objectParametersMenu.getObjectProperties(this.selectedSubtractObject);
                 this.objectParametersMenu.visibleMenu();
+
+                this.tempPosition.copy(this.selectedSubtractObject.position);
         } else {
             // if (!this.selectedWindow) {
                 this.menuObject.hiddenMenu();
@@ -2820,9 +2870,25 @@ ControlDesigner.prototype.mouseCancel = function (event){
 
             if (this.selectedSubtractObject) {
                 if (camera.isPerspectiveCamera) {
-                    this.rebuildWall(this.selectedSubtractObject.name.split('_')[1]);
-                    this.selectedSubtractObject = this.mapSubtractObjects.get(this.selectedSubtractObject.name);
-                    this.selectSubtractObject(this.selectedSubtractObject);
+                    if (  new THREE.Vector3(
+                        this.tempPosition.x - this.selectedSubtractObject.position.x,
+                        this.tempPosition.y - this.selectedSubtractObject.position.y,
+                        this.tempPosition.z - this.selectedSubtractObject.position.z
+                    ).length() > 0) {
+                        this.rebuildWall(this.selectedSubtractObject.name.split('_')[1]);
+                        this.selectedSubtractObject = this.mapSubtractObjects.get(this.selectedSubtractObject.name);
+                        this.selectSubtractObject(this.selectedSubtractObject);
+                    }
+                } else if (camera.isOrthographicCamera) {
+                    if (  new THREE.Vector3(
+                        this.tempPosition.x - this.selectedSubtractObject.position.x,
+                        this.tempPosition.y - this.selectedSubtractObject.position.y,
+                        this.tempPosition.z - this.selectedSubtractObject.position.z
+                    ).length() > 0) {
+                        this.rebuildWall(this.selectedSubtractObject.name.split('_')[1]);
+                        this.selectedSubtractObject = this.mapSubtract.get(this.selectedSubtractObject.name);
+                        this.selectSubtractObject(this.selectedSubtractObject);
+                    }
                 }
                 this.enableMouseMove = false;
                 this.menuObject.setPosition(event, this.selectedSubtractObject.position);

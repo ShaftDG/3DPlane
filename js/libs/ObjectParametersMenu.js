@@ -94,7 +94,7 @@ function ObjectParametersMenu() {
             if (camera.isPerspectiveCamera) {
                 designer.changeSize3D(designer.selectedSubtractObject, changedSize);
             } else if (camera.isOrthographicCamera) {
-                designer.changeSize2D(designer.selectedSubtractObject, changedSize);
+                designer.changeSize3D(designer.mapSubtractObjects.get(designer.selectedSubtractObject.name), changedSize);
             }
         }
     }, false);
@@ -114,6 +114,8 @@ function ObjectParametersMenu() {
             var changedSize = new THREE.Vector3(null, designer.heightSubtractObject, null);
             if (camera.isPerspectiveCamera) {
                 designer.changeSize3D(designer.selectedSubtractObject, changedSize);
+            } else if (camera.isOrthographicCamera) {
+                designer.changeSize3D(designer.mapSubtractObjects.get(designer.selectedSubtractObject.name), changedSize);
             }
         }
     }, false);
@@ -133,13 +135,11 @@ function ObjectParametersMenu() {
             }
         } else if (designer.selectedSubtractObject) {
             designer.selectedSubtractObject.userData.depth = designer.depthSubtractObject;
-            var changedSize;
+            var changedSize = new THREE.Vector3(null, null, designer.depthSubtractObject);
             if (camera.isPerspectiveCamera) {
-                changedSize = new THREE.Vector3(null, null, designer.depthSubtractObject);
                 designer.changeSize3D(designer.selectedSubtractObject, changedSize);
             } else if (camera.isOrthographicCamera) {
-                changedSize = new THREE.Vector3(null, designer.depthSubtractObject, null);
-                designer.changeSize2D(designer.selectedSubtractObject, changedSize);
+                designer.changeSize3D(designer.mapSubtractObjects.get(designer.selectedSubtractObject.name), changedSize);
             }
         }
     }, false);
@@ -156,7 +156,7 @@ function ObjectParametersMenu() {
             if (camera.isPerspectiveCamera) {
                 designer.changeSize3D(designer.selectedSubtractObject, changedSize);
             } else if (camera.isOrthographicCamera) {
-                designer.changeSize2D(designer.selectedSubtractObject, changedSize);
+                designer.changeSize3D(designer.mapSubtractObjects.get(designer.selectedSubtractObject.name), changedSize);
             }
         }
     }, false);

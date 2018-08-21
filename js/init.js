@@ -165,7 +165,7 @@ function init() {
     document.addEventListener( 'keydown', onKeyDown, false );
     document.getElementsByTagName("canvas")[0].addEventListener( 'mousedown', onDocumentMouseDown, false );
     document.getElementsByTagName("canvas")[0].addEventListener( 'mouseup', onDocumentMouseCancel, false );
-    document.getElementsByTagName("canvas")[0].addEventListener( 'mouseleave', onDocumentMouseCancel, false );
+  //  document.getElementsByTagName("canvas")[0].addEventListener( 'mouseleave', onDocumentMouseCancel, false );
 
     document.Instruments.changeDoor.addEventListener("click", changeDoor);
     document.Instruments.changeWindow.addEventListener("click", changeWindow);
@@ -593,7 +593,7 @@ function changeCamera(event){
             camera = cameraPerspective;
             setCameraDefaultPosition();
 
-            designer.rebuildAll();
+            // designer.rebuildAll();
         }
     }
 }
