@@ -900,28 +900,6 @@ ControlDesigner.prototype.makeTextSprite = function ( message, parameters, angle
     return sprite;
 };
 
-ControlDesigner.prototype.extrudeFaceWall = function (start, end, nameFace) {
-    var pathTemp = [];
-    pathTemp.push(start);
-    pathTemp.push(end);
-    var vector = {
-        x0: start.x,
-        y0: start.y,
-        z0: 0,
-        x1: end.x,
-        y1: end.y,
-        z1: 0,
-    };
-    var v = this.getVectors(vector, 0.1);
-    pathTemp.push(new THREE.Vector2(v.d.x, v.d.y));
-    pathTemp.push(new THREE.Vector2(v.b.x, v.b.y));
-    var inputShapeTemp = new THREE.Shape( pathTemp );
-    var extrudeSettings = { depth: this.heightWall, bevelEnabled: false, steps: 1 };
-    this.removeObject(this.mapWalls.get("walls_" + this.numWalls.toString()),
-        this.mapWalls.get("walls_" + this.numWalls.toString()).getObjectByName(this.numWalls.toString() + "-" + nameFace));
-    this.addFaceWall( inputShapeTemp, extrudeSettings, "#39424e", 0, 0, 0, 0, 0, 0, 1, this.numWalls.toString(), nameFace );
-};
-
                 // Create Wall
 ControlDesigner.prototype.addPointObject = function (x, y ,z, num) {
     var pointGeometry = new THREE.SphereBufferGeometry( 4, 8, 8 );
@@ -1262,7 +1240,7 @@ ControlDesigner.prototype.extrudePath = function () {
                 pathPts.push(new THREE.Vector2(this.positionsRect[i * 3 + 0], this.positionsRect[i * 3 + 1]));
 
                 if (i > 1) {
-                    this.extrudeFaceWall(pathPts[pathPts.length-1], pathPts[pathPts.length-2], pathPts.length-1);
+                    this.extrudeFaceWall(pathPts[pathPts.length-2], pathPts[pathPts.length-1], pathPts.length-1);
                 } else if (i === 1) {
                     this.extrudeFaceWall(pathPts[pathPts.length-2], pathPts[pathPts.length-1], pathPts.length-1);
                     this.extrudeFaceWall(pathPts[pathPts.length-1], pathPts[0], pathPts.length);
@@ -2654,6 +2632,28 @@ ControlDesigner.prototype.setPropertiesCursor = function () {
         this.objectParametersMenu.setValue();
         this.objectParametersMenu.visibleMenu();
     }
+};
+
+ControlDesigner.prototype.extrudeFaceWall = function (start, end, nameFace) {
+    var pathTemp = [];
+    pathTemp.push(start);
+    pathTemp.push(end);
+    var vector = {
+        x0: start.x,
+        y0: start.y,
+        z0: 0,
+        x1: end.x,
+        y1: end.y,
+        z1: 0,
+    };
+    var v = this.getVectors(vector, 0.1);
+    pathTemp.push(new THREE.Vector2(v.d.x, v.d.y));
+    pathTemp.push(new THREE.Vector2(v.b.x, v.b.y));
+    var inputShapeTemp = new THREE.Shape( pathTemp );
+    var extrudeSettings = { depth: this.heightWall, bevelEnabled: false, steps: 1 };
+    this.removeObject(this.mapWalls.get("walls_" + this.numWalls.toString()),
+        this.mapWalls.get("walls_" + this.numWalls.toString()).getObjectByName(this.numWalls.toString() + "-" + nameFace));
+    this.addFaceWall( inputShapeTemp, extrudeSettings, "#39424e", 0, 0, 0, 0, 0, 0, 1, this.numWalls.toString(), nameFace );
 };
 
 /////////////// Mouse event
