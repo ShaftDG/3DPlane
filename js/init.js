@@ -511,7 +511,7 @@ function changeCamera(event){
             designer.groupSubtract.rotation.x = designer.group.rotation.x;
             designer.groupProportions.rotation.x = designer.group.rotation.x;
 
-            // designer.groupExtrude.visible = false;
+            designer.groupExtrude.visible = false;
             designer.groupFinishedWalls.visible = false;
             designer.groupPlane.visible = true;
             designer.groupLinesUpdate.visible = true;
