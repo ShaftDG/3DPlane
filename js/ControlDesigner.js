@@ -1207,7 +1207,7 @@ ControlDesigner.prototype.extrudePath = function () {
         pathPts.push( new THREE.Vector2 ( this.positions[i * 3 + 0], this.positions[i * 3 + 1] ) );
 
         if (i > 0) {
-            this.extrudeFaceWall(pathPts[i-1], pathPts[i], pathPts.length-1);
+            this.extrudeFaceWall(pathPts[i-1], pathPts[i], this.numWalls, pathPts.length-1);
         }
 
         mainLine.push( new THREE.Vector2 ( this.positions[i * 3 + 0], this.positions[i * 3 + 1] ) );
@@ -1240,10 +1240,10 @@ ControlDesigner.prototype.extrudePath = function () {
                 pathPts.push(new THREE.Vector2(this.positionsRect[i * 3 + 0], this.positionsRect[i * 3 + 1]));
 
                 if (i > 1) {
-                    this.extrudeFaceWall(pathPts[pathPts.length-2], pathPts[pathPts.length-1], pathPts.length-1);
+                    this.extrudeFaceWall(pathPts[pathPts.length-2], pathPts[pathPts.length-1], this.numWalls, pathPts.length-1);
                 } else if (i === 1) {
-                    this.extrudeFaceWall(pathPts[pathPts.length-2], pathPts[pathPts.length-1], pathPts.length-1);
-                    this.extrudeFaceWall(pathPts[pathPts.length-1], pathPts[0], pathPts.length);
+                    this.extrudeFaceWall(pathPts[pathPts.length-2], pathPts[pathPts.length-1], this.numWalls, pathPts.length-1);
+                    this.extrudeFaceWall(pathPts[pathPts.length-1], pathPts[0], this.numWalls, pathPts.length);
                 }
 
                 this.addPointObject(this.positionsRect[i * 3 + 0], this.positionsRect[i * 3 + 1], this.positionsRect[i * 3 + 2], num);
@@ -1258,7 +1258,7 @@ ControlDesigner.prototype.extrudePath = function () {
         } else {
             pathPts.push(new THREE.Vector2(this.positionsRect[i * 3 + 0], this.positionsRect[i * 3 + 1]));
 
-            this.extrudeFaceWall(pathPts[pathPts.length-2], pathPts[pathPts.length-1], pathPts.length-1);
+            this.extrudeFaceWall(pathPts[pathPts.length-2], pathPts[pathPts.length-1], this.numWalls, pathPts.length-1);
 
             this.addPointObject(this.positionsRect[i * 3 + 0], this.positionsRect[i * 3 + 1], this.positionsRect[i * 3 + 2], num);
             this.removeObject(this.groupProportions, this.mapProportions.get((pathPts.length - 2).toString()+ "_" + this.numWalls.toString()));
@@ -1280,15 +1280,16 @@ ControlDesigner.prototype.extrudePath = function () {
 
 ControlDesigner.prototype.updateExtrudePath = function (position) {
 
-    this.removeObject(this.groupExtrude, this.mapWalls.get("walls_" + this.updatedWall.toString()));
+    this.removeIntersectObjectsArray(this.objects, this.mapWallsCup.get("wallsCup_" + this.updatedWall.toString()));
+
+    this.removeIntersectObjectsArray(this.objects,
+        this.groupExtrude.getObjectByName("walls_" + this.updatedWall.toString()).getObjectByName("walls_" + this.updatedWall.toString() + "-0"));
+    this.removeObject(this.groupExtrude.getObjectByName("walls_" + this.updatedWall.toString()),
+        this.groupExtrude.getObjectByName("walls_" + this.updatedWall.toString()).getObjectByName("walls_" + this.updatedWall.toString() + "-0"));
+
     this.removeObject(this.groupPlane, this.mapWallsCup.get("wallsCup_" + this.updatedWall.toString()));
     this.removeObject(this.groupLinesUpdate, this.mapLines.get("line_" + this.updatedWall.toString()));
 
-    this.removeIntersectObjectsArray(this.objects, this.mapWallsCup.get("wallsCup_" + this.updatedWall.toString()));
-    this.removeIntersectObjectsArray(this.objects, this.mapWalls.get("walls_" + this.updatedWall.toString()));
-
-    this.addGroupFaceWall(this.updatedWall);
-    var num = 0;
     var pathPts = [];
     var mainLine = [];
     var length = position.length / 3;
@@ -1305,20 +1306,16 @@ ControlDesigner.prototype.updateExtrudePath = function (position) {
                 } else {
                     pathPts.push(new THREE.Vector2(position[i * 3 + 0], position[i * 3 + 1]));
 
-                    this.extrudeFaceWall(pathPts[pathPts.length-2], pathPts[pathPts.length-1], pathPts.length-1);
+                    this.extrudeFaceWall(pathPts[pathPts.length-2], pathPts[pathPts.length-1], this.updatedWall, pathPts.length-1);
 
                     if (i < Math.round((length-1) / 2)) {
                         mainLine.push(new THREE.Vector2(position[i * 3 + 0], position[i * 3 + 1]));
                     }
-                    num++;
                 }
-
             } else {
                 pathPts.push(new THREE.Vector2(position[i * 3 + 0], position[i * 3 + 1]));
                 mainLine.push(new THREE.Vector2(position[i * 3 + 0], position[i * 3 + 1]));
-                num++;
             }
-
         }
 
         this.mapLinesWalls.delete(this.updatedWall.toString());
@@ -1355,10 +1352,10 @@ ControlDesigner.prototype.addShape = function ( shape, extrudeSettings, colorCup
     mesh.position.set( x, y, z );
     mesh.rotation.set( rx, ry, rz );
     mesh.scale.set( s, s, s );
-    mesh.name = "walls_" + nameWall.toString();
+    mesh.name = "walls_" + nameWall.toString() + "-0";
     // mesh.castShadow = true;
     this.objects.push(mesh);
-    this.mapWalls.get("walls_" + nameWall.toString()).add( mesh );
+    this.groupExtrude.getObjectByName("walls_" + nameWall.toString()).add( mesh );
     // flat shape
     var geometry = new THREE.ShapeBufferGeometry( shape );
     var mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { color: colorCup/*, wireframe: true*/ } ) );
@@ -1374,8 +1371,8 @@ ControlDesigner.prototype.addShape = function ( shape, extrudeSettings, colorCup
 ControlDesigner.prototype.addGroupFaceWall = function ( nameWall ) {
     var groupFace = new THREE.Object3D();
     groupFace.name = "walls_" + nameWall.toString();
-    this.mapWalls.set(groupFace.name, groupFace);
-    this.objects.push(groupFace);
+    // this.mapWalls.set(groupFace.name, groupFace);
+  //  this.objects.push(groupFace);
     this.groupExtrude.add( groupFace );
 };
 
@@ -1388,10 +1385,9 @@ ControlDesigner.prototype.addFaceWall = function ( shape, extrudeSettings, color
     mesh.rotation.set( rx, ry, rz );
     mesh.scale.set( s, s, s );
     mesh.name = "walls_" + nameWall.toString() + "-" + nameFace.toString();
-    this.add(mesh);
   //  this.mapWalls.set(mesh.name, mesh);
     this.objects.push(mesh);
-    this.mapWalls.get("walls_" + nameWall.toString()).add( mesh );
+    this.groupExtrude.getObjectByName("walls_" + nameWall.toString()).add( mesh );
 };
 
 ControlDesigner.prototype.booleanOperation = function ( obj1, obj2 ){
@@ -1573,7 +1569,7 @@ ControlDesigner.prototype.rebuildWall = function (nameWall){
     this.removeIntersectObjectsArray(this.objects, this.mapWalls.get(m.name));
     this.removeObject(this.groupFinishedWalls, this.mapWalls.get(m.name));
     this.mapWalls.set(m.name, m);
-    this.objects.push(m);
+  //  this.objects.push(m);
     this.groupFinishedWalls.add(m);
 };
 
@@ -2634,7 +2630,7 @@ ControlDesigner.prototype.setPropertiesCursor = function () {
     }
 };
 
-ControlDesigner.prototype.extrudeFaceWall = function (start, end, nameFace) {
+ControlDesigner.prototype.extrudeFaceWall = function (start, end, nameWalls, nameFace) {
     var pathTemp = [];
     pathTemp.push(start);
     pathTemp.push(end);
@@ -2651,9 +2647,11 @@ ControlDesigner.prototype.extrudeFaceWall = function (start, end, nameFace) {
     pathTemp.push(new THREE.Vector2(v.b.x, v.b.y));
     var inputShapeTemp = new THREE.Shape( pathTemp );
     var extrudeSettings = { depth: this.heightWall, bevelEnabled: false, steps: 1 };
-    this.removeObject(this.mapWalls.get("walls_" + this.numWalls.toString()),
-        this.mapWalls.get("walls_" + this.numWalls.toString()).getObjectByName(this.numWalls.toString() + "-" + nameFace));
-    this.addFaceWall( inputShapeTemp, extrudeSettings, "#39424e", 0, 0, 0, 0, 0, 0, 1, this.numWalls.toString(), nameFace );
+    this.removeIntersectObjectsArray(this.objects,
+        this.groupExtrude.getObjectByName("walls_" + nameWalls.toString()).getObjectByName("walls_" + nameWalls.toString() + "-" + nameFace.toString()));
+    this.removeObject(this.groupExtrude.getObjectByName("walls_" + nameWalls.toString()),
+        this.groupExtrude.getObjectByName("walls_" + nameWalls.toString()).getObjectByName("walls_" + nameWalls.toString() + "-" + nameFace.toString()));
+    this.addFaceWall( inputShapeTemp, extrudeSettings, "#39424e", 0, 0, 0, 0, 0, 0, 1, nameWalls.toString(), nameFace.toString() );
 };
 
 /////////////// Mouse event
@@ -2972,7 +2970,6 @@ ControlDesigner.prototype.mouseCancel = function (event){
                 this.menuObject.setPosition(event, this.selectedSubtractObject.position);
                 this.objectParametersMenu.visibleMenu();
             }
-
 };
 
 ControlDesigner.prototype.mouseClickCursor3D = function (intersect){

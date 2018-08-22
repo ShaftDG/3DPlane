@@ -401,6 +401,7 @@ function leftClick( event ) {
     var intersects = raycaster.intersectObjects(designer.objects, false);
     if (intersects.length > 0) {
         var intersect = intersects[0];
+        // console.log(intersect.object.name);
         if (camera.isOrthographicCamera) {
             if (designer.boolCursor) {
                 designer.mouseClickCursor2D(intersect);
@@ -627,7 +628,7 @@ function onKeyDown ( event ) {
         case 82: // r
             // console.log(" designer.mapX",  designer.mapX);
             // console.log(" designer.mapY",  designer.mapY);
-            console.log(" groupSubtract",  designer.groupSubtract);
+            // console.log(" groupSubtract",  designer.groupSubtract);
             console.log(" objects",  designer.objects);
             break;
         case 83: // s
