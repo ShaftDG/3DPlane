@@ -35,6 +35,7 @@ var textureSpritePointScale;
 
 var width, height, depth, fromFloor;
 
+var rollOverMesh1, rollOverMesh2, rollOverMesh3, rollOverMesh4;
 function init() {
     loadingScreen = {
         scene: new THREE.Scene(),
@@ -139,6 +140,32 @@ function init() {
   human.position.y = 90;
   human.visible = false;
   scene.add( human );
+
+  /*  var rollOverGeo = new THREE.PlaneBufferGeometry( 10, 10 );
+    var rollOverMaterial = new THREE.MeshBasicMaterial( { color: '#00ff22', opacity: 0.5, transparent: true } );
+    rollOverMesh1 = new THREE.Mesh( rollOverGeo, rollOverMaterial );
+    rollOverMesh1.name = "rollOverMesh1";
+    // rollOverMesh1.visible = false;
+    scene.add( rollOverMesh1 );
+
+    var rollOverMaterial = new THREE.MeshBasicMaterial( { color: '#feff00', opacity: 0.5, transparent: true } );
+    rollOverMesh2 = new THREE.Mesh( rollOverGeo, rollOverMaterial );
+    rollOverMesh2.name = "rollOverMesh2";
+    // rollOverMesh2.visible = false;
+    scene.add( rollOverMesh2 );
+
+    var rollOverMaterial = new THREE.MeshBasicMaterial( { color: '#ff0100', opacity: 0.5, transparent: true } );
+    rollOverMesh3 = new THREE.Mesh( rollOverGeo, rollOverMaterial );
+    rollOverMesh3.name = "rollOverMesh3";
+    // rollOverMesh3.visible = false;
+    scene.add( rollOverMesh3 );
+
+    var rollOverMaterial = new THREE.MeshBasicMaterial( { color: '#0002ff', opacity: 0.5, transparent: true } );
+    rollOverMesh4 = new THREE.Mesh( rollOverGeo, rollOverMaterial );
+    rollOverMesh4.name = "rollOverMesh4";
+    // rollOverMesh4.visible = false;
+    scene.add( rollOverMesh4 );*/
+
 
     ////
     renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true, precision: "highp" });
