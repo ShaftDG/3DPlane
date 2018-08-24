@@ -87,7 +87,7 @@ function ControlDesigner(textureSpritePointScale) {
 
     this.groupPlaneX = new THREE.Object3D();
     this.groupPlaneX.name = "groupPlaneX";
-    this.add(this.groupPlaneX);
+   // this.add(this.groupPlaneX);
 
     this.groupExtrude = new THREE.Object3D();
     this.groupExtrude.name = "groupExtrude";
@@ -1206,11 +1206,11 @@ ControlDesigner.prototype.extrudePath = function () {
     this.addGroupFaceWall(this.numWalls);
     var num = 0;
     var pathPts = [];
-    // var pathPtsX = [];
+    var pathPtsX = [];
     var mainLine = [];
     for (var i = 0; i < this.count; i++) {
         pathPts.push( new THREE.Vector2 ( this.positions[i * 3 + 0], this.positions[i * 3 + 1] ) );
-        // pathPtsX.push( new THREE.Vector2 ( this.positions[i * 3 + 0]*0.5, this.positions[i * 3 + 1]*0.5 ) );
+        pathPtsX.push( new THREE.Vector2 ( this.positions[i * 3 + 0]*0.5, this.positions[i * 3 + 1]*0.5 ) );
         if (i > 0) {
             this.extrudeFaceWall(pathPts[i-1], pathPts[i], this.numWalls, pathPts.length-1);
         }
@@ -1274,7 +1274,41 @@ ControlDesigner.prototype.extrudePath = function () {
         }
     }
 
-    for (var i = 0; i < (pathPts.length/2)-1; i++) {
+
+    var edgeMap = new WeakMap();
+    console.log(pathPtsX);
+    for (var i = 0; i < pathPtsX.length-1; i++) {
+        edgeMap.set(pathPtsX[i], pathPtsX[i+1]);
+    }
+    for (var i = 0; i < pathPtsX.length-1; i++) {
+        var pathI = [];
+        var pathJ = [];
+        pathI[0] = pathPtsX[i];
+        pathI[1] = pathPtsX[i + 1];
+        for (var j = 0; j < pathPtsX.length-1; j++) {
+            if (i !== j) {
+                if ((pathI[1].x !== pathPts[j].x) && (pathI[1].y !== pathPts[j].y)) {
+                    console.log(j);
+                    var cross = this.crossSection(pathPtsX[j], pathPtsX[j + 1], pathI[0], pathI[1]);
+                    if (cross.overlapping) {
+                        var point = new THREE.Vector2(cross.x, cross.y);
+                        edgeMap.set(pathI[0], point);
+                        edgeMap.set(point, pathPtsX[j + 1]);
+                        edgeMap.set(pathPtsX[j], point);
+                    } else {
+                        edgeMap.set(pathI[0], pathI[1]);
+                    }
+                }
+            }
+        }
+    }
+    console.log(edgeMap);
+    var pathX = [];
+    for (var i = 0; i < pathPtsX.length-1; i++) {
+
+    }
+
+   /* for (var i = 0; i < (pathPts.length/2)-1; i++) {
         var path = [];
         var pathJ = [];
         path[0] = pathPts[i];
@@ -1282,157 +1316,170 @@ ControlDesigner.prototype.extrudePath = function () {
         path[2] = pathPts[pathPts.length - i - 2];
         path[3] = pathPts[pathPts.length - i - 1];
         for (var j = 0; j < (pathPts.length/2)-1; j++) {
-           /* if (
-                path[0] !== pathPts[j] &&
-                path[1] !== pathPts[j + 1] &&
-                path[2] !== pathPts[pathPts.length - j - 2] &&
-                path[3] !== pathPts[pathPts.length - j - 1]
-            ) {*/
-           if (j !== i) {
-               var cross = this.crossSection(pathPts[j], pathPts[j + 1], path[0], path[1]);
-               var v1Length = new THREE.Vector2(cross.x, cross.y).sub(path[0]).length();
-               cross = this.crossSection(pathPts[pathPts.length - j - 2], pathPts[pathPts.length - j - 1], path[0], path[1]);
-               var v2Length = new THREE.Vector2(cross.x, cross.y).sub(path[0]).length();
-               console.log(v1Length);
-               console.log(v2Length);
-               if (v1Length && v2Length ) {
-                   if (v1Length < v2Length) {
-                       var cross = this.crossSection(pathPts[j], pathPts[j + 1], path[0], path[1]);
-                       if (cross.overlapping) {
-                           var m = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#ff0021"}));
-                           m.position.x = cross.x;
-                           m.position.z = -cross.y;
-                           m.position.y = 700;
-                           this.add(m);
-                           pathJ.push(path[0]);
-                           pathJ.push(new THREE.Vector2(cross.x, cross.y));
-                           pathJ.push(pathPts[j + 1]);
-                       } else {
-                           pathJ.push(path[0]);
-                       }
-                       cross = this.crossSection(pathPts[pathPts.length - j - 2], pathPts[pathPts.length - j - 1], path[0], path[1]);
-                       if (cross.overlapping) {
-                           var m = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#0020ff"}));
-                           m.position.x = cross.x;
-                           m.position.z = -cross.y;
-                           m.position.y = 700;
-                           this.add(m);
-                           pathJ.push(pathPts[pathPts.length - j - 2]);
-                           pathJ.push(new THREE.Vector2(cross.x, cross.y));
-                           pathJ.push(path[1]);
-                       } else {
-                           pathJ.push(path[1]);
-                       }
-                       cross = this.crossSection(pathPts[pathPts.length - j - 2], pathPts[pathPts.length - j - 1], path[2], path[3]);
-                       if (cross.overlapping) {
-                           var m = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#ff00ea"}));
-                           m.position.x = cross.x;
-                           m.position.z = -cross.y;
-                           m.position.y = 700;
-                           this.add(m);
-                           pathJ.push(path[2]);
-                           pathJ.push(new THREE.Vector2(cross.x, cross.y));
-                           pathJ.push(pathPts[pathPts.length - j - 1]);
-                       } else {
-                           pathJ.push(path[2]);
-                       }
-                       cross = this.crossSection(pathPts[j], pathPts[j + 1], path[2], path[3]);
-                       if (cross.overlapping) {
-                           var m = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#00ff0b"}));
-                           m.position.x = cross.x;
-                           m.position.z = -cross.y;
-                           m.position.y = 700;
-                           this.add(m);
-                           pathJ.push(pathPts[j]);
-                           pathJ.push(new THREE.Vector2(cross.x, cross.y));
-                           pathJ.push(path[3]);
-                       } else {
-                           pathJ.push(path[3]);
-                       }
-                   } else {
-                       var cross = this.crossSection(pathPts[pathPts.length - j - 2], pathPts[pathPts.length - j - 1], path[0], path[1]);
-                       if (cross.overlapping) {
-                           var m = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#0020ff"}));
-                           m.position.x = cross.x;
-                           m.position.z = -cross.y;
-                           m.position.y = 700;
-                           this.add(m);
-                           pathJ.push(path[0]);
-                           pathJ.push(new THREE.Vector2(cross.x, cross.y));
-                           pathJ.push(pathPts[pathPts.length - j - 1]);
-                       } else {
-                           pathJ.push(path[0]);
-                       }
-                       cross = this.crossSection(pathPts[j], pathPts[j + 1], path[0], path[1]);
-                       if (cross.overlapping) {
-                           var m = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#ff0021"}));
-                           m.position.x = cross.x;
-                           m.position.z = -cross.y;
-                           m.position.y = 700;
-                           this.add(m);
-                           pathJ.push(pathPts[j]);
-                           pathJ.push(new THREE.Vector2(cross.x, cross.y));
-                           pathJ.push(path[1]);
-                       } else {
-                           pathJ.push(path[1]);
-                       }
-                       cross = this.crossSection(pathPts[j], pathPts[j + 1], path[2], path[3]);
-                       if (cross.overlapping) {
-                           var m = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#00ff0b"}));
-                           m.position.x = cross.x;
-                           m.position.z = -cross.y;
-                           m.position.y = 700;
-                           this.add(m);
-                           pathJ.push(path[2]);
-                           pathJ.push(new THREE.Vector2(cross.x, cross.y));
-                           pathJ.push(pathPts[j + 1]);
-                       } else {
-                           pathJ.push(path[2]);
-                       }
-                       cross = this.crossSection(pathPts[pathPts.length - j - 2], pathPts[pathPts.length - j - 1], path[2], path[3]);
-                       if (cross.overlapping) {
-                           var m = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#ff00ea"}));
-                           m.position.x = cross.x;
-                           m.position.z = -cross.y;
-                           m.position.y = 700;
-                           this.add(m);
-                           pathJ.push(pathPts[pathPts.length - j - 2]);
-                           pathJ.push(new THREE.Vector2(cross.x, cross.y));
-                           pathJ.push(path[3]);
-                       } else {
-                           pathJ.push(path[3]);
-                       }
-                   }
-              }
+            /!* if (
+                 path[0] !== pathPts[j] &&
+                 path[1] !== pathPts[j + 1] &&
+                 path[2] !== pathPts[pathPts.length - j - 2] &&
+                 path[3] !== pathPts[pathPts.length - j - 1]
+             ) {*!/
+            if (j !== i) {
+                if ((path[1].x !== pathPts[j].x) && (path[1].y !== pathPts[j].y)) {
+
+                    console.log(i);
+                    var cross = this.crossSection(pathPts[j], pathPts[j + 1], path[0], path[1]);
+                    console.log(j, cross.overlapping);
+                    var v1Length = new THREE.Vector2().subVectors(new THREE.Vector2(cross.x, cross.y), (path[0])).length();
+                    console.log(j, v1Length);
+                    console.log(j, cross.overlapping);
+                    cross = this.crossSection(pathPts[pathPts.length - j - 2], pathPts[pathPts.length - j - 1], path[0], path[1]);
+                    var v2Length = new THREE.Vector2().subVectors(new THREE.Vector2(cross.x, cross.y), (path[0])).length();
+                    console.log(j, v2Length);
+
+                    if (v1Length && v2Length) {
+                        if (v1Length < v2Length) {
+                            var cross = this.crossSection(pathPts[j], pathPts[j + 1], path[0], path[1]);
+                            if (cross.overlapping) {
+                              /!*  var m = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#ff0021"}));
+                                m.position.x = cross.x;
+                                m.position.z = -cross.y;
+                                m.position.y = 700;
+                                this.add(m);*!/
+                                pathJ.push(path[0]);
+                                pathJ.push(new THREE.Vector2(cross.x, cross.y));
+                                pathJ.push(pathPts[j + 1]);
+                            } else {
+                                pathJ.push(path[0]);
+                            }
+                            cross = this.crossSection(pathPts[pathPts.length - j - 2], pathPts[pathPts.length - j - 1], path[0], path[1]);
+                            if (cross.overlapping) {
+                             /!*   var m = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#0020ff"}));
+                                m.position.x = cross.x;
+                                m.position.z = -cross.y;
+                                m.position.y = 700;
+                                this.add(m);*!/
+                                pathJ.push(pathPts[pathPts.length - j - 2]);
+                                pathJ.push(new THREE.Vector2(cross.x, cross.y));
+                                pathJ.push(path[1]);
+                            } else {
+                                pathJ.push(path[1]);
+                            }
+                            cross = this.crossSection(pathPts[pathPts.length - j - 2], pathPts[pathPts.length - j - 1], path[2], path[3]);
+                            if (cross.overlapping) {
+                              /!*  var m = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#ff00ea"}));
+                                m.position.x = cross.x;
+                                m.position.z = -cross.y;
+                                m.position.y = 700;
+                                this.add(m);*!/
+                                pathJ.push(path[2]);
+                                pathJ.push(new THREE.Vector2(cross.x, cross.y));
+                                pathJ.push(pathPts[pathPts.length - j - 1]);
+                            } else {
+                                pathJ.push(path[2]);
+                            }
+                            cross = this.crossSection(pathPts[j], pathPts[j + 1], path[2], path[3]);
+                            if (cross.overlapping) {
+                              /!*  var m = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#00ff0b"}));
+                                m.position.x = cross.x;
+                                m.position.z = -cross.y;
+                                m.position.y = 700;
+                                this.add(m);*!/
+                                pathJ.push(pathPts[j]);
+                                pathJ.push(new THREE.Vector2(cross.x, cross.y));
+                                pathJ.push(path[3]);
+                            } else {
+                                pathJ.push(path[3]);
+                            }
+                        } else {
+                            var cross = this.crossSection(pathPts[pathPts.length - j - 2], pathPts[pathPts.length - j - 1], path[0], path[1]);
+                            if (cross.overlapping) {
+                             /!*   var m = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#0020ff"}));
+                                m.position.x = cross.x;
+                                m.position.z = -cross.y;
+                                m.position.y = 700;
+                                this.add(m);*!/
+                                pathJ.push(path[0]);
+                                pathJ.push(new THREE.Vector2(cross.x, cross.y));
+                                pathJ.push(pathPts[pathPts.length - j - 1]);
+                            } else {
+                                pathJ.push(path[0]);
+                            }
+                            cross = this.crossSection(pathPts[j], pathPts[j + 1], path[0], path[1]);
+                            if (cross.overlapping) {
+                              /!*  var m = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#ff0021"}));
+                                m.position.x = cross.x;
+                                m.position.z = -cross.y;
+                                m.position.y = 700;
+                                this.add(m);*!/
+                                pathJ.push(pathPts[j]);
+                                pathJ.push(new THREE.Vector2(cross.x, cross.y));
+                                pathJ.push(path[1]);
+                            } else {
+                                pathJ.push(path[1]);
+                            }
+                            cross = this.crossSection(pathPts[j], pathPts[j + 1], path[2], path[3]);
+                            if (cross.overlapping) {
+                               /!* var m = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#00ff0b"}));
+                                m.position.x = cross.x;
+                                m.position.z = -cross.y;
+                                m.position.y = 700;
+                                this.add(m);*!/
+                                pathJ.push(path[2]);
+                                pathJ.push(new THREE.Vector2(cross.x, cross.y));
+                                pathJ.push(pathPts[j + 1]);
+                            } else {
+                                pathJ.push(path[2]);
+                            }
+                            cross = this.crossSection(pathPts[pathPts.length - j - 2], pathPts[pathPts.length - j - 1], path[2], path[3]);
+                            if (cross.overlapping) {
+                              /!*  var m = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#ff00ea"}));
+                                m.position.x = cross.x;
+                                m.position.z = -cross.y;
+                                m.position.y = 700;
+                                this.add(m);*!/
+                                pathJ.push(pathPts[pathPts.length - j - 2]);
+                                pathJ.push(new THREE.Vector2(cross.x, cross.y));
+                                pathJ.push(path[3]);
+                            } else {
+                                pathJ.push(path[3]);
+                            }
+                        }
+                    }
+                } else {
+                    pathJ.push(path[0]);
+                    pathJ.push(path[1]);
+                    pathJ.push(path[2]);
+                    pathJ.push(path[3]);
+                }/////////////////////
             }
         }
         var shape = new THREE.Shape( pathJ );
 
         this.addShapeX( shape, "#fffb00", 0, 0, 0, 0, 0, 0, 1, this.numWalls, i );
-        this.addLineShapeX( shape, "#d755d7", 0, 0, 0, 0, 0, 0, 1, this.numWalls );
-    }
-    console.log(this.groupPlaneX.children[0].geometry);
+        //this.addLineShapeX( shape, "#d755d7", 0, 0, 0, 0, 0, 0, 1, this.numWalls );
+    }*/
+    // console.log(this.groupPlaneX.children[0].geometry);
     // console.log(this.groupPlaneX.children)
     /////////// merge geometry
-   /* var singleGeometry = new THREE.Geometry();
+ /*   var singleGeometry = new THREE.Geometry();
         for (var j = 0; j < this.groupPlaneX.children.length; j++) {
             var mesh = this.groupPlaneX.children[j];
             singleGeometry.merge(mesh.geometry, mesh.matrix);
         }
     singleGeometry.mergeVertices();
-    var mesh = new THREE.Mesh(singleGeometry, new THREE.MeshBasicMaterial({color: "#00ff02"}));
+    var mesh = new THREE.Mesh(singleGeometry, new THREE.MeshBasicMaterial({color: "#00ff02", wireframe: true}));
     mesh.name = "mergedGeometry";
     mesh.position.y = 500;
-    this.add(mesh);
-    console.log(mesh.geometry);*/
+    this.add(mesh);*/
+    // console.log(mesh.geometry);
 
   /*  for (var i = 0; i < mesh.geometry.vertices.length; i++) {
       var m = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#ff0021"}));
       m.position.copy(mesh.geometry.vertices[i]);
         m.position.y = 500;
+        m.name = i.toString();
       this.add(m);
-    }*/
-
+    }
+    console.log(mesh.geometry.vertices.length);*/
 
     var inputShape = new THREE.Shape( pathPts );
 
@@ -1942,7 +1989,6 @@ ControlDesigner.prototype.crossSection = function (start1, end1, start2, end2) {
         x: null,
         y: null,
     }
-
     var maxx1 = Math.max(start1.x, end1.x), maxy1 = Math.max(start1.y, end1.y);
     var minx1 = Math.min(start1.x, end1.x), miny1 = Math.min(start1.y, end1.y);
     var maxx2 = Math.max(start2.x, end2.x), maxy2 = Math.max(start2.y, end2.y);
@@ -1957,7 +2003,7 @@ ControlDesigner.prototype.crossSection = function (start1, end1, start2, end2) {
     var dxx = start1.x-start2.X, dyy = start1.y-start2.y;
     var div, mul;
 
-    if ((div = dy2*dx1-dx2*dy1) == 0) {
+    if ((div = dy2*dx1-dx2*dy1) === 0) {
         return ret; // Линии параллельны...
     }
     if (div > 0) {
@@ -1981,16 +2027,6 @@ ControlDesigner.prototype.crossSection = function (start1, end1, start2, end2) {
     ret.x = x;
     ret.y = y;
     ret.overlapping = true;
-
-/*
-this.removeObject(this, this.getObjectByName("human"));
-      var geom = new THREE.BoxBufferGeometry( 10, 10, 10 );
-  var mat = new THREE.MeshBasicMaterial( { color: '#ff00fa', opacity: 0.5, transparent: true } );
-  var human = new THREE.Mesh( geom, mat );
-  human.name = "human";
-  human.position.set(x, y, 700);
-  // human.visible = false;
-  this.add( human );*/
 
     return ret;
 };
