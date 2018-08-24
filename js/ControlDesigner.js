@@ -1276,13 +1276,13 @@ ControlDesigner.prototype.extrudePath = function () {
 
 
     var edgeMap = new WeakMap();
-    console.log(pathPtsX);
+    // console.log(pathPtsX);
     for (var i = 0; i < pathPtsX.length-1; i++) {
         edgeMap.set(pathPtsX[i], pathPtsX[i+1]);
     }
+    var pathJ = [];
     for (var i = 0; i < pathPtsX.length-1; i++) {
         var pathI = [];
-        var pathJ = [];
         pathI[0] = pathPtsX[i];
         pathI[1] = pathPtsX[i + 1];
         for (var j = 0; j < pathPtsX.length-1; j++) {
@@ -1293,21 +1293,32 @@ ControlDesigner.prototype.extrudePath = function () {
                     if (cross.overlapping) {
                         var point = new THREE.Vector2(cross.x, cross.y);
                         edgeMap.set(pathI[0], point);
+                        pathJ.push(pathI[0]);
                         edgeMap.set(point, pathPtsX[j + 1]);
+                        pathJ.push(point);
                         edgeMap.set(pathPtsX[j], point);
                     } else {
                         edgeMap.set(pathI[0], pathI[1]);
+                        pathJ.push(pathI[0]);
                     }
                 }
             }
         }
     }
-    console.log(edgeMap);
+    // console.log(edgeMap);
     var pathX = [];
-    for (var i = 0; i < pathPtsX.length-1; i++) {
-
+    var index = 0;
+    for (var i = 0; i < pathJ.length-1; i++) {
+        pathX.push(pathPtsX[index]);
+        var h = edgeMap.get(pathPtsX[index]);
+        pathX.push(h);
+        console.log(h);
+        index = pathPtsX.indexOf(h);
+      //  console.log(index);
     }
-
+    console.log(pathPtsX);
+    var shape = new THREE.Shape( pathX );
+    this.addLineShapeX( shape, "#d755d7", 0, 0, 0, 0, 0, 0, 1, this.numWalls );
    /* for (var i = 0; i < (pathPts.length/2)-1; i++) {
         var path = [];
         var pathJ = [];
