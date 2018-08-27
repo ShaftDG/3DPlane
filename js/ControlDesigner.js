@@ -1206,11 +1206,9 @@ ControlDesigner.prototype.extrudePath = function () {
     this.addGroupFaceWall(this.numWalls);
     var num = 0;
     var pathPts = [];
-    var pathPtsX = [];
     var mainLine = [];
     for (var i = 0; i < this.count; i++) {
         pathPts.push( new THREE.Vector2 ( this.positions[i * 3 + 0], this.positions[i * 3 + 1] ) );
-        pathPtsX.push( new THREE.Vector2 ( this.positions[i * 3 + 0]*0.5, this.positions[i * 3 + 1]*0.5 ) );
         if (i > 0) {
             this.extrudeFaceWall(pathPts[i-1], pathPts[i], this.numWalls, pathPts.length-1);
         }
@@ -1243,7 +1241,6 @@ ControlDesigner.prototype.extrudePath = function () {
                 }
             } else {
                 pathPts.push(new THREE.Vector2(this.positionsRect[i * 3 + 0], this.positionsRect[i * 3 + 1]));
-                // pathPtsX.push( new THREE.Vector2 ( this.positionsRect[i * 3 + 0]*0.5, this.positionsRect[i * 3 + 1]*0.5 ) );
                 if (i > 1) {
                     this.extrudeFaceWall(pathPts[pathPts.length-2], pathPts[pathPts.length-1], this.numWalls, pathPts.length-1);
                 } else if (i === 1) {
@@ -1262,7 +1259,6 @@ ControlDesigner.prototype.extrudePath = function () {
             }
         } else {
             pathPts.push(new THREE.Vector2(this.positionsRect[i * 3 + 0], this.positionsRect[i * 3 + 1]));
-            // pathPtsX.push( new THREE.Vector2 ( this.positionsRect[i * 3 + 0]*0.5, this.positionsRect[i * 3 + 1]*0.5 ) );
             this.extrudeFaceWall(pathPts[pathPts.length-2], pathPts[pathPts.length-1], this.numWalls, pathPts.length-1);
 
             this.addPointObject(this.positionsRect[i * 3 + 0], this.positionsRect[i * 3 + 1], this.positionsRect[i * 3 + 2], num);
