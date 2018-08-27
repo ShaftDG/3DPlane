@@ -1271,14 +1271,59 @@ ControlDesigner.prototype.extrudePath = function () {
     }
 
     var mapEdge = new Map();
-    for (var i = 0; i < pathPts.length; i++) {
-        if (i <  pathPts.length-1) {
+    for (var i = 0; i < (pathPts.length/2); i++) {
+        if (i < (pathPts.length/2)-1) {
             mapEdge.set(pathPts[i], pathPts[i + 1]);
+            mapEdge.set(pathPts[pathPts.length - i - 1], pathPts[pathPts.length - i - 2]);
         } else {
-            mapEdge.set(pathPts[i], pathPts[0]);
+            mapEdge.set(pathPts[i], pathPts[pathPts.length/2]);
         }
     }
     console.log(mapEdge);
+
+    var usedEdge = new Map();
+    for (var i = 0; i < pathPts.length; i++) {
+        if (i <  pathPts.length-1) {
+            usedEdge.set(pathPts[i], pathPts[i + 1]);
+            var path = []
+            var startCurrentVector = pathPts[i];
+            var endCurrentVector = pathPts[i+1];
+            var scope = this;
+            mapEdge.forEach(function(value, key, map){
+               if (!usedEdge.has(key)) {
+                    var cross = scope.crossSectionX(key, value, startCurrentVector, endCurrentVector);
+                    if (cross.overlapping) {
+                        var mesh = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#001aff"}));
+                        mesh.position.x = cross.x;
+                        mesh.position.z = -cross.y;
+                        mesh.position.y = 300;
+                        mesh.name = "!!!!!";
+                        scope.add(mesh);
+
+                        var point = new THREE.Vector2(cross.x, cross.y);
+                        map.set(startCurrentVector, point);
+                        map.set(point, endCurrentVector);
+                    }
+                    // console.log(cross);
+               }
+            })
+
+        } else {
+            usedEdge.set(pathPts[i], pathPts[0]);
+        }
+    }
+
+    var pathX = [];
+    var key = pathPts[0];
+    pathX.push(key);
+    for (var i = 0; i < pathPts.length; i++) {
+        var h = mapEdge.get(key);
+        pathX.push(h)
+        key = h;
+    }
+    var shape = new THREE.Shape( pathX );
+    this.addLineShapeX( shape, "#cd00d7", 0, 300, 0, 0, 0, 0, 1, this.numWalls );
+
 
     var inputShape = new THREE.Shape( pathPts );
  /*   console.log(pathPts);
@@ -1345,21 +1390,6 @@ ControlDesigner.prototype.updateExtrudePath = function (position) {
     }
 };
 
-ControlDesigner.prototype.addLineShapeX = function ( shape, color, x, y, z, rx, ry, rz, s, nameWall ) {
-    // lines
-    shape.autoClose = true;
-    var points = shape.getPoints();
-    var geometryPoints = new THREE.BufferGeometry().setFromPoints( points );
-    geometryPoints.rotateX(-Math.PI / 2);
-    // solid this.line
-    var line = new THREE.Line( geometryPoints, new THREE.LineBasicMaterial( { color: color, linewidth: 10/*, transparent: true */} ) );
-    line.position.set( x, y+700, z );
-    line.rotation.set( rx, ry, rz );
-    line.scale.set( s, s, s );
-    line.name = "line_" + nameWall.toString();
-    this.add( line );
-};
-
 ControlDesigner.prototype.addLineShape = function ( shape, color, x, y, z, rx, ry, rz, s, nameWall ) {
     // lines
     shape.autoClose = true;
@@ -1373,6 +1403,21 @@ ControlDesigner.prototype.addLineShape = function ( shape, color, x, y, z, rx, r
     line.name = "line_" + nameWall.toString();
     this.mapLines.set(line.name, line);
     this.groupLinesUpdate.add( line );
+};
+
+ControlDesigner.prototype.addLineShapeX = function ( shape, color, x, y, z, rx, ry, rz, s, nameWall ) {
+    // lines
+   // shape.autoClose = true;
+    var points = shape.getPoints();
+    var geometryPoints = new THREE.BufferGeometry().setFromPoints( points );
+    geometryPoints.rotateX(-Math.PI / 2);
+    // solid this.line
+    var line = new THREE.Line( geometryPoints, new THREE.LineBasicMaterial( { color: color, linewidth: 10/*, transparent: true */} ) );
+    line.position.set( x, y, z );
+    line.rotation.set( rx, ry, rz );
+    line.scale.set( s, s, s );
+    line.name = "line_" + nameWall.toString();
+    this.groupPlaneX.add( line );
 };
 
 ControlDesigner.prototype.addShapeX = function ( shape, colorCup, x, y, z, rx, ry, rz, s, nameWall, namePart ) {
@@ -1837,14 +1882,6 @@ ControlDesigner.prototype.crossSectionX = function (start1, end1, start2, end2) 
         x: null,
         y: null,
     };
- /*   var maxx1 = Math.max(start1.x, end1.x), maxy1 = Math.max(start1.y, end1.y);
-    var minx1 = Math.min(start1.x, end1.x), miny1 = Math.min(start1.y, end1.y);
-    var maxx2 = Math.max(start2.x, end2.x), maxy2 = Math.max(start2.y, end2.y);
-    var minx2 = Math.min(start2.x, end2.x), miny2 = Math.min(start2.y, end2.y);
-
-    if (minx1 > maxx2 || maxx1 < minx2 || miny1 > maxy2 || maxy1 < miny2) {
-        return ret;  // Момент, када линии имеют одну общую вершину...
-    }*/
 
     if (
         (start1.x === start2.x && start1.y === start2.y) ||
@@ -1852,40 +1889,103 @@ ControlDesigner.prototype.crossSectionX = function (start1, end1, start2, end2) 
         (end1.x === start2.x && end1.y === start2.y) ||
         (end1.x === end2.x && end1.y === end2.y)
     ) {
-        return ret;
+        return ret; // Момент, када линии имеют одну общую вершину...
     }
 
-    var dx1 = end1.x-start1.x, dy1 = end1.y-start1.y; // Длина проекций первой линии на ось x и y
-    var dx2 = end2.x-start2.x, dy2 = end2.y-start2.y; // Длина проекций второй линии на ось x и y
-    var dxx = start1.x-start2.x, dyy = start1.y-start2.y;
-    var div, mul;
+//сначала расставим точки по порядку, т.е. чтобы было start1.x <= end1.x
+        if (end1.x < start1.x) {
+            var tmp = start1;
+            start1 = end1;
+            end1 = tmp;
+        }
 
-    if ((div = dy2*dx1-dx2*dy1) === 0) {
-        return ret; // Линии параллельны...
-    }
-    if (div > 0) {
-        if ((mul = dx1*dyy-dy1*dxx) < 0 || mul > div)
-            return ret; // Первый отрезок пересекается за своими границами...
-        if ((mul = dx2*dyy-dy2*dxx) < 0 || mul > div)
-            return ret; // Второй отрезок пересекается за своими границами...
-    }
+//и start2.x <= end2.x
+        if (end2.x < start2.x) {
+            var tmp = start2;
+            start2 = end2;
+            end2 = tmp;
+        }
 
-    if ((mul = -dx1*dyy-dy1*dxx) < 0 || mul > -div)
-        return ret; // Первый отрезок пересекается за своими границами...
-    if ((mul = -dx2*dyy-dy2*dxx) < 0 || mul > -div)
-        return ret; // Второй отрезок пересекается за своими границами...
+//проверим существование потенциального интервала для точки пересечения отрезков
+        if (end1.x < start2.x) {
+            return ret; //ибо у отрезков нету взаимной абсциссы
+        }
 
-    var u = ((end2.x - start2.x)*(start1.y - start2.y) - (end2.y - start2.y)*(start1.x - start2.x))/
-        ((end2.y - start2.y)*(end1.x - start1.x) - (end2.x - start2.x)*(end1.y - start1.y));
+//если оба отрезка вертикальные
+        if((start1.x - end1.x == 0) && (start2.x - end2.x == 0)) {
 
-    var x = start1.x + u * (end1.x - start1.x);
-    var y = start1.y + u * (end1.y - start1.y);
+//если они лежат на одном X
+            if(start1.x == start2.x) {
 
-    ret.x = x;
-    ret.y = y;
-    ret.overlapping = true;
+//проверим пересекаются ли они, т.е. есть ли у них общий Y
+//для этого возьмём отрицание от случая, когда они НЕ пересекаются
+                if (!((Math.max(start1.y, end1.y) < Math.min(start2.y, end2.y)) ||
+                    (Math.min(start1.y, end1.y) > Math.max(start2.y, end2.y)))) {
+                    return true;
+                }
+            }
+            return ret;
+        }
 
-    return ret;
+//найдём коэффициенты уравнений, содержащих отрезки
+//f1(x) = A1*x + b1 = y
+//f2(x) = A2*x + b2 = y
+//если первый отрезок вертикальный
+        if (start1.x - end1.x == 0) {
+
+//найдём Xa, Ya - точки пересечения двух прямых
+            var Xa = start1.x;
+            var A2 = (start2.y - end2.y) / (start2.x - end2.x);
+            var b2 = start2.y - A2 * start2.x;
+            var Ya = A2 * Xa + b2;
+            if (start2.x <= Xa && end2.x >= Xa && Math.min(start1.y, end1.y) <= Ya &&
+                Math.max(start1.y, end1.y) >= Ya) {
+                ret.x = Xa;
+                ret.y = Ya;
+                ret.overlapping = true;
+                return ret;
+            }
+            return ret;
+        }
+
+//если второй отрезок вертикальный
+        if (start2.x - end2.x == 0) {
+//найдём Xa, Ya - точки пересечения двух прямых
+            var Xa = start2.x;
+            var A1 = (start1.y - end1.y) / (start1.x - end1.x);
+            var b1 = start1.y - A1 * start1.x;
+            var Ya = A1 * Xa + b1;
+            if (start1.x <= Xa && end1.x >= Xa && Math.min(start2.y, end2.y) <= Ya &&
+                Math.max(start2.y, end2.y) >= Ya) {
+                ret.x = Xa;
+                ret.y = Ya;
+                ret.overlapping = true;
+                return ret;
+            }
+            return false;
+        }
+
+//оба отрезка невертикальные
+    var A1 = (start1.y - end1.y) / (start1.x - end1.x);
+    var A2 = (start2.y - end2.y) / (start2.x - end2.x);
+    var b1 = start1.y - A1 * start1.x;
+    var b2 = start2.y - A2 * start2.x;
+
+        if (A1 == A2) {
+            return ret; //отрезки параллельны
+        }
+
+//Xa - абсцисса точки пересечения двух прямых
+    var Xa = (b2 - b1) / (A1 - A2);
+    var Ya = A1 * Xa + b1 ;
+        if ((Xa < Math.max(start1.x, start2.x)) || (Xa > Math.min( end1.x, end2.x))) {
+            return ret; //точка Xa находится вне пересечения проекций отрезков на ось X
+        } else {
+            ret.x = Xa;
+            ret.y = Ya;
+            ret.overlapping = true;
+            return ret;
+        }
 };
 
 ControlDesigner.prototype.unselectObject = function (object) {
