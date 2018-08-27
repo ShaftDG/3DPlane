@@ -1282,41 +1282,77 @@ ControlDesigner.prototype.extrudePath = function () {
     console.log(mapEdge);
 
     var usedEdge = new Map();
-    for (var i = 0; i < pathPts.length; i++) {
-        if (i <  pathPts.length-1) {
+    for (var i = 0; i < (pathPts.length/2); i++) {
+        if (i < (pathPts.length/2)-1) {
             usedEdge.set(pathPts[i], pathPts[i + 1]);
-            var path = []
             var startCurrentVector = pathPts[i];
             var endCurrentVector = pathPts[i+1];
-            var scope = this;
-            mapEdge.forEach(function(value, key, map){
-               if (!usedEdge.has(key)) {
-                    var cross = scope.crossSectionX(key, value, startCurrentVector, endCurrentVector);
+            var startCurrentVector1 = pathPts[pathPts.length - i - 2];
+            var endCurrentVector1 = pathPts[pathPts.length - i - 1];
+
+            for (var j = 0; j < (pathPts.length/2); j++) {
+                if (!usedEdge.has(pathPts[j])) {
+                    var cross = this.crossSectionX(pathPts[pathPts.length - j - 2], pathPts[pathPts.length - j - 1], startCurrentVector, endCurrentVector);
                     if (cross.overlapping) {
                         var mesh = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#001aff"}));
                         mesh.position.x = cross.x;
                         mesh.position.z = -cross.y;
                         mesh.position.y = 300;
                         mesh.name = "!!!!!";
-                        scope.add(mesh);
+                        this.add(mesh);
 
                         var point = new THREE.Vector2(cross.x, cross.y);
-                        map.set(startCurrentVector, point);
-                        map.set(point, endCurrentVector);
+                        mapEdge.set(startCurrentVector, point);
+                        mapEdge.set(point, pathPts[pathPts.length - j - 1]);
                     }
+                    var cross = this.crossSectionX(pathPts[j], pathPts[j+1], startCurrentVector1, endCurrentVector1);
+                    if (cross.overlapping) {
+                        var mesh = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#001aff"}));
+                        mesh.position.x = cross.x;
+                        mesh.position.z = -cross.y;
+                        mesh.position.y = 300;
+                        mesh.name = "!!!!!";
+                        this.add(mesh);
+
+                        var point = new THREE.Vector2(cross.x, cross.y);
+                        mapEdge.set(startCurrentVector1, point);
+                        mapEdge.set(point, pathPts[j]);
+                        for (var k = j-1; k < (pathPts.length/2); k++) {
+                            if (k < (pathPts.length/2)-1) {
+                                mapEdge.set(pathPts[k+1], pathPts[k]);
+                                mapEdge.set(pathPts[pathPts.length - k - 1], pathPts[pathPts.length - k - 2]);
+                            } else {
+                                //  mapEdge.set(pathPts[k], pathPts[pathPts.length/2]);
+                            }
+                        }
+
+                    }
+                   /* var cross = this.crossSectionX(pathPts[pathPts.length - j - 2], pathPts[pathPts.length - j - 1], startCurrentVector1, endCurrentVector1);
+                    if (cross.overlapping) {
+                        var mesh = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#001aff"}));
+                        mesh.position.x = cross.x;
+                        mesh.position.z = -cross.y;
+                        mesh.position.y = 300;
+                        mesh.name = "!!!!!";
+                        this.add(mesh);
+
+                        var point = new THREE.Vector2(cross.x, cross.y);
+                        mapEdge.set(startCurrentVector1, point);
+                        mapEdge.set(point, pathPts[pathPts.length - j - 2]);
+                    }*/
                     // console.log(cross);
-               }
-            })
+                }
+            }
 
         } else {
-            usedEdge.set(pathPts[i], pathPts[0]);
+            usedEdge.set(pathPts[i], pathPts[pathPts.length/2]);
         }
     }
 
     var pathX = [];
     var key = pathPts[0];
     pathX.push(key);
-    for (var i = 0; i < pathPts.length; i++) {
+    for (var i = 0; i < 2; i++) {
         var h = mapEdge.get(key);
         pathX.push(h)
         key = h;
