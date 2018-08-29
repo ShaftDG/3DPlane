@@ -289,8 +289,8 @@ function setTransformControls() {
     } );
     dragcontrols.addEventListener( 'drag', function ( event ) {
 
-     //   designer.updateHelperLines(transformControl.object);
-      //  designer.updateObject(transformControl.object);
+     //   designer.updateHelperLines(transformControl.object); ////////////!!!!!!!!!!!!!!!
+      //  designer.updateObject(transformControl.object); ////////////!!!!!!!!!!!!!!!
         // dragEnd();
     } );
     dragcontrols.addEventListener( 'dragend', dragEnd );
@@ -324,7 +324,7 @@ function dragEnd( event ) {
     if (designer.mapLines.has("line_" + designer.updatedWall.toString())) {
         objectlines = designer.mapLines.get("line_" + designer.updatedWall.toString());
     }
-    // designer.updateExtrudePath(objectlines.geometry.attributes.position.array);
+    // designer.updateExtrudePath(objectlines.geometry.attributes.position.array); ////////////!!!!!!!!!!!!!!!
     designer.updateExtrudePathX(transformControl.object);
    designer.lineHorizontal.visible = false;
    designer.lineVertical.visible = false;

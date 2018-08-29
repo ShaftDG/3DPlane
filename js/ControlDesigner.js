@@ -1269,98 +1269,10 @@ ControlDesigner.prototype.extrudePath = function () {
             num++;
         }
     }
-/*
-    var mapEdge = new Map();
-    for (var i = 0; i < (pathPts.length/2); i++) {
-        if (i < (pathPts.length/2)-1) {
-            mapEdge.set(pathPts[i], pathPts[i + 1]);
-            mapEdge.set(pathPts[pathPts.length - i - 1], pathPts[pathPts.length - i - 2]);
-        } else {
-            mapEdge.set(pathPts[i], pathPts[pathPts.length/2]);
-        }
-    }
-    console.log(mapEdge);
-
-    var usedEdge = new Map();
-    for (var i = 0; i < (pathPts.length/2); i++) {
-        if (i < (pathPts.length/2)-1) {
-            usedEdge.set(pathPts[i], pathPts[i + 1]);
-            var startCurrentVector = pathPts[i];
-            var endCurrentVector = pathPts[i+1];
-            var startCurrentVector1 = pathPts[pathPts.length - i - 2];
-            var endCurrentVector1 = pathPts[pathPts.length - i - 1];
-
-            for (var j = 0; j < (pathPts.length/2); j++) {
-                if (!usedEdge.has(pathPts[j])) {
-                    var cross = this.crossSectionX(pathPts[pathPts.length - j - 2], pathPts[pathPts.length - j - 1], startCurrentVector, endCurrentVector);
-                    if (cross.overlapping) {
-                        var mesh = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#001aff"}));
-                        mesh.position.x = cross.x;
-                        mesh.position.z = -cross.y;
-                        mesh.position.y = 300;
-                        mesh.name = "!!!!!";
-                        this.add(mesh);
-
-                        var point = new THREE.Vector2(cross.x, cross.y);
-                        mapEdge.set(startCurrentVector, point);
-                        mapEdge.set(point, pathPts[pathPts.length - j - 1]);
-                    }
-                    var cross = this.crossSectionX(pathPts[j], pathPts[j+1], startCurrentVector1, endCurrentVector1);
-                    if (cross.overlapping) {
-                        var mesh = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#001aff"}));
-                        mesh.position.x = cross.x;
-                        mesh.position.z = -cross.y;
-                        mesh.position.y = 300;
-                        mesh.name = "!!!!!";
-                        this.add(mesh);
-
-                        var point = new THREE.Vector2(cross.x, cross.y);
-                        mapEdge.set(startCurrentVector1, point);
-                        mapEdge.set(point, pathPts[j]);
-                        for (var k = j-1; k < (pathPts.length/2); k++) {
-                            if (k < (pathPts.length/2)-1) {
-                                mapEdge.set(pathPts[k+1], pathPts[k]);
-                                mapEdge.set(pathPts[pathPts.length - k - 1], pathPts[pathPts.length - k - 2]);
-                            } else {
-                                //  mapEdge.set(pathPts[k], pathPts[pathPts.length/2]);
-                            }
-                        }
-
-                    }
-                   /!* var cross = this.crossSectionX(pathPts[pathPts.length - j - 2], pathPts[pathPts.length - j - 1], startCurrentVector1, endCurrentVector1);
-                    if (cross.overlapping) {
-                        var mesh = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#001aff"}));
-                        mesh.position.x = cross.x;
-                        mesh.position.z = -cross.y;
-                        mesh.position.y = 300;
-                        mesh.name = "!!!!!";
-                        this.add(mesh);
-
-                        var point = new THREE.Vector2(cross.x, cross.y);
-                        mapEdge.set(startCurrentVector1, point);
-                        mapEdge.set(point, pathPts[pathPts.length - j - 2]);
-                    }*!/
-                    // console.log(cross);
-                }
-            }
-
-        } else {
-            usedEdge.set(pathPts[i], pathPts[pathPts.length/2]);
-        }
-    }
-
-    var pathX = [];
-    var key = pathPts[0];
-    pathX.push(key);
-    for (var i = 0; i < 2; i++) {
-        var h = mapEdge.get(key);
-        pathX.push(h)
-        key = h;
-    }
-    var shape = new THREE.Shape( pathX );
-    this.addLineShapeX( shape, "#cd00d7", 0, 300, 0, 0, 0, 0, 1, this.numWalls );*/
 var index = 0;
+    var crossedLine = new Map();
     for (var i = 0; i < (pathPts.length/2)-1; i++) {
+        var crossedLineSecond = new Map();
         var groupCross = [];
         var pX = [
             pathPts[i],
@@ -1389,6 +1301,7 @@ var index = 0;
                         } else {
                             groupCross.push([pointB, pointD, pointA, pointC]);
                         }
+                        crossedLineSecond.set(groupCross.length-1, j);
                     }
             }
         }
@@ -1417,18 +1330,23 @@ var index = 0;
                     groupCross[k][0]
                 ];
                 var shape = new THREE.Shape(p);
-                this.addShapeX(shape, "#00d7d3", 0, 0, 800, 0, 0, 0, 1, this.numWalls, i);
+                this.addShapeX(shape, "#a9ffff", 0, 0, 800, 0, 0, 0, 1, this.numWalls, i);
                 st1 = groupCross[k][2];
                 st2 = groupCross[k][3];
 
-               /* var pCross = [
-                    groupCross[k][1],
-                    groupCross[k][0],
-                    groupCross[k][2],
-                    groupCross[k][3]
-                ];
-                var shape = new THREE.Shape(pCross);
-                this.addShapeX(shape, "#00d709", 0, 0, 800, 0, 0, 0, 1, this.numWalls, i);*/
+                console.log("crossedLineSecond", crossedLineSecond);
+                console.log("crossedLine",crossedLine);
+                 if (!crossedLine.has(crossedLineSecond.get(k))) {
+                    var pCross = [
+                        groupCross[k][1],
+                        groupCross[k][0],
+                        groupCross[k][2],
+                        groupCross[k][3]
+                    ];
+                    crossedLine.set(i, i);
+                    var shape = new THREE.Shape(pCross);
+                    this.addShapeX(shape, "#c2ffbd", 0, 0, 800, 0, 0, 0, 1, this.numWalls, i);
+                 }
             }
         }
 
@@ -1439,9 +1357,10 @@ var index = 0;
             pathPts[i + 1]
         ];
         var shape = new THREE.Shape(p);
-        this.addShapeX(shape, "#d739ca", 0, 0, 800, 0, 0, 0, 1, this.numWalls, i);
+        this.addShapeX(shape, "#fad9ff", 0, 0, 800, 0, 0, 0, 1, this.numWalls, i);
     }
 console.log(index);
+
     var figure1 = new THREE.Geometry();
     for (var i = 0; i < this.groupPlaneX.children.length; i++) {
         figure1.merge(this.groupPlaneX.children[i].geometry);
@@ -1451,10 +1370,10 @@ console.log(index);
     figure1.computeVertexNormals();
 
   //  var m = this.booleanOperationX(this.groupPlaneX.children[0], this.groupPlaneX.children[2]);
-    var m = new THREE.Mesh(figure1, new THREE.MeshBasicMaterial({color: "#001aff", wireframe: false}));
+    var m = new THREE.Mesh(figure1, new THREE.MeshBasicMaterial({color: "#ff1500", wireframe: true}));
     m.position.z = 800;
     m.name = "example";
-    // this.add(m);
+    this.add(m);
 
     for (var i = 0; i < m.geometry.vertices.length; i++) {
         var mesh = new THREE.Mesh(new THREE.SphereGeometry(5), new THREE.MeshBasicMaterial({color: "#ff00cf"}));
@@ -1548,7 +1467,7 @@ ControlDesigner.prototype.addLineShape = function ( shape, color, x, y, z, rx, r
     var points = shape.getPoints();
     var geometryPoints = new THREE.BufferGeometry().setFromPoints( points );
     // solid this.line
-    var line = new THREE.Line( geometryPoints, new THREE.LineBasicMaterial( { color: color, linewidth: 10/*, transparent: true */} ) );
+    var line = new THREE.LineSegments( geometryPoints, new THREE.LineBasicMaterial( { color: color, linewidth: 10/*, transparent: true */} ) );
     line.position.set( x, y, z + 500 );
     line.rotation.set( rx, ry, rz );
     line.scale.set( s, s, s );
