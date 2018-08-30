@@ -54,7 +54,12 @@ MenuObject.prototype.setPosition = function (event, position) {
     point.y = Math.round(( 0.5 - point.y / 2 ) * ( canvas.height / window.devicePixelRatio ));
 
     var tempX = point.x - 50;
-    var tempY = point.y - 140;
+    var tempY = point.y;
+    if (camera.isOrthographicCamera) {
+        tempY -= 140;
+    } else if (camera.isPerspectiveCamera) {
+        tempY -= 250;
+    }
 
     var menu = document.getElementById("contextMenuObject");
     menu.style.top = tempY.toString() + "px";

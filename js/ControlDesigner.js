@@ -207,6 +207,7 @@ ControlDesigner.prototype.addScaleLine = function () {
         // transparent: true,
     });
     this.lineScale = new THREE.Line(geometry, material);
+    this.lineScale.frustumCulled = false;
     this.lineScale.name = "lineScale";
     this.groupLinesScale.add(this.lineScale);
 };
@@ -271,6 +272,7 @@ ControlDesigner.prototype.addLines = function () {
 
 // this.line
     this.line = new THREE.Line(geometry, material);
+    this.line.frustumCulled = false;
     this.line.name = "line";
     this.groupLines.add(this.line);
 
@@ -288,6 +290,7 @@ ControlDesigner.prototype.addLines = function () {
 
 // this.line
     this.lineRect = new THREE.Line(geometry, material);
+    this.lineRect.frustumCulled = false;
     this.lineRect.name = "lineRect";
     this.groupLines.add(this.lineRect);
 
@@ -305,6 +308,7 @@ ControlDesigner.prototype.addLines = function () {
 
 // this.line
     this.lineDown = new THREE.LineSegments(geometry, material);
+    this.lineDown.frustumCulled = false;
     this.lineDown.name = "lineDown";
     this.groupLines.add(this.lineDown);
 };
@@ -908,7 +912,7 @@ ControlDesigner.prototype.makeTextSprite = function ( message, parameters, angle
                 // Create Wall
 ControlDesigner.prototype.addPointObject = function (x, y ,z, num) {
     var pointGeometry = new THREE.SphereBufferGeometry( 4, 8, 8 );
-    var pointMaterial = new THREE.MeshBasicMaterial( { color: '#ff0000', /*opacity: 0.5,*/ transparent: true } );
+    var pointMaterial = new THREE.MeshBasicMaterial( { color: '#748a8e', /*opacity: 0.5,*/ transparent: true } );
     var point = new THREE.Mesh( pointGeometry, pointMaterial );
     point.name = num.toString() + "_" + this.numWalls;
     point.position.set(x, y ,z);
@@ -1468,7 +1472,7 @@ ControlDesigner.prototype.updateExtrudePathX = function (point) {
 
     var object = this.groupPlane.getObjectByName("wallsCup_" + this.updatedWall);
     console.log(object);
-    var helperline = this.getObjectByName("helperLine");
+
     for (var i = 0; i < object.geometry.vertices.length; i++) {
 
         if (+point.name === i) {
@@ -1485,12 +1489,11 @@ ControlDesigner.prototype.addEdgeLine = function (object, nameWall) {
 
     this.removeObject(this.groupLinesUpdate, this.groupLinesUpdate.getObjectByName("line_" + nameWall));
 
-    var helper = new THREE.EdgesHelper( object, "#ff0100" );
+    var helper = new THREE.EdgesHelper( object, "#6c838a" );
     helper.name = "line_" + nameWall.toString();
     this.mapLines.set(helper.name, helper);
     this.groupLinesUpdate.add( helper );
 };
-
 
 ControlDesigner.prototype.updateExtrudePath = function (position) {
 
@@ -1556,21 +1559,6 @@ ControlDesigner.prototype.addLineShape = function ( shape, color, x, y, z, rx, r
     line.name = "line_" + nameWall.toString();
     this.mapLines.set(line.name, line);
     this.groupLinesUpdate.add( line );
-};
-
-ControlDesigner.prototype.addLineShapeX = function ( shape, color, x, y, z, rx, ry, rz, s, nameWall ) {
-    // lines
-   // shape.autoClose = true;
-    var points = shape.getPoints();
-    var geometryPoints = new THREE.BufferGeometry().setFromPoints( points );
-    geometryPoints.rotateX(-Math.PI / 2);
-    // solid this.line
-    var line = new THREE.Line( geometryPoints, new THREE.LineBasicMaterial( { color: color, linewidth: 10/*, transparent: true */} ) );
-    line.position.set( x, y, z );
-    line.rotation.set( rx, ry, rz );
-    line.scale.set( s, s, s );
-    line.name = "line_" + nameWall.toString();
-    this.groupPlaneX.add( line );
 };
 
 ControlDesigner.prototype.addShapeX = function ( shape, colorCup, x, y, z, rx, ry, rz, s, nameWall, namePart ) {
@@ -1652,31 +1640,18 @@ ControlDesigner.prototype.booleanOperation = function ( obj1, obj2 ){
     return groupFace;
 };
 
-ControlDesigner.prototype.booleanOperationX = function ( obj1, obj2 ){
-
-        var obj1BSP = new ThreeBSP(obj1);
-
-        var obj2BSP = new ThreeBSP(obj2);
-
-        // var newSubtractBSP = obj1BSP.subtract(obj2BSP).toGeometry();
-        // var newUnionBSP = obj1BSP.union(obj2BSP).toGeometry();
-        var newIntersectBSP = obj1BSP.intersect(obj2BSP).toGeometry();
-        var mesh = new THREE.Mesh(newIntersectBSP, obj1.material);
-        mesh.name = obj1.name;
-        mesh.geometry.computeFaceNormals();
-        mesh.geometry.computeVertexNormals();
-        mesh.geometry.computeBoundingSphere();
-
-    return mesh;
-};
-
 ControlDesigner.prototype.createCursor3D = function (){
     var geom = new THREE.BoxGeometry( 1, 1, 1 );
-    var mat = new THREE.MeshPhongMaterial({color: "#ff00fa"});
+    var mat = new THREE.MeshBasicMaterial({color: "#02ffbb", transparent: true, opacity: 0.75, depthTest: false});
     this.cursor3D = new THREE.Mesh( geom, mat );
     this.cursor3D.scale.set(this.widthSubtractObject, this.heightSubtractObject , (this.depthSubtractObject+2));
     this.cursor3D.name = "cursor3D";
     this.add(this.cursor3D);
+
+    var helper = new THREE.EdgesHelper( this.cursor3D, "#ffd10b" );
+    helper.material.transparent = true;
+    helper.material.depthTest = false;
+    this.cursor3D.add(helper);
 };
 
 ControlDesigner.prototype.removeCursor3D = function (){
@@ -1881,127 +1856,6 @@ ControlDesigner.prototype.removeLines = function ( groupObject ) {
     groupObject.children = [];
 };
 
-ControlDesigner.prototype.crossingWalls = function () {
-
-    var firstWall = {
-        x0: this.positions[0],
-        y0: this.positions[1],
-        z0: this.positions[2],
-        x1: this.positions[3],
-        y1: this.positions[4],
-        z1: this.positions[5],
-    };
-    var lastWall = {
-        x0: this.positions[this.count * 3 - 6],
-        y0: this.positions[this.count * 3 - 5],
-        z0: this.positions[this.count * 3 - 4],
-        x1: this.positions[this.count * 3 - 3],
-        y1: this.positions[this.count * 3 - 2],
-        z1: this.positions[this.count * 3 - 1],
-    };
-
-    var start1 = new THREE.Vector2(firstWall.x0, firstWall.y0);
-    var end1 = new THREE.Vector2(firstWall.x1, firstWall.y1);
-
-    var start2 = new THREE.Vector2(lastWall.x0, lastWall.y0);
-    var end2 = new THREE.Vector2(lastWall.x1, lastWall.y1);
-
-    var cross = this.crossSection(start1, end1, start2, end2);
-    // console.log("crosssssssssssssssssss1", cross);
-
-    rollOverMesh1.position.x = cross.x;
-    rollOverMesh1.position.y = cross.y;
-
-    var firstWall = {
-        x0: this.positionsRect[3],
-        y0: this.positionsRect[4],
-        z0: this.positionsRect[5],
-        x1: this.positionsRect[6],
-        y1: this.positionsRect[7],
-        z1: this.positionsRect[8],
-    };
-    var lastWall = {
-        x0: this.positionsRect[this.count1 * 3 - 9],
-        y0: this.positionsRect[this.count1 * 3 - 8],
-        z0: this.positionsRect[this.count1 * 3 - 7],
-        x1: this.positionsRect[this.count1 * 3 - 6],
-        y1: this.positionsRect[this.count1 * 3 - 5],
-        z1: this.positionsRect[this.count1 * 3 - 4],
-    };
-
-    var start1 = new THREE.Vector2(firstWall.x0, firstWall.y0);
-    var end1 = new THREE.Vector2(firstWall.x1, firstWall.y1);
-
-    var start2 = new THREE.Vector2(lastWall.x0, lastWall.y0);
-    var end2 = new THREE.Vector2(lastWall.x1, lastWall.y1);
-
-    var cross = this.crossSection(start1, end1, start2, end2);
-    // console.log("crosssssssssssssssssss2", cross);
-
-    rollOverMesh2.position.x = cross.x;
-    rollOverMesh2.position.y = cross.y;
-
-
-    var firstWall = {
-        x0: this.positions[0],
-        y0: this.positions[1],
-        z0: this.positions[2],
-        x1: this.positions[3],
-        y1: this.positions[4],
-        z1: this.positions[5],
-    };
-    var lastWall = {
-        x0: this.positionsRect[this.count1 * 3 - 9],
-        y0: this.positionsRect[this.count1 * 3 - 8],
-        z0: this.positionsRect[this.count1 * 3 - 7],
-        x1: this.positionsRect[this.count1 * 3 - 6],
-        y1: this.positionsRect[this.count1 * 3 - 5],
-        z1: this.positionsRect[this.count1 * 3 - 4],
-    };
-
-    var start1 = new THREE.Vector2(firstWall.x0, firstWall.y0);
-    var end1 = new THREE.Vector2(firstWall.x1, firstWall.y1);
-
-    var start2 = new THREE.Vector2(lastWall.x0, lastWall.y0);
-    var end2 = new THREE.Vector2(lastWall.x1, lastWall.y1);
-
-    var cross = this.crossSection(start1, end1, start2, end2);
-    // console.log("crosssssssssssssssssss3", cross);
-
-    rollOverMesh3.position.x = cross.x;
-    rollOverMesh3.position.y = cross.y;
-
-    var firstWall = {
-        x0: this.positionsRect[3],
-        y0: this.positionsRect[4],
-        z0: this.positionsRect[5],
-        x1: this.positionsRect[6],
-        y1: this.positionsRect[7],
-        z1: this.positionsRect[8],
-    };
-    var lastWall = {
-        x0: this.positions[this.count * 3 - 6],
-        y0: this.positions[this.count * 3 - 5],
-        z0: this.positions[this.count * 3 - 4],
-        x1: this.positions[this.count * 3 - 3],
-        y1: this.positions[this.count * 3 - 2],
-        z1: this.positions[this.count * 3 - 1],
-    };
-
-    var start1 = new THREE.Vector2(firstWall.x0, firstWall.y0);
-    var end1 = new THREE.Vector2(firstWall.x1, firstWall.y1);
-
-    var start2 = new THREE.Vector2(lastWall.x0, lastWall.y0);
-    var end2 = new THREE.Vector2(lastWall.x1, lastWall.y1);
-
-    var cross = this.crossSection(start1, end1, start2, end2);
-    // console.log("crosssssssssssssssssss4", cross);
-
-    rollOverMesh4.position.x = cross.x;
-    rollOverMesh4.position.y = cross.y;
-
-};
-
 ControlDesigner.prototype.crossSection = function (start1, end1, start2, end2) {
 
     var ret = {
@@ -2169,10 +2023,10 @@ ControlDesigner.prototype.unselectObject = function (object) {
     if (object) {
         var name = object.name.split('_');
         if (this.mapWallsCup.has(object.name)) {
-            this.mapWallsCup.get(object.name).material.color = new THREE.Color("#9cc2d7");
+            this.mapWallsCup.get(object.name).material.color = new THREE.Color("#c7f3ff");
         }
         if (this.mapLines.has("line_" + name[1])) {
-            this.mapLines.get("line_" + name[1]).material.color = new THREE.Color("#d70003");
+            this.mapLines.get("line_" + name[1]).material.color = new THREE.Color("#6c838a");
         }
     }
 };
@@ -2213,7 +2067,7 @@ ControlDesigner.prototype.unselectFaceWall = function (object) {
 
 ControlDesigner.prototype.unselectSubtractObject = function (object) {
     if (object) {
-            object.material.color = new THREE.Color("#39424e");
+            object.material.color = new THREE.Color("#4145d7");
         if (object.children.length) {
             object.children[0].visible = false;
         }
@@ -2223,14 +2077,14 @@ ControlDesigner.prototype.unselectSubtractObject = function (object) {
 ControlDesigner.prototype.unselectPointObject = function (point) {
     if (point) {
         point.scale.set(1.0, 1.0, 1.0);
-        point.material.color = new THREE.Color("#ff0000");
+        point.material.color = new THREE.Color("#748a8e");
     }
 };
 
 ControlDesigner.prototype.selectPointObject = function (point) {
     if (point) {
         point.scale.set(1.5, 1.5, 1.5);
-        point.material.color = new THREE.Color("#00d40f");
+        point.material.color = new THREE.Color("#1300ff");
     }
 };
 
@@ -2572,11 +2426,13 @@ ControlDesigner.prototype.getDistanceToPoint3D = function ( cross, f, v, width )
         var positionsDistance = new Float32Array(4 * 3);
         geometry.addAttribute('position', new THREE.BufferAttribute(positionsDistance, 3));
         var material = new THREE.LineBasicMaterial({
-            color: '#18c500',
+            color: '#1cff00',
             linewidth: 20,
-            // transparent: true,
+            transparent: true,
+            depthTest: false
         });
         this.lineDistance = new THREE.Line(geometry, material);
+        this.lineDistance.frustumCulled = false;
         this.lineDistance.name = "lineDistance";
         this.add(this.lineDistance);
     }
@@ -2655,11 +2511,13 @@ ControlDesigner.prototype.getDistanceToPoint2D = function ( cross, f, v, width )
         var positionsDistance = new Float32Array(4 * 3);
         geometry.addAttribute('position', new THREE.BufferAttribute(positionsDistance, 3));
         var material = new THREE.LineBasicMaterial({
-            color: '#18c500',
+            color: '#1cff00',
             linewidth: 20,
-            // transparent: true,
+            transparent: true,
+            depthTest: false
         });
         this.lineDistance = new THREE.Line(geometry, material);
+        this.lineDistance.frustumCulled = false;
         this.lineDistance.name = "lineDistance";
         this.add(this.lineDistance);
     }
@@ -3098,11 +2956,16 @@ ControlDesigner.prototype.mouseMoveCursor2D = function (posMouse ){
 
 ControlDesigner.prototype.createCursor2D = function (){
     var geom = new THREE.PlaneGeometry( 1, 1 );
-    var mat = new THREE.MeshPhongMaterial({color: "#02ffbb"});
+    var mat = new THREE.MeshBasicMaterial({color: "#02ffba", transparent: true, opacity: 0.75, depthTest: false});
     this.cursor2D = new THREE.Mesh( geom, mat );
     this.cursor2D.scale.set(this.widthSubtractObject, this.depthSubtractObject, this.heightSubtractObject);
     this.cursor2D.name = "cursor2D";
     this.add(this.cursor2D);
+
+    var helper = new THREE.EdgesHelper( this.cursor2D, "#ffd10b" );
+    helper.material.transparent = true;
+    helper.material.depthTest = false;
+    this.cursor2D.add(helper);
 };
 
 ControlDesigner.prototype.removeCursor2D = function (){
@@ -3157,7 +3020,7 @@ ControlDesigner.prototype.addHelper = function (mesh) {
 
     var box = new THREE.Box3();
     box.setFromObject(mesh);
-    var helper = new THREE.Box3Helper(box, "#ffff00");
+    var helper = new THREE.Box3Helper(box, "#ffd10b");
 
     // var helper = new THREE.BoxHelper(mesh, "#ffff00");
 

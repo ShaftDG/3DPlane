@@ -89,11 +89,11 @@ function init() {
 
     var frustumSize = 1000;
     var aspect = window.innerWidth / window.innerHeight;
-    cameraOrthographic = new THREE.OrthographicCamera( frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 0.1, 50000 );
+    cameraOrthographic = new THREE.OrthographicCamera( frustumSize * aspect / - 2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / - 2, 0.001, 50000 );
     setDefaultOrthographicCameraPosition();
     cameraOrthographic.name = "cameraOrthographic";
 
-    cameraPerspective = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 20000 );
+    cameraPerspective = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.001, 20000 );
     setDefaultPerspectiveCameraPosition();
     cameraPerspective.name = "cameraPerspective";
 
@@ -141,32 +141,6 @@ function init() {
   human.visible = false;
   scene.add( human );
 
-  /*  var rollOverGeo = new THREE.PlaneBufferGeometry( 10, 10 );
-    var rollOverMaterial = new THREE.MeshBasicMaterial( { color: '#00ff22', opacity: 0.5, transparent: true } );
-    rollOverMesh1 = new THREE.Mesh( rollOverGeo, rollOverMaterial );
-    rollOverMesh1.name = "rollOverMesh1";
-    // rollOverMesh1.visible = false;
-    scene.add( rollOverMesh1 );
-
-    var rollOverMaterial = new THREE.MeshBasicMaterial( { color: '#feff00', opacity: 0.5, transparent: true } );
-    rollOverMesh2 = new THREE.Mesh( rollOverGeo, rollOverMaterial );
-    rollOverMesh2.name = "rollOverMesh2";
-    // rollOverMesh2.visible = false;
-    scene.add( rollOverMesh2 );
-
-    var rollOverMaterial = new THREE.MeshBasicMaterial( { color: '#ff0100', opacity: 0.5, transparent: true } );
-    rollOverMesh3 = new THREE.Mesh( rollOverGeo, rollOverMaterial );
-    rollOverMesh3.name = "rollOverMesh3";
-    // rollOverMesh3.visible = false;
-    scene.add( rollOverMesh3 );
-
-    var rollOverMaterial = new THREE.MeshBasicMaterial( { color: '#0002ff', opacity: 0.5, transparent: true } );
-    rollOverMesh4 = new THREE.Mesh( rollOverGeo, rollOverMaterial );
-    rollOverMesh4.name = "rollOverMesh4";
-    // rollOverMesh4.visible = false;
-    scene.add( rollOverMesh4 );*/
-
-
     ////
     renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true, precision: "highp" });
     // renderer.sortObjects = false;
@@ -202,34 +176,6 @@ function init() {
     document.panelCamera.cameraDefault.addEventListener("click", setCameraDefaultPosition);
 
     document.getElementById('help').addEventListener('click', visibilityHelp, false);
-
-  /*  // Get the valueScale input.
-    var valueSc = document.getElementById('valueScale');
-    designer.valueScale = valueSc.value;
-    if (!designer.valueScale) {
-        alert('Error: failed to get the valueScale element!');
-        designer.valueScale = 1;
-        return;
-    }
-    valueSc.addEventListener('change', function (ev) {
-        designer.valueScale = valueSc.value;
-        designer.calculateScale(designer.positionsScale);
-        // console.log(valueScale);
-    }, false);*/
-
-  /*  // Get the sensitivityMagnet input.
-    var sensitivityMag = document.getElementById('sensitivityMagnet');
-    designer.sensitivity = sensitivityMag.value;
-    if (!designer.sensitivity) {
-        alert('Error: failed to get the sensitivityMagnet element!');
-        designer.sensitivity = 10;
-        return;
-    }
-    sensitivityMag.addEventListener('change', function (ev) {
-        designer.sensitivity = sensitivityMag.value;
-        // console.log(valueScale);
-    }, false);
-*/
 
     animate();
 }
