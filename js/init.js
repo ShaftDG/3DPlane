@@ -237,7 +237,7 @@ function setTransformControls() {
 
      //   designer.updateHelperLines(transformControl.object); ////////////!!!!!!!!!!!!!!!
       //  designer.updateObject(transformControl.object); ////////////!!!!!!!!!!!!!!!
-        // dragEnd();
+        dragEnd();
     } );
     dragcontrols.addEventListener( 'dragend', dragEnd );
     dragcontrols.addEventListener( 'dragstart', function( e ) {
@@ -271,6 +271,7 @@ function dragEnd( event ) {
         objectlines = designer.mapLines.get("line_" + designer.updatedWall.toString());
     }
     // designer.updateExtrudePath(objectlines.geometry.attributes.position.array); ////////////!!!!!!!!!!!!!!!
+    // console.log(transformControl.object);
     designer.updateExtrudePathX(transformControl.object);
    designer.lineHorizontal.visible = false;
    designer.lineVertical.visible = false;
@@ -602,7 +603,7 @@ function onKeyDown ( event ) {
             // console.log(" designer.mapX",  designer.mapX);
             // console.log(" designer.mapY",  designer.mapY);
             // console.log(" groupSubtract",  designer.groupSubtract);
-            console.log(" objects",  designer.objects);
+            console.log(" objects",  designer.clockwiseMap);
             break;
         case 83: // s
             break;
