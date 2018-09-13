@@ -1719,7 +1719,7 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
             begin = beginPoint;
             beginPoint = null;
         }
-        // console.log("begin", begin);
+
         p.push(begin);
 
         var tempBegin = begin;
