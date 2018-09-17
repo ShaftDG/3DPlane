@@ -1430,6 +1430,7 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
             if (groupCross[k] && groupCross[k + 1]) {
                 clockwiseMap.set(Math.round(groupCross[k].x) + "-" + Math.round(groupCross[k].y), groupCross[k + 1]);
                 mainLine.push( groupCross[k] );
+                mainLine.push( groupCross[k + 1] );
                 this.extrudeFaceWall(groupCross[k], groupCross[k + 1], this.numWalls, i + "/" + k + "/" + 0);
                 this.positionProportions(groupCross[k], groupCross[k + 1], i + "/" + k + "/" + 0, this.numWalls);
             }
