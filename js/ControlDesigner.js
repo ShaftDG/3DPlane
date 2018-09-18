@@ -911,9 +911,11 @@ ControlDesigner.prototype.makeTextSprite = function ( message, parameters, angle
 
                 // Create Wall
 ControlDesigner.prototype.addPointObject = function (x, y ,z, num) {
-    var pointGeometry = new THREE.SphereBufferGeometry( 4, 8, 8 );
-    var pointMaterial = new THREE.MeshBasicMaterial( { color: '#748a8e', /*opacity: 0.5,*/ transparent: true } );
-    var point = new THREE.Mesh( pointGeometry, pointMaterial );
+    var pointMaterial = new THREE.SpriteMaterial( {
+        color: '#d2faff',
+        map: new THREE.TextureLoader().load("textures/sprites/circle.png") } );
+    var point = new THREE.Sprite( pointMaterial );
+    point.scale.set(10, 10, 1);
     point.name = num.toString() + "_" + this.numWalls;
     point.position.set(x, y ,z);
     this.mapX.set(Math.round(x), point.position);
@@ -921,7 +923,6 @@ ControlDesigner.prototype.addPointObject = function (x, y ,z, num) {
     this.groupPoints.add(point);
     this.mapPointObjects.set(point.name, point);
     this.objects.push(point);
-    // transformControl.attach( point );
 };
 
 ControlDesigner.prototype.updateObject = function (object) {
@@ -1380,7 +1381,24 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
                 }
                 if (cross && cross.overlapping) {
                     var point = new THREE.Vector2(cross.x, cross.y);
-                    groupCross.push(point);
+                   /* var crossInPolygon = false;
+                    for (var g = 0; g < pathPts.length/2; g++) {
+                        if (!crossInPolygon) {
+                            crossInPolygon = this.pointInsideThePolygon([pathPts[g], pathPts[g + 1], pathPts[pathPts.length - g - 2], pathPts[pathPts.length - g - 1]], point);
+                        }
+                    }*/
+                    // console.log("i", i);
+                    // console.log("j", j);
+                    // console.log("crossInPolygon", crossInPolygon);
+                    // if (!crossInPolygon) {
+                        groupCross.push(point);
+                    /*} else {
+                        var mesh = new THREE.Mesh(new THREE.SphereGeometry(10), new THREE.MeshBasicMaterial({color: "#ff00cf", transparent: true}));
+                        mesh.position.x = point.x;
+                        mesh.position.y = point.y;
+                        mesh.position.z = 800;
+                        scene.add(mesh);
+                    }*/
                 }
                 // console.log("j", j);
                 // console.log("j+1", j+1);
@@ -1516,8 +1534,10 @@ ControlDesigner.prototype.pointInsideThePolygon = function (points, pointStart) 
 
     var D = (pointStart.x - points[0].x) * (points[1].y - points[0].y) - (pointStart.y - points[0].y) * (points[1].x - points[0].x);
     var D1 = (pointStart.x - points[2].x) * (points[3].y - points[2].y) - (pointStart.y - points[2].y) * (points[3].x - points[2].x);
-
+    // console.log("D", D);
+    // console.log("D1", D1);
     if (D < 0 && D1 < 0 && c1 >= 0 && c2 >= c1) {
+        // console.log("true", true);
         return true;
     } else {
         return false;
@@ -2318,15 +2338,15 @@ ControlDesigner.prototype.unselectSubtractObject = function (object) {
 
 ControlDesigner.prototype.unselectPointObject = function (point) {
     if (point) {
-        point.scale.set(1.0, 1.0, 1.0);
-        point.material.color = new THREE.Color("#748a8e");
+        point.scale.set(10, 10, 1);
+        point.material.color = new THREE.Color("#d2faff");
     }
 };
 
 ControlDesigner.prototype.selectPointObject = function (point) {
     if (point) {
-        point.scale.set(1.5, 1.5, 1.5);
-        point.material.color = new THREE.Color("#1300ff");
+        point.scale.set(20, 20, 1);
+        point.material.color = new THREE.Color("#ff9183");
     }
 };
 
