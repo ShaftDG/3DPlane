@@ -1295,34 +1295,6 @@ ControlDesigner.prototype.extrudePath = function () {
 };
 
 ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
-    /* console.log(pathPts);
-     var p11 = [
-         pathPts[0],
-         pathPts[1],
-         pathPts[2],
-         pathPts[3]
-     ];
-     var p22 = [
-         pathPts[pathPts.length - 2 - 1],
-         pathPts[pathPts.length - 2 - 2],
-         pathPts[pathPts.length - 2 - 3],
-         pathPts[pathPts.length - 2 - 4]
-     ];
-     var union = new Boolean2D().union(p11, p22);
-
-     console.log(union[0]);
-
-     var shape = new THREE.Shape( union[0] );
-     shape.autoClose = true;
-     var points = shape.getPoints();
-     var geometryPoints = new THREE.BufferGeometry().setFromPoints( points );
-     // solid this.line
-     var line = new THREE.Line( geometryPoints, new THREE.LineBasicMaterial( { color: "#ff000d", linewidth: 10/!*, transparent: true *!/} ) );
-     line.position.set( 0, 10, 800 );
-     line.name = "!!!!!!";
-     this.add( line );*/
-
-
     var clockwiseMap = new Map();
     var indexPointBegin = 0;
     var lengthPointBegin = 0;
@@ -2285,7 +2257,7 @@ ControlDesigner.prototype.unselectObject = function (object) {
     if (object) {
         var name = object.name.split('_');
         if (this.mapWallsCup.has(object.name)) {
-            this.mapWallsCup.get(object.name).material.color = new THREE.Color("#c7f3ff");
+            this.mapWallsCup.get(object.name).material.color = new THREE.Color("#9cc2d7");
         }
         if (this.mapLines.has("line_" + name[1])) {
             this.mapLines.get("line_" + name[1]).material.color = new THREE.Color("#6c838a");
@@ -2297,7 +2269,7 @@ ControlDesigner.prototype.selectObject = function (object) {
     if (object) {
         var name = object.name.split('_');
         if (this.mapWallsCup.has(object.name)) {
-            this.mapWallsCup.get(object.name).material.color = new THREE.Color("#b4e2f9");
+            this.mapWallsCup.get(object.name).material.color = new THREE.Color("#b8e7ff");
         }
 
         if (this.mapLines.has("line_" + name[1])) {
