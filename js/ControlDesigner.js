@@ -1295,7 +1295,8 @@ ControlDesigner.prototype.extrudePath = function () {
 };
 
 ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
-    var clockwiseMap = new Map();
+    var counterСlockwiseMap = new Map();
+    var bufferMap = new Map();
     var indexPointBegin = 0;
     var lengthPointBegin = 0;
     for (var i = 0; i < pathPts.length; i++) {
@@ -1353,24 +1354,66 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
                 }
                 if (cross && cross.overlapping) {
                     var point = new THREE.Vector2(cross.x, cross.y);
-                   /* var crossInPolygon = false;
-                    for (var g = 0; g < pathPts.length/2; g++) {
-                        if (!crossInPolygon) {
-                            crossInPolygon = this.pointInsideThePolygon([pathPts[g], pathPts[g + 1], pathPts[pathPts.length - g - 2], pathPts[pathPts.length - g - 1]], point);
+                    if (
+                        (Math.round(point.x) === Math.round(pX[0].x) && Math.round(point.y) === Math.round(pX[0].y)) ||
+                        (Math.round(point.x) === Math.round(pX[1].x) && Math.round(point.y) === Math.round(pX[1].y))
+                    ) {
+                        if ( (Math.round(point.x) === Math.round(pX[0].x) && Math.round(point.y) === Math.round(pX[0].y)) ) {
+                            p1Intersections = true;
                         }
-                    }*/
-                    // console.log("i", i);
-                    // console.log("j", j);
-                    // console.log("crossInPolygon", crossInPolygon);
-                    // if (!crossInPolygon) {
-                        groupCross.push(point);
-                    /*} else {
-                        var mesh = new THREE.Mesh(new THREE.SphereGeometry(10), new THREE.MeshBasicMaterial({color: "#ff00cf", transparent: true}));
-                        mesh.position.x = point.x;
-                        mesh.position.y = point.y;
-                        mesh.position.z = 800;
-                        scene.add(mesh);
-                    }*/
+                        if ( (Math.round(point.x) === Math.round(pX[1].x) && Math.round(point.y) === Math.round(pX[1].y)) ) {
+                            p2Intersections = true;
+                        }
+                        console.log("i", i);
+                        console.log("j", j);
+                    } else {
+                        var D = (pathPts[j].x - pX[0].x) * (pX[1].y - pX[0].y) - (pathPts[j].y - pX[0].y) * (pX[1].x - pX[0].x);
+                        if (j === pathPts.length - 1) {
+                            var D1 = (pathPts[0].x - pX[0].x) * (pX[1].y - pX[0].y) - (pathPts[0].y - pX[0].y) * (pX[1].x - pX[0].x);
+                        } else {
+                            var D1 = (pathPts[j + 1].x - pX[0].x) * (pX[1].y - pX[0].y) - (pathPts[j + 1].y - pX[0].y) * (pX[1].x - pX[0].x);
+                        }
+                        if (Math.round(D) > 0 || Math.round(D1) > 0) {
+                          /*  if (j === pathPts.length - 1) {
+                                if (
+                                    (Math.round(point.x) !== Math.round(pathPts[j].x) && Math.round(point.y) !== Math.round(pathPts[j].y)) ||
+                                    (Math.round(point.x) !== Math.round(pathPts[0].x) && Math.round(point.y) !== Math.round(pathPts[0].y))
+                                ) {
+                                    groupCross.push(point);
+                                }
+                            } else {
+                                if (
+                                    (Math.round(point.x) !== Math.round(pathPts[j].x) && Math.round(point.y) !== Math.round(pathPts[j].y)) ||
+                                    (Math.round(point.x) !== Math.round(pathPts[j+1].x) && Math.round(point.y) !== Math.round(pathPts[j+1].y))
+                                ) {*/
+                         /*   if (
+                                (Math.round(point.x) === Math.round(pathPts[j].x) && Math.round(point.y) === Math.round(pathPts[j].y)) &&
+                                (Math.round(point.x) === Math.round(pX[1].x) && Math.round(point.y) === Math.round(pX[1].y))
+                            ) {*/
+                                groupCross.push(point);
+                            // }
+                                // }
+                            // }
+
+                              /*  console.log("i", i);
+                                console.log("j", j);
+                                var mesh = new THREE.Mesh(new THREE.SphereGeometry(10), new THREE.MeshBasicMaterial({
+                                    color: "#ff00cf",
+                                    transparent: true
+                                }));
+                                mesh.position.x = point.x;
+                                mesh.position.y = point.y;
+                                mesh.position.z = 800;
+                                scene.add(mesh);*/
+                        }
+                    }
+                } else {
+                    if (cross.liesOn) {
+                        if (i === (pathPts.length/2)-1) {
+                            p1Intersections = true;
+                            p2Intersections = true;
+                        }
+                    }
                 }
                 // console.log("j", j);
                 // console.log("j+1", j+1);
@@ -1383,7 +1426,7 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
 
 
         groupCross.push(pX[1]);
-        // console.log("groupCross", groupCross);
+        var identicalPoints = [];
         for (var k = 1; k < groupCross.length; k++) {
             for (var g = k; g > 0; g--) {
                 var lengthA = new THREE.Vector2().subVectors(groupCross[0], groupCross[g - 1]).length();
@@ -1393,6 +1436,11 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
                     var tmp = groupCross[g - 1];
                     groupCross[g - 1] = groupCross[g];
                     groupCross[g] = tmp;
+                } else if (lengthA === lengthB) {
+                    console.log("groupCross[g]", groupCross[g]);
+                    groupCross.splice(g, 1);
+                    console.log("groupCross[g]", groupCross[g]);
+                    groupCross.splice(g-1, 1);
                 }
             }
         }
@@ -1415,10 +1463,10 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
                 groupCross.splice(-1, 1);
             }
         }
-
+        console.log("groupCross", groupCross);
         for (var k = 0; k < groupCross.length; k += 2) {
-            if (groupCross[k] && groupCross[k + 1]) {
-                clockwiseMap.set(Math.round(groupCross[k].x) + "-" + Math.round(groupCross[k].y), groupCross[k + 1]);
+            if ( groupCross[k] && groupCross[k + 1] ) {
+                counterСlockwiseMap.set(Math.round(groupCross[k].x) + "-" + Math.round(groupCross[k].y), groupCross[k + 1]);
                 mainLine.push( groupCross[k] );
                 mainLine.push( groupCross[k + 1] );
                 this.extrudeFaceWall(groupCross[k], groupCross[k + 1], this.numWalls, i + "/" + k + "/" + 0);
@@ -1430,11 +1478,11 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
     var beginPoint = pathPts[indexPointBegin];
 /////////////////////////////////////////////////
     var pOut = [];
-    // console.log("clockwiseMap", clockwiseMap);
-    while (clockwiseMap.size !== 0) {
+    // console.log("counterСlockwiseMap", counterСlockwiseMap);
+    while (counterСlockwiseMap.size !== 0) {
         var p = [];
 
-        var begin = clockwiseMap.entries().next().value[1];
+        var begin = counterСlockwiseMap.entries().next().value[1];
         if (beginPoint) {
             begin = beginPoint;
             beginPoint = null;
@@ -1443,25 +1491,25 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
         p.push(begin);
 
         var tempBegin = begin;
-        var current = clockwiseMap.get(Math.round(begin.x) + "-" + Math.round(begin.y));
-        clockwiseMap.delete(Math.round(tempBegin.x) + "-" + Math.round(tempBegin.y));
+        var current = counterСlockwiseMap.get(Math.round(begin.x) + "-" + Math.round(begin.y));
+        counterСlockwiseMap.delete(Math.round(tempBegin.x) + "-" + Math.round(tempBegin.y));
 
         // var index = 0;
         do {
             p.push(current);
             // console.log("111111", current);
-            // console.log("has", clockwiseMap.has(current.x));
+            // console.log("has", counterСlockwiseMap.has(current.x));
             var tempCurrent = current;
-            current = clockwiseMap.get(Math.round(current.x) + "-" + Math.round(current.y));
-            clockwiseMap.delete(Math.round(tempCurrent.x) + "-" + Math.round(tempCurrent.y));
+            current = counterСlockwiseMap.get(Math.round(current.x) + "-" + Math.round(current.y));
+            counterСlockwiseMap.delete(Math.round(tempCurrent.x) + "-" + Math.round(tempCurrent.y));
             // console.log("222222", current);
             // index++
         }
         while (begin !== current);
         // while (index <= 3);
 
-        // console.log("clockwiseMap", clockwiseMap);
-      /*   clockwiseMap.forEach(function (value, key, map) {
+        // console.log("counterСlockwiseMap", counterСlockwiseMap);
+       /*  counterСlockwiseMap.forEach(function (value, key, map) {
              var mesh = new THREE.Mesh(new THREE.SphereGeometry(10), new THREE.MeshBasicMaterial({color: "#ff00cf", transparent: true}));
              mesh.position.x = value.x;
              mesh.position.y = value.y;
@@ -2186,7 +2234,7 @@ ControlDesigner.prototype.crossSectionX = function (start1, end1, start2, end2) 
 //для этого возьмём отрицание от случая, когда они НЕ пересекаются
                 if (!((Math.max(start1.y, end1.y) < Math.min(start2.y, end2.y)) ||
                     (Math.min(start1.y, end1.y) > Math.max(start2.y, end2.y)))) {
-                    return true;
+                    return ret;
                 }
             }
             return ret;
@@ -2227,7 +2275,7 @@ ControlDesigner.prototype.crossSectionX = function (start1, end1, start2, end2) 
                 ret.overlapping = true;
                 return ret;
             }
-            return false;
+            return ret;
         }
 
 //оба отрезка невертикальные
@@ -2237,6 +2285,18 @@ ControlDesigner.prototype.crossSectionX = function (start1, end1, start2, end2) 
     var b2 = start2.y - A2 * start2.x;
 
         if (A1 == A2) {
+            //отрезки лежат на одной прямой
+            var v = new THREE.Vector2().subVectors(start1, end1);
+            var w = new THREE.Vector2().subVectors(start2, start1);
+            var c1 = v.dot(w);
+            var c2 = v.dot(v);
+
+            var D = (start2.x - start1.x) * (end1.y - start1.y) - (start2.y - start1.y) * (end1.x - start1.x);
+            if (D === 0) {
+                ret.liesOn = true; //отрезки лежат друг на друге
+            } else {
+                ret.liesOn = false; //отрезки НЕ лежат друг на друге
+            }
             return ret; //отрезки параллельны
         }
 
