@@ -181,7 +181,10 @@ function init() {
 }
 
 function setTransformControls() {
-    transformControl = new THREE.TransformControls( camera, renderer.domElement, false );
+    transformControl = new THREE.TransformControls( camera, renderer.domElement );
+    transformControl.showX = false;
+    transformControl.showY = false;
+    transformControl.showZ = false;
     // transformControl.addEventListener( 'change', render );
     transformControl.setSize( transformControl.size * 0.5 );
     scene.add( transformControl );

@@ -101,16 +101,6 @@ THREE.TrackballControls = function ( object, domElement ) {
 
 	};
 
-	this.handleEvent = function ( event ) {
-
-		if ( typeof this[ event.type ] == 'function' ) {
-
-			this[ event.type ]( event );
-
-		}
-
-	};
-
 	var getMouseOnScreen = ( function () {
 
 		var vector = new THREE.Vector2();
@@ -217,16 +207,7 @@ THREE.TrackballControls = function ( object, domElement ) {
 
 			if ( factor !== 1.0 && factor > 0.0 ) {
 
-                if ( _this.object.isOrthographicCamera) {
-                    _this.object.left *= factor;
-                    _this.object.right *= factor;
-                    _this.object.top *= factor;
-                    _this.object.bottom *= factor;
-
-                    _this.object.updateProjectionMatrix();
-                } else {
-                    _eye.multiplyScalar( factor );
-                }
+				_eye.multiplyScalar( factor );
 
 			}
 
@@ -511,6 +492,8 @@ THREE.TrackballControls = function ( object, domElement ) {
 	function touchstart( event ) {
 
 		if ( _this.enabled === false ) return;
+		
+		event.preventDefault();
 
 		switch ( event.touches.length ) {
 

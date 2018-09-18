@@ -95,7 +95,7 @@ THREE.DragControls = function ( _objects, _camera, _domElement ) {
 
 				scope.dispatchEvent( { type: 'hoveron', object: object } );
 
-				_domElement.style.cursor = 'crosshair';
+				_domElement.style.cursor = 'pointer';
 				_hovered = object;
 
 			}
@@ -133,7 +133,7 @@ THREE.DragControls = function ( _objects, _camera, _domElement ) {
 
 			}
 
-			_domElement.style.cursor = 'crosshair';
+			_domElement.style.cursor = 'move';
 
 			scope.dispatchEvent( { type: 'dragstart', object: _selected } );
 
@@ -154,7 +154,7 @@ THREE.DragControls = function ( _objects, _camera, _domElement ) {
 
 		}
 
-		_domElement.style.cursor = 'auto';
+		_domElement.style.cursor = _hovered ? 'pointer' : 'auto';
 
 	}
 
