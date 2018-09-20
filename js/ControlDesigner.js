@@ -330,6 +330,13 @@ ControlDesigner.prototype.addRectangle = function (coord, depth) {
     this.positionsRect[this.count1 * 3 + 1] = vectors.c.y;
     this.positionsRect[this.count1 * 3 + 2] = coord.z;
 
+    if (this.count1 !== 0) {
+        this.mapX.set(Math.round(this.positionsRect[this.count1 * 3 - 6]),
+            new THREE.Vector3(this.positionsRect[this.count1 * 3 - 6], -200000, this.positionsRect[this.count1 * 3 - 4]));
+        this.mapY.set(Math.round(this.positionsRect[this.count1 * 3 - 5]),
+            new THREE.Vector3(-200000, this.positionsRect[this.count1 * 3 - 5], this.positionsRect[this.count1 * 3 - 4]));
+    }
+
     this.tempCoord.x = this.positionsRect[this.count1 * 3 - 3];
     this.tempCoord.y = this.positionsRect[this.count1 * 3 - 2];
 
@@ -355,6 +362,7 @@ ControlDesigner.prototype.addRectangle = function (coord, depth) {
     this.positionsDown[this.count1 * 3 + 5] = coord.z;
 
     this.count1++;
+
     this.lineRect.geometry.setDrawRange(0, this.count1);
     this.lineDown.geometry.setDrawRange(0, this.count1);
 };
@@ -364,9 +372,9 @@ ControlDesigner.prototype.addPoint = function (coord){
     this.posMouse.copy(coord);
     if (this.count !== 0) {
         this.mapX.set(Math.round(this.positions[this.count * 3 - 3]),
-            new THREE.Vector3(this.positions[this.count * 3 - 3], this.positions[this.count * 3 - 2], this.positions[this.count * 3 - 1]));
+            new THREE.Vector3(this.positions[this.count * 3 - 3], -200000, this.positions[this.count * 3 - 1]));
         this.mapY.set(Math.round(this.positions[this.count * 3 - 2]),
-            new THREE.Vector3(this.positions[this.count * 3 - 3], this.positions[this.count * 3 - 2], this.positions[this.count * 3 - 1]));
+            new THREE.Vector3(-200000, this.positions[this.count * 3 - 2], this.positions[this.count * 3 - 1]));
     }
 
     this.positions[this.count * 3 + 0] = coord.x;
@@ -1155,7 +1163,7 @@ ControlDesigner.prototype.updateHelperLines = function (object) {
 
             var pX = this.mapX.get(Math.round(object.position.x));
             posVert[3] = pX.x;
-            posVert[4] = pX.y;
+            posVert[4] = 200000;
             posVert[5] = pX.z + 20;
         }
 
@@ -1167,7 +1175,7 @@ ControlDesigner.prototype.updateHelperLines = function (object) {
             this.magnetY = posHor[1];
 
             var pY = this.mapY.get(Math.round(object.position.y));
-            posHor[3] = pY.x;
+            posHor[3] = 200000;
             posHor[4] = pY.y;
             posHor[5] = pY.z + 20;
         }
@@ -1179,7 +1187,7 @@ ControlDesigner.prototype.updateHelperLines = function (object) {
             if (this.lineHorizontal.visible) {
                 posVert[1] = posHor[1];
             } else {
-                posVert[1] = object.position.y;
+                posVert[1] = -200000;
             }
             posVert[2] = object.position.z + 20;
         } else {
@@ -1189,9 +1197,13 @@ ControlDesigner.prototype.updateHelperLines = function (object) {
         if (object.position.y >= this.magnetY - this.sensitivity && object.position.y <= this.magnetY + this.sensitivity) {
             object.position.y = this.magnetY;
             this.lineHorizontal.visible = true;
-            posHor[0] = object.position.x;
+            posHor[0] = -200000;
             posHor[1] = object.position.y;
             posHor[2] = object.position.z + 20;
+
+            posVert[0] = object.position.x;
+            posVert[1] = -200000;
+            posVert[2] = object.position.z + 20;
         } else {
             this.lineHorizontal.visible = false;
         }
@@ -1320,13 +1332,12 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
             ];
         }
         groupCross.push(pX[0]);
-        // console.log("i", i);
+        console.log("i", i);
         //intersection calculation
         for (var j = 0; j < pathPts.length; j++) {
             // index ++;
             if (i !== j) {
-                // console.log("i", i);
-                // console.log("j", j);
+                console.log("j", j);
                 if (j === pathPts.length - 1) {
                    var cross = this.crossSectionX(pX[0], pX[1], pathPts[j], pathPts[0]);
                    if (!p1Intersections && j !== i + 1 && j !== i - 1) {
@@ -1354,7 +1365,7 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
                        }*/
                    }
                 }
-                // console.log("cross", cross);
+                console.log("cross", cross);
                 if (cross && cross.overlapping) {
                     var point = new THREE.Vector2(cross.x, cross.y);
                     if (
@@ -1384,7 +1395,6 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
                         if (cross.endOn) {
                             p2Intersections = true;
                             bufferMap.set(Math.round(pX[1].x) + "-" + Math.round(pX[1].y), point);
-
                         }
                     }
                 } else {
@@ -1392,17 +1402,18 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
                             p1Intersections = true;
                             p2Intersections = true;
                     }
+                    if (cross.commonVertexStart && j > i+1 && j !== pathPts.length - 1 ) {
+                        p1Intersections = true;
+                    }
+                    if (cross.commonVertexEnd && j > i+1) {
+                        p2Intersections = true;
+                    }
                 }
-                // console.log("j", j);
-                // console.log("j+1", j+1);
-                // console.log("pathPts.length - j - 2", pathPts.length - j - 2);
-                // console.log("pathPts.length - j - 1", pathPts.length - j - 1);
-                // console.log("p1Intersections", p1Intersections);
-                // console.log("p2Intersections", p2Intersections);
             }
         }
+
         groupCross.push(pX[1]);
-        var identicalPoints = [];
+
         for (var k = 1; k < groupCross.length; k++) {
             for (var g = k; g > 0; g--) {
                 var lengthA = new THREE.Vector2().subVectors(groupCross[0], groupCross[g - 1]).length();
@@ -1419,8 +1430,11 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
             }
         }
 
-        if (groupCross.length % 2 !== 0) {
+        console.log("p1Intersections", p1Intersections);
+        console.log("p2Intersections", p2Intersections);
 
+
+        if (groupCross.length % 2 !== 0) {
             if (p1Intersections && p2Intersections) {
                 groupCross.splice(0, 1);
                 groupCross.splice(-1, 1);
@@ -1442,8 +1456,7 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
         for (var k = 0; k < groupCross.length; k += 2) {
             if ( groupCross[k] && groupCross[k + 1] ) {
                 if (counterСlockwiseMap.has(Math.round(groupCross[k].x) + "-" + Math.round(groupCross[k].y))) {
-                    console.log("i", i);
-                  //  bufferMap.set(Math.round(groupCross[k].x) + "-" + Math.round(groupCross[k].y), counterСlockwiseMap.get(Math.round(groupCross[k].x) + "-" + Math.round(groupCross[k].y)));
+                   bufferMap.set(Math.round(groupCross[k].x) + "-" + Math.round(groupCross[k].y), counterСlockwiseMap.get(Math.round(groupCross[k].x) + "-" + Math.round(groupCross[k].y)));
                 }
                 counterСlockwiseMap.set(Math.round(groupCross[k].x) + "-" + Math.round(groupCross[k].y), groupCross[k + 1]);
                 mainLine.push( groupCross[k] );
@@ -1453,23 +1466,11 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
             }
         }
     }
-    bufferMap.forEach(function (value, key, map) {
-        var mesh = new THREE.Mesh(new THREE.SphereGeometry(10), new THREE.MeshBasicMaterial({color: "#001fff", transparent: true}));
-        mesh.position.x = value.x;
-        mesh.position.y = value.y;
-        mesh.position.z = 800;
-        scene.add(mesh);
-    });
     var beginPoint = pathPts[indexPointBegin];
-    var mesh = new THREE.Mesh(new THREE.SphereGeometry(10), new THREE.MeshBasicMaterial({color: "#00ff0d", transparent: true}));
-    mesh.position.x = beginPoint.x;
-    mesh.position.y = beginPoint.y;
-    mesh.position.z = 800;
-    scene.add(mesh);
 /////////////////////////////////////////////////
     var pOut = [];
     console.log("counterСlockwiseMap", counterСlockwiseMap);
-    console.log("bufferMap", bufferMap);
+    // console.log("bufferMap", bufferMap);
     while (counterСlockwiseMap.size !== 0) {
         var p = [];
         var begin = counterСlockwiseMap.entries().next().value[1];
@@ -1508,6 +1509,7 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
              mesh.position.z = 800;
              scene.add(mesh);
          });
+
          var shape = new THREE.Shape(p);
          shape.autoClose = true;
          var points = shape.getPoints();
@@ -1521,6 +1523,8 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
 
         pOut.push(p);
     }
+    bufferMap.clear();
+    counterСlockwiseMap.clear();
     // console.log("pOut", pOut);
     var inputShape = new THREE.Shape( pOut[0] );
 
@@ -2183,107 +2187,170 @@ ControlDesigner.prototype.crossSectionX = function (start1, end1, start2, end2) 
 
     var ret = {
         overlapping: false,
+        commonVertexStart: false,
+        commonVertexEnd: false,
+        startOn: false,
+        endOn: false,
         x: null,
         y: null,
     };
 
+    //сначала расставим точки по порядку, т.е. чтобы было start1.x <= end1.x
+    var turn1 = false;
+    if (end1.x < start1.x) {
+        var tmp = start1;
+        start1 = end1;
+        end1 = tmp;
+        turn1 = true;
+    }
+
+//и start2.x <= end2.x
+    if (end2.x < start2.x) {
+        var tmp = start2;
+        start2 = end2;
+        end2 = tmp;
+    }
+//проверим существование потенциального интервала для точки пересечения отрезков
+    if (end1.x < start2.x) {
+        return ret; //ибо у отрезков нету взаимной абсциссы
+    }
+
+//если оба отрезка вертикальные
+    if((start1.x - end1.x == 0) && (start2.x - end2.x == 0)) {
+
+//если они лежат на одном X
+        if(start1.x == start2.x) {
+
+//проверим пересекаются ли они, т.е. есть ли у них общий Y
+//для этого возьмём отрицание от случая, когда они НЕ пересекаются
+            if (!((Math.max(start1.y, end1.y) < Math.min(start2.y, end2.y)) ||
+                (Math.min(start1.y, end1.y) > Math.max(start2.y, end2.y)))) {
+
+//сначала расставим точки по порядку, т.е. чтобы было start1.y <= end1.y
+                if (end1.y < start1.y) {
+                    var tmp = start1;
+                    start1 = end1;
+                    end1 = tmp;
+                    turn1 = true;
+                }
+
+//и start2.y <= end2.y
+                if (end2.y < start2.y) {
+                    var tmp = start2;
+                    start2 = end2;
+                    end2 = tmp;
+                }
+
+                if (
+                    start1.y >= start2.y &&
+                    start1.y <= end2.y &&
+                    end1.y >= start2.y &&
+                    end1.y <= end2.y
+                ) {
+                    ret.liesOn = true; //отрезки лежат друг на друге
+                } else if (
+                    start1.y >= start2.y &&
+                    start1.y <= end2.y
+                ) {
+                    ret.x = end2.x;
+                    ret.y = end2.y;
+                    ret.overlapping = true;
+                    if (turn1) {
+                        ret.endOn = true;
+                    } else {
+                        ret.startOn = true;
+                    }
+                } else if (
+                    end1.y >= start2.y &&
+                    end1.y <= end2.y
+                ) {
+                    ret.x = start2.x;
+                    ret.y = start2.y;
+                    ret.overlapping = true;
+                    if (turn1) {
+                        ret.startOn = true;
+                    } else {
+                        ret.endOn = true;
+                    }
+                }
+            } else {
+                ret.liesOn = false;
+            }
+        }
+        return ret;
+    }
+    //оба отрезка невертикальные
+    var A1 = (start1.y - end1.y) / (start1.x - end1.x);
+    var A2 = (start2.y - end2.y) / (start2.x - end2.x);
+    var b1 = start1.y - A1 * start1.x;
+    var b2 = start2.y - A2 * start2.x;
+
+    if (A1 == A2) {
+        
+        //отрезки лежат на одной прямой
+        var D = (start1.x - start2.x) * (end2.y - start2.y) - (start1.y - start2.y) * (end2.x - start2.x);
+        if (D === 0) {
+            if (
+                start1.x >= start2.x &&
+                start1.x <= end2.x &&
+                end1.x >= start2.x &&
+                end1.x <= end2.x
+            ) {
+                ret.liesOn = true; //отрезки лежат друг на друге
+            } else if (
+                start1.x >= start2.x &&
+                start1.x <= end2.x
+            ) {
+                ret.x = end2.x;
+                ret.y = end2.y;
+                ret.overlapping = true;
+                if (turn1) {
+                    ret.endOn = true;
+                } else {
+                    ret.startOn = true;
+                }
+            } else if (
+                end1.x >= start2.x &&
+                end1.x <= end2.x
+            ) {
+                ret.x = start2.x;
+                ret.y = start2.y;
+                ret.overlapping = true;
+                if (turn1) {
+                    ret.startOn = true;
+                } else {
+                    ret.endOn = true;
+                }
+            }
+        } else {
+            ret.liesOn = false; //отрезки НЕ лежат друг на друге
+        }
+        return ret; //отрезки параллельны
+    }
     if (
         (start1.x === start2.x && start1.y === start2.y) ||
         (start1.x === end2.x && start1.y === end2.y) ||
         (end1.x === start2.x && end1.y === start2.y) ||
         (end1.x === end2.x && end1.y === end2.y)
     ) {
-        ret.commonVertex = true;
+
+        if ( (start1.x === start2.x && start1.y === start2.y) || (start1.x === end2.x && start1.y === end2.y) ) {
+            if (turn1) {
+                ret.commonVertexEnd = true;
+            } else {
+                ret.commonVertexStart = true;
+            }
+        } else if ( (end1.x === start2.x && end1.y === start2.y) || (end1.x === end2.x && end1.y === end2.y) ) {
+            if (turn1) {
+                ret.commonVertexStart = true;
+            } else {
+                ret.commonVertexEnd = true;
+            }
+        }
+
+         //   ret.commonVertex = true;
         return ret; // Момент, када линии имеют одну общую вершину...
     }
-
-//сначала расставим точки по порядку, т.е. чтобы было start1.x <= end1.x
-    var turn1 = false;
-        if (end1.x < start1.x) {
-            var tmp = start1;
-            start1 = end1;
-            end1 = tmp;
-            turn1 = true;
-        }
-
-//и start2.x <= end2.x
-        if (end2.x < start2.x) {
-            var tmp = start2;
-            start2 = end2;
-            end2 = tmp;
-        }
-
-//проверим существование потенциального интервала для точки пересечения отрезков
-        if (end1.x < start2.x) {
-            return ret; //ибо у отрезков нету взаимной абсциссы
-        }
-
-//если оба отрезка вертикальные
-        if((start1.x - end1.x == 0) && (start2.x - end2.x == 0)) {
-
-//если они лежат на одном X
-            if(start1.x == start2.x) {
-
-//проверим пересекаются ли они, т.е. есть ли у них общий Y
-//для этого возьмём отрицание от случая, когда они НЕ пересекаются
-                if (!((Math.max(start1.y, end1.y) < Math.min(start2.y, end2.y)) ||
-                    (Math.min(start1.y, end1.y) > Math.max(start2.y, end2.y)))) {
-
-//сначала расставим точки по порядку, т.е. чтобы было start1.y <= end1.y
-                    if (end1.y < start1.y) {
-                        var tmp = start1;
-                        start1 = end1;
-                        end1 = tmp;
-                        turn1 = true;
-                    }
-
-//и start2.y <= end2.y
-                    if (end2.y < start2.y) {
-                        var tmp = start2;
-                        start2 = end2;
-                        end2 = tmp;
-                    }
-
-                    ret.startOn = false;
-                    ret.endOn = false;
-                    if (
-                        start1.y >= start2.y &&
-                        start1.y <= end2.y &&
-                        end1.y >= start2.y &&
-                        end1.y <= end2.y
-                    ) {
-                        ret.liesOn = true; //отрезки лежат друг на друге
-                    } else if (
-                        start1.y >= start2.y &&
-                        start1.y <= end2.y
-                    ) {
-                        ret.x = end2.x;
-                        ret.y = end2.y;
-                        ret.overlapping = true;
-                        if (turn1) {
-                            ret.endOn = true;
-                        } else {
-                            ret.startOn = true;
-                        }
-                    } else if (
-                        end1.y >= start2.y &&
-                        end1.y <= end2.y
-                    ) {
-                        ret.x = start2.x;
-                        ret.y = start2.y;
-                        ret.overlapping = true;
-                        if (turn1) {
-                            ret.startOn = true;
-                        } else {
-                            ret.endOn = true;
-                        }
-                    }
-                } else {
-                    ret.liesOn = false;
-                }
-            }
-            return ret;
-        }
 
 //найдём коэффициенты уравнений, содержащих отрезки
 //f1(x) = A1*x + b1 = y
@@ -2323,56 +2390,7 @@ ControlDesigner.prototype.crossSectionX = function (start1, end1, start2, end2) 
             return ret;
         }
 
-//оба отрезка невертикальные
-    var A1 = (start1.y - end1.y) / (start1.x - end1.x);
-    var A2 = (start2.y - end2.y) / (start2.x - end2.x);
-    var b1 = start1.y - A1 * start1.x;
-    var b2 = start2.y - A2 * start2.x;
 
-        if (A1 == A2) {
-            //отрезки лежат на одной прямой
-            ret.startOn = false;
-            ret.endOn = false;
-
-            var D = (start1.x - start2.x) * (end2.y - start2.y) - (start1.y - start2.y) * (end2.x - start2.x);
-            if (D === 0) {
-                if (
-                    start1.x >= start2.x &&
-                    start1.x <= end2.x &&
-                    end1.x >= start2.x &&
-                    end1.x <= end2.x
-                ) {
-                    ret.liesOn = true; //отрезки лежат друг на друге
-                } else if (
-                    start1.x >= start2.x &&
-                    start1.x <= end2.x
-                ) {
-                    ret.x = end2.x;
-                    ret.y = end2.y;
-                    ret.overlapping = true;
-                    if (turn1) {
-                        ret.endOn = true;
-                    } else {
-                        ret.startOn = true;
-                    }
-                } else if (
-                    end1.x >= start2.x &&
-                    end1.x <= end2.x
-                ) {
-                    ret.x = start2.x;
-                    ret.y = start2.y;
-                    ret.overlapping = true;
-                    if (turn1) {
-                        ret.startOn = true;
-                    } else {
-                        ret.endOn = true;
-                    }
-                }
-            } else {
-                ret.liesOn = false; //отрезки НЕ лежат друг на друге
-            }
-            return ret; //отрезки параллельны
-        }
 
 //Xa - абсцисса точки пересечения двух прямых
     var Xa = (b2 - b1) / (A1 - A2);
