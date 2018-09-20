@@ -1372,12 +1372,13 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
                         (Math.round(point.x) === Math.round(pX[0].x) && Math.round(point.y) === Math.round(pX[0].y)) ||
                         (Math.round(point.x) === Math.round(pX[1].x) && Math.round(point.y) === Math.round(pX[1].y))
                     ) {
-                        if ( (Math.round(point.x) === Math.round(pX[0].x) && Math.round(point.y) === Math.round(pX[0].y)) ) {
+                        if ( Math.round(point.x) === Math.round(pX[0].x) && Math.round(point.y) === Math.round(pX[0].y) ) {
                             p1Intersections = true;
                         }
-                        if ( (Math.round(point.x) === Math.round(pX[1].x) && Math.round(point.y) === Math.round(pX[1].y)) ) {
+                      /*  if ( Math.round(point.x) === Math.round(pX[1].x) && Math.round(point.y) === Math.round(pX[1].y) ) {
                             p2Intersections = true;
-                        }
+                            console.log("p2Intersections", p2Intersections);
+                        }*/
                     } else {
                         var D = (pathPts[j].x - pX[0].x) * (pX[1].y - pX[0].y) - (pathPts[j].y - pX[0].y) * (pX[1].x - pX[0].x);
                         if (j === pathPts.length - 1) {
@@ -1431,7 +1432,7 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
         }
 
         console.log("p1Intersections", p1Intersections);
-        console.log("p2Intersections", p2Intersections);
+
 
 
         if (groupCross.length % 2 !== 0) {
@@ -1502,13 +1503,13 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
 
         // console.log("counterСlockwiseMap", counterСlockwiseMap);
         // console.log("bufferMap", bufferMap);
-         counterСlockwiseMap.forEach(function (value, key, map) {
+       /*  counterСlockwiseMap.forEach(function (value, key, map) {
              var mesh = new THREE.Mesh(new THREE.SphereGeometry(10), new THREE.MeshBasicMaterial({color: "#ff00cf", transparent: true}));
              mesh.position.x = value.x;
              mesh.position.y = value.y;
              mesh.position.z = 800;
              scene.add(mesh);
-         });
+         });*/
 
          var shape = new THREE.Shape(p);
          shape.autoClose = true;
@@ -2286,7 +2287,7 @@ ControlDesigner.prototype.crossSectionX = function (start1, end1, start2, end2) 
     var b2 = start2.y - A2 * start2.x;
 
     if (A1 == A2) {
-        
+
         //отрезки лежат на одной прямой
         var D = (start1.x - start2.x) * (end2.y - start2.y) - (start1.y - start2.y) * (end2.x - start2.x);
         if (D === 0) {
