@@ -924,10 +924,10 @@ ControlDesigner.prototype.addPointObject = function (x, y ,z, num) {
         map: new THREE.TextureLoader().load("textures/sprites/circle.png") } );
     var point = new THREE.Sprite( pointMaterial );
     point.scale.set(10, 10, 1);
-    point.name = num.toString() + "_" + this.numWalls;
+    point.name = this.numWalls + "_" + num.toString();
     point.position.set(x, y ,z);
-    this.mapX.set(Math.round(x), point.position);
-    this.mapY.set(Math.round(y), point.position);
+    this.mapX.set(x, point.position);
+    this.mapY.set(y, point.position);
     this.groupPoints.add(point);
     this.mapPointObjects.set(point.name, point);
     this.objects.push(point);
@@ -1302,6 +1302,7 @@ ControlDesigner.prototype.extrudePath = function () {
    // this.addShape( inputShape, extrudeSettings, "#9cc2d7", "#39424e", 0, 0, 0, 0, 0, 0, 1, this.numWalls );
    // this.addLineShape( inputShape, "#d70003", 0, 0, 0, 0, 0, 0, 1, this.numWalls );
     this.rebuildWall(this.numWalls);
+    // console.log("mainLine", mainLine);
     this.mapLinesWalls.set(this.numWalls.toString(), mainLine);
     this.numWalls++;
 };
@@ -1332,12 +1333,12 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
             ];
         }
         groupCross.push(pX[0]);
-        console.log("i", i);
+        // console.log("i", i);
         //intersection calculation
         for (var j = 0; j < pathPts.length; j++) {
             // index ++;
             if (i !== j) {
-                console.log("j", j);
+                // console.log("j", j);
                 if (j === pathPts.length - 1) {
                    var cross = this.crossSectionX(pX[0], pX[1], pathPts[j], pathPts[0]);
                    if (!p1Intersections && j !== i + 1 && j !== i - 1) {
@@ -1365,7 +1366,7 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
                        }*/
                    }
                 }
-                console.log("cross", cross);
+                // console.log("cross", cross);
                 if (cross && cross.overlapping) {
                     var point = new THREE.Vector2(cross.x, cross.y);
                     if (
@@ -1431,7 +1432,7 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
             }
         }
 
-        console.log("p1Intersections", p1Intersections);
+        // console.log("p1Intersections", p1Intersections);
 
 
 
@@ -1453,24 +1454,20 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
                 groupCross.splice(-1, 1);
             }
         }
-        console.log("groupCross", groupCross);
+        // console.log("groupCross", groupCross);
         for (var k = 0; k < groupCross.length; k += 2) {
             if ( groupCross[k] && groupCross[k + 1] ) {
                 if (counterСlockwiseMap.has(Math.round(groupCross[k].x) + "-" + Math.round(groupCross[k].y))) {
                    bufferMap.set(Math.round(groupCross[k].x) + "-" + Math.round(groupCross[k].y), counterСlockwiseMap.get(Math.round(groupCross[k].x) + "-" + Math.round(groupCross[k].y)));
                 }
                 counterСlockwiseMap.set(Math.round(groupCross[k].x) + "-" + Math.round(groupCross[k].y), groupCross[k + 1]);
-                mainLine.push( groupCross[k] );
-                mainLine.push( groupCross[k + 1] );
-                this.extrudeFaceWall(groupCross[k], groupCross[k + 1], this.numWalls, i + "/" + k + "/" + 0);
-                this.positionProportions(groupCross[k], groupCross[k + 1], i + "/" + k + "/" + 0, this.numWalls);
             }
         }
     }
     var beginPoint = pathPts[indexPointBegin];
 /////////////////////////////////////////////////
     var pOut = [];
-    console.log("counterСlockwiseMap", counterСlockwiseMap);
+    // console.log("counterСlockwiseMap", counterСlockwiseMap);
     // console.log("bufferMap", bufferMap);
     while (counterСlockwiseMap.size !== 0) {
         var p = [];
@@ -1479,6 +1476,11 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
             begin = beginPoint;
             beginPoint = null;
         }
+        var mesh = new THREE.Mesh(new THREE.SphereGeometry(10), new THREE.MeshBasicMaterial({color: "#ff00cf", transparent: true}));
+        mesh.position.x = begin.x;
+        mesh.position.y = begin.y;
+        mesh.position.z = 800;
+        scene.add(mesh);
         p.push(begin);
         // console.log("begin", begin);
         var current = counterСlockwiseMap.get(Math.round(begin.x) + "-" + Math.round(begin.y));
@@ -1511,25 +1513,52 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
              scene.add(mesh);
          });*/
 
-         var shape = new THREE.Shape(p);
-         shape.autoClose = true;
-         var points = shape.getPoints();
-         var geometryPoints = new THREE.BufferGeometry().setFromPoints(points);
-         // solid this.line
-         var line = new THREE.Line(geometryPoints, new THREE.LineBasicMaterial({color: "#ff000d", transparent: true}));
-         line.material.color.setHex( Math.random() * 0xffffff );
-         line.position.set(0, 0, 800);
-         line.name = "!!!!!!";
-         this.add(line);
-
         pOut.push(p);
     }
     bufferMap.clear();
     counterСlockwiseMap.clear();
     // console.log("pOut", pOut);
     var inputShape = new THREE.Shape( pOut[0] );
+    var shape = new THREE.Shape(pOut[0]);
+    this.addLineShape( shape, "#d70003", 0, 0, 0, 0, 0, 0, 1, this.numWalls, 0 );
+    for (var j = 0; j < pOut[0].length; j++) {
+        this.addPointObject(pOut[0][j].x, pOut[0][j].y, 710, 0 + "-" + j);
+        mainLine.push( pOut[0][j] );
+        if (j < pOut[0].length - 1) {
+            this.positionProportions(pOut[0][j], pOut[0][j+1], 0 + "/" + j, this.numWalls);
+            this.extrudeFaceWall(pOut[0][j], pOut[0][j+1], this.numWalls, 0 + "/" + j);
+        } else {
+            this.positionProportions(pOut[0][j], pOut[0][0], 0 + "/" + j, this.numWalls);
+            this.extrudeFaceWall(pOut[0][j], pOut[0][0], this.numWalls, 0 + "/" + j);
+        }
+    }
+    mainLine.push( pOut[0][0] );
+    mainLine[mainLine.length-1] = {
+        x: pOut[0][0].x,
+        y: pOut[0][0].y,
+        end: true
+    };
 
     for (var i = 1; i < pOut.length; i++) {
+        var shape = new THREE.Shape(pOut[i]);
+        this.addLineShape( shape, "#d70003", 0, 0, 0, 0, 0, 0, 1, this.numWalls, i );
+        for (var j = 0; j < pOut[i].length; j++) {
+            this.addPointObject(pOut[i][j].x, pOut[i][j].y, 710, i + "-" + j);
+            mainLine.push( pOut[i][j] );
+            if (j < pOut[i].length - 1) {
+                this.positionProportions(pOut[i][j], pOut[i][j+1], i + "/" + j, this.numWalls);
+                this.extrudeFaceWall(pOut[i][j], pOut[i][j+1], this.numWalls, i + "/" + j);
+            } else {
+                this.positionProportions(pOut[i][j], pOut[i][0], i + "/" + j, this.numWalls);
+                this.extrudeFaceWall(pOut[i][j], pOut[i][0], this.numWalls, i + "/" + j);
+            }
+        }
+        mainLine.push( pOut[i][0] );
+        mainLine[mainLine.length-1] = {
+            x: pOut[i][0].x,
+            y: pOut[i][0].y,
+            end: true
+        };
         var smileyEye1Path = new THREE.Path(pOut[i]);
         smileyEye1Path.moveTo(0, 0);
         inputShape.holes.push(smileyEye1Path);
@@ -1537,8 +1566,6 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
 
     var extrudeSettings = { depth: this.heightWall, bevelEnabled: false, steps: 1 };
     this.addShape( inputShape, extrudeSettings, "#9cc2d7", "#39424e", 0, 0, 0, 0, 0, 0, 1, this.numWalls );
-    // this.addLineShape( inputShape, "#d70003", 0, 0, 0, 0, 0, 0, 1, this.numWalls );
-
 };
 
 ControlDesigner.prototype.pointInsideThePolygon = function (points, pointStart) {
@@ -1741,20 +1768,92 @@ ControlDesigner.prototype.createCup = function (pathPts, mainLine) {
     this.addEdgeLine(m, this.numWalls);
 };
 
-ControlDesigner.prototype.updateExtrudePathX = function (point) {
-
-    var object = this.groupPlane.getObjectByName("wallsCup_" + this.updatedWall);
-    // console.log(object);
-
+ControlDesigner.prototype.updateLinePath = function (point) {
+    var nameLine = point.name.split('_')[1].split('-')[0];
+    var object = this.groupLinesUpdate.getObjectByName("line_" + this.updatedWall + "-" + nameLine);
+    var mainLine = [];
     for (var i = 0; i < object.geometry.vertices.length; i++) {
-
-        if (point.name === (i + "_" + this.updatedWall) ) {
+        if (point.name === (this.updatedWall + "_" + nameLine + "-" + i) ) {
+            if (i === 0) {
+                object.geometry.vertices[object.geometry.vertices.length-1].copy(point.position);
+            }
             object.geometry.vertices[i].copy(point.position);
+        }
+        mainLine.push( object.geometry.vertices[i] );
+        if (i < object.geometry.vertices.length - 1) {
+            this.positionProportions(object.geometry.vertices[i], object.geometry.vertices[i + 1], nameLine + "/" + i, this.updatedWall);
+        } else {
+            this.positionProportions(object.geometry.vertices[i], object.geometry.vertices[0], nameLine + "/" + i, this.updatedWall);
         }
     }
     object.geometry.verticesNeedUpdate = true;
 
-   // this.addEdgeLine(object, this.updatedWall);
+    this.mapLinesWalls.delete(this.updatedWall.toString());
+    this.mapLinesWalls.set(this.updatedWall.toString(), mainLine);
+};
+
+ControlDesigner.prototype.updateExtrudePathX = function (position) {
+
+    this.removeIntersectObjectsArray(this.objects, this.mapWallsCup.get("wallsCup_" + this.updatedWall.toString()));
+
+    this.removeIntersectObjectsArray(this.objects,
+        this.groupExtrude.getObjectByName("walls_" + this.updatedWall.toString()).getObjectByName("walls_" + this.updatedWall.toString() + "-0"));
+    this.removeObject(this.groupExtrude.getObjectByName("walls_" + this.updatedWall.toString()),
+        this.groupExtrude.getObjectByName("walls_" + this.updatedWall.toString()).getObjectByName("walls_" + this.updatedWall.toString() + "-0"));
+
+    this.removeObject(this.groupPlane, this.mapWallsCup.get("wallsCup_" + this.updatedWall.toString()));
+
+  /*  var pathPts = [];
+    for (var i = 0; i < this.groupLinesUpdate.children.length; i++) {
+        for (var j = 0; j < this.groupLinesUpdate.children[i].geometry.vertices.length; j++) {
+            if (j < this.groupLinesUpdate.children[i].geometry.vertices.length - 1) {
+                pathPts.push( new THREE.Vector2 ( this.groupLinesUpdate.children[i].geometry.vertices[j].x, this.groupLinesUpdate.children[i].geometry.vertices[j].y ) );
+            }
+        }
+    }
+
+    console.log("pathPts", pathPts);
+    this.createCup_alternative(pathPts, mainLine);*/
+
+
+    var inputShape = new THREE.Shape( this.groupLinesUpdate.children[0].geometry.vertices );
+
+    for (var j = 0; j < this.groupLinesUpdate.children[0].geometry.vertices.length; j++) {
+        if (j < this.groupLinesUpdate.children[0].geometry.vertices.length - 1) {
+            this.extrudeFaceWall(this.groupLinesUpdate.children[0].geometry.vertices[j], this.groupLinesUpdate.children[0].geometry.vertices[j+1], this.updatedWall, 0 + "/" + j);
+        }
+    }
+
+    for (var i = 1; i < this.groupLinesUpdate.children.length; i++) {
+        for (var j = 0; j < this.groupLinesUpdate.children[i].geometry.vertices.length; j++) {
+            if (j < this.groupLinesUpdate.children[i].geometry.vertices.length - 1) {
+                this.extrudeFaceWall(this.groupLinesUpdate.children[i].geometry.vertices[j], this.groupLinesUpdate.children[i].geometry.vertices[j + 1], this.updatedWall, i + "/" + j);
+            }
+        }
+        var smileyEye1Path = new THREE.Path(this.groupLinesUpdate.children[i].geometry.vertices);
+        smileyEye1Path.moveTo(0, 0);
+        inputShape.holes.push(smileyEye1Path);
+    }
+
+    var extrudeSettings = {depth: this.heightWall, bevelEnabled: false, steps: 1};
+    this.addShape(inputShape, extrudeSettings, "#9cc2d7", "#39424e", 0, 0, 0, 0, 0, 0, 1, this.updatedWall);
+    this.rebuildWall(this.updatedWall);
+
+
+   /* var m = new Boolean2D();
+    var x = m.union(this.groupLinesUpdate.children[0].geometry.vertices, this.groupLinesUpdate.children[1].geometry.vertices);
+    var s = new THREE.Shape( x[0] );
+
+    var smileyEye1Path = new THREE.Path(this.groupLinesUpdate.children[1].geometry.vertices);
+    smileyEye1Path.moveTo(0, 0);
+    s.holes.push(smileyEye1Path);
+
+    var geometry = new THREE.ShapeGeometry( s );
+    var mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { color: "#ff009d"/!*, wireframe: true*!/ } ) );
+    mesh.position.set( 0, 0, 750 );
+    mesh.name = "!!!!!!!!!!!";
+    this.removeObject(this, this.getObjectByName("!!!!!!!!!!!") );
+    this.add( mesh );*/
 
 };
 
@@ -1819,17 +1918,19 @@ ControlDesigner.prototype.updateExtrudePath = function (position) {
     }
 };
 
-ControlDesigner.prototype.addLineShape = function ( shape, color, x, y, z, rx, ry, rz, s, nameWall ) {
+ControlDesigner.prototype.addLineShape = function ( shape, color, x, y, z, rx, ry, rz, s, nameWall, nameLine ) {
     // lines
-    shape.autoClose = true;
+    // shape.autoClose = true;
     var points = shape.getPoints();
-    var geometryPoints = new THREE.BufferGeometry().setFromPoints( points );
+    var geometryPoints = new THREE.Geometry().setFromPoints( points );
+    geometryPoints.vertices.push( geometryPoints.vertices[0].clone() );
     // solid this.line
-    var line = new THREE.Line( geometryPoints, new THREE.LineBasicMaterial( { color: color, linewidth: 10/*, transparent: true */} ) );
-    line.position.set( x, y, z + 720 );
+    var line = new THREE.Line( geometryPoints, new THREE.LineBasicMaterial( { color: color, linewidth: 10, transparent: true } ) );
+    line.frustumCulled = false;
+    line.position.set( x, y, z );
     line.rotation.set( rx, ry, rz );
     line.scale.set( s, s, s );
-    line.name = "line_" + nameWall.toString();
+    line.name = "line_" + nameWall.toString() + "-" + nameLine.toString();
     this.mapLines.set(line.name, line);
     this.groupLinesUpdate.add( line );
 };
@@ -1868,11 +1969,6 @@ ControlDesigner.prototype.addShape = function ( shape, extrudeSettings, colorCup
     this.mapWallsCup.set(mesh.name, mesh);
     this.objects.push(mesh);
     this.groupPlane.add( mesh );
-
-
-    for (var i = 0; i < mesh.geometry.vertices.length; i++) {
-        this.addPointObject(mesh.geometry.vertices[i].x, mesh.geometry.vertices[i].y, mesh.geometry.vertices[i].z, i);
-    }
 };
 
 ControlDesigner.prototype.addGroupFaceWall = function ( nameWall ) {
@@ -2072,7 +2168,6 @@ ControlDesigner.prototype.rebuildWall = function (nameWall){
     }
     var meshSubtract = new THREE.Mesh(singleGeometry);
 
-
     var m = this.groupExtrude.getObjectByName(wall);
 
     m = this.booleanOperation(m, meshSubtract);
@@ -2141,46 +2236,54 @@ ControlDesigner.prototype.crossSection = function (start1, end1, start2, end2) {
         x: null,
         y: null,
     };
-    var maxx1 = Math.max(start1.x, end1.x), maxy1 = Math.max(start1.y, end1.y);
-    var minx1 = Math.min(start1.x, end1.x), miny1 = Math.min(start1.y, end1.y);
-    var maxx2 = Math.max(start2.x, end2.x), maxy2 = Math.max(start2.y, end2.y);
-    var minx2 = Math.min(start2.x, end2.x), miny2 = Math.min(start2.y, end2.y);
 
-    if (minx1 > maxx2 || maxx1 < minx2 || miny1 > maxy2 || maxy1 < miny2) {
-        return ret;  // Момент, када линии имеют одну общую вершину...
+
+
+    if (
+        (start2.x >= start1.x && start2.x <= end1.x) ||
+        (start2.x >= end1.x && start2.x <= start1.x)
+    ) {
+
+        /*    var maxx1 = Math.max(start1.x, end1.x), maxy1 = Math.max(start1.y, end1.y);
+            var minx1 = Math.min(start1.x, end1.x), miny1 = Math.min(start1.y, end1.y);
+            var maxx2 = Math.max(start2.x, end2.x), maxy2 = Math.max(start2.y, end2.y);
+            var minx2 = Math.min(start2.x, end2.x), miny2 = Math.min(start2.y, end2.y);
+
+            if (minx1 > maxx2 || maxx1 < minx2 || miny1 > maxy2 || maxy1 < miny2) {
+                return ret;  // Момент, када линии имеют одну общую вершину...
+            }*/
+
+
+        var dx1 = end1.x - start1.x, dy1 = end1.y - start1.y; // Длина проекций первой линии на ось x и y
+        var dx2 = end2.x - start2.x, dy2 = end2.y - start2.y; // Длина проекций второй линии на ось x и y
+        var dxx = start1.x - start2.x, dyy = start1.y - start2.y;
+        var div, mul;
+
+        if ((div = dy2 * dx1 - dx2 * dy1) === 0) {
+            return ret; // Линии параллельны...
+        }
+        /* if (div > 0) {
+             if ((mul = dx1*dyy-dy1*dxx) < 0 || mul > div)
+                 return ret; // Первый отрезок пересекается за своими границами...
+             if ((mul = dx2*dyy-dy2*dxx) < 0 || mul > div)
+                 return ret; // Второй отрезок пересекается за своими границами...
+         }
+
+         if ((mul = -dx1*dyy-dy1*dxx) < 0 || mul > -div)
+             return ret; // Первый отрезок пересекается за своими границами...
+         if ((mul = -dx2*dyy-dy2*dxx) < 0 || mul > -div)
+             return ret; // Второй отрезок пересекается за своими границами...*/
+
+        var u = ((end2.x - start2.x) * (start1.y - start2.y) - (end2.y - start2.y) * (start1.x - start2.x)) /
+            ((end2.y - start2.y) * (end1.x - start1.x) - (end2.x - start2.x) * (end1.y - start1.y));
+
+        var x = start1.x + u * (end1.x - start1.x);
+        var y = start1.y + u * (end1.y - start1.y);
+
+        ret.x = x;
+        ret.y = y;
+        ret.overlapping = true;
     }
-
-
-    var dx1 = end1.x-start1.x, dy1 = end1.y-start1.y; // Длина проекций первой линии на ось x и y
-    var dx2 = end2.x-start2.x, dy2 = end2.y-start2.y; // Длина проекций второй линии на ось x и y
-    var dxx = start1.x-start2.x, dyy = start1.y-start2.y;
-    var div, mul;
-
-    if ((div = dy2*dx1-dx2*dy1) === 0) {
-        return ret; // Линии параллельны...
-    }
-   /* if (div > 0) {
-        if ((mul = dx1*dyy-dy1*dxx) < 0 || mul > div)
-            return ret; // Первый отрезок пересекается за своими границами...
-        if ((mul = dx2*dyy-dy2*dxx) < 0 || mul > div)
-            return ret; // Второй отрезок пересекается за своими границами...
-    }
-
-    if ((mul = -dx1*dyy-dy1*dxx) < 0 || mul > -div)
-        return ret; // Первый отрезок пересекается за своими границами...
-    if ((mul = -dx2*dyy-dy2*dxx) < 0 || mul > -div)
-        return ret; // Второй отрезок пересекается за своими границами...*/
-
-    var u = ((end2.x - start2.x)*(start1.y - start2.y) - (end2.y - start2.y)*(start1.x - start2.x))/
-        ((end2.y - start2.y)*(end1.x - start1.x) - (end2.x - start2.x)*(end1.y - start1.y));
-
-    var x = start1.x + u * (end1.x - start1.x);
-    var y = start1.y + u * (end1.y - start1.y);
-
-    ret.x = x;
-    ret.y = y;
-    ret.overlapping = true;
-
     return ret;
 };
 
@@ -2623,7 +2726,7 @@ ControlDesigner.prototype.getBetweenPoints = function (pointsLine, intersectPoin
     var minD = 10000;
     var index = 1;
     for (var i = 1; i  < pointsLine.length; i++) {
-        if ( new THREE.Vector2().subVectors(pointsLine[i], pointsLine[i-1]).length() > this.widthSubtractObject ) {
+        if ( new THREE.Vector2().subVectors(pointsLine[i], pointsLine[i-1]).length() > this.widthSubtractObject && !pointsLine[i-1].end) {
 
             var v = new THREE.Vector2().subVectors(pointsLine[i], pointsLine[i-1]);
             var w = new THREE.Vector2().subVectors(intersectPoint, pointsLine[i-1]);
@@ -2649,30 +2752,31 @@ ControlDesigner.prototype.getBetweenPoints = function (pointsLine, intersectPoin
 };
 
 ControlDesigner.prototype.middleWall = function ( f, posMouse ){
+    f.a.round();
+    f.c.round();
     var cross;
     if (f.a.y !== f.c.y) {
         if (f.a.x !== f.c.x) {
             if (new THREE.Vector2(f.c.x - f.a.x, 0).length() >
                 new THREE.Vector2(0, f.c.y - f.a.y).length() ) {
-
                 if (f.a.y < f.c.y) {
                     if (f.a.x < f.c.x) {
                         /*   >
                             -
                            -  */
                         if (posMouse.y < f.a.y || posMouse.y < f.c.y) {
-                            cross = this.crossSection(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, -1000 * f.NvectorA.y));
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, -1000 * f.NvectorA.y));
                         } else {
-                            cross = this.crossSection(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, 1000 * f.NvectorA.y));
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, 1000 * f.NvectorA.y));
                         }
                     } else {
                         /* <
                             -
                              - */
                         if (posMouse.y < f.a.y || posMouse.y < f.c.y) {
-                            cross = this.crossSection(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, 1000 * f.NvectorA.y));
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, 1000 * f.NvectorA.y));
                         } else {
-                            cross = this.crossSection(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, -1000 * f.NvectorA.y));
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, -1000 * f.NvectorA.y));
                         }
                     }
                 } else {
@@ -2681,18 +2785,18 @@ ControlDesigner.prototype.middleWall = function ( f, posMouse ){
                             -
                              > */
                         if (posMouse.y < f.c.y || posMouse.y < f.c.y) {
-                            cross = this.crossSection(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, -1000 * f.NvectorA.y));
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, -1000 * f.NvectorA.y));
                         } else {
-                            cross = this.crossSection(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, 1000 * f.NvectorA.y));
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, 1000 * f.NvectorA.y));
                         }
                     } else {
                         /*   -
                             -
                            < */
                         if (posMouse.y < f.c.y || posMouse.y < f.c.y) {
-                            cross = this.crossSection(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, 1000 * f.NvectorA.y));
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, 1000 * f.NvectorA.y));
                         } else {
-                            cross = this.crossSection(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, -1000 * f.NvectorA.y));
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, -1000 * f.NvectorA.y));
                         }
                     }
                 }
@@ -2704,60 +2808,63 @@ ControlDesigner.prototype.middleWall = function ( f, posMouse ){
                             /
                            /  */
                         if (posMouse.x < f.a.x || posMouse.x < f.c.x) {
-                            cross = this.crossSection(f.a, f.c, posMouse, new THREE.Vector2(-1000 * f.NvectorA.y, posMouse.y));
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(-1000 * f.NvectorA.y, posMouse.y));
                         } else {
-                            cross = this.crossSection(f.a, f.c, posMouse, new THREE.Vector2(1000 * f.NvectorA.y, posMouse.y));
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(1000 * f.NvectorA.y, posMouse.y));
                         }
                     } else {
                         /* <
                             \
                              \ */
                         if (posMouse.x < f.a.x || posMouse.x < f.c.x) {
-                            cross = this.crossSection(f.a, f.c, posMouse, new THREE.Vector2(1000 * f.NvectorA.y, posMouse.y));
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(1000 * f.NvectorA.y, posMouse.y));
                         } else {
-                            cross = this.crossSection(f.a, f.c, posMouse, new THREE.Vector2(-1000 * f.NvectorA.y, posMouse.y));
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(-1000 * f.NvectorA.y, posMouse.y));
                         }
                     }
                 } else {
+
                     if (f.a.x < f.c.x) {
                         /* \
                             \
                              > */
                         if (posMouse.x < f.c.x || posMouse.x < f.c.x) {
-                            cross = this.crossSection(f.a, f.c, posMouse, new THREE.Vector2(-1000 * f.NvectorA.y, posMouse.y));
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(-1000 * f.NvectorA.y, posMouse.y));
                         } else {
-                            cross = this.crossSection(f.a, f.c, posMouse, new THREE.Vector2(1000 * f.NvectorA.y, posMouse.y));
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(1000 * f.NvectorA.y, posMouse.y));
                         }
                     } else {
                         /*   /
                             /
                            < */
                         if (posMouse.x < f.c.x || posMouse.x < f.c.x) {
-                            cross = this.crossSection(f.a, f.c, posMouse, new THREE.Vector2(1000 * f.NvectorA.y, posMouse.y));
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(1000 * f.NvectorA.y, posMouse.y));
                         } else {
-                            cross = this.crossSection(f.a, f.c, posMouse, new THREE.Vector2(-1000 * f.NvectorA.y, posMouse.y));
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(-1000 * f.NvectorA.y, posMouse.y));
                         }
                     }
                 }
             }
         } else {
             if (posMouse.x < f.a.x) {
-                cross = this.crossSection(f.a, f.c, posMouse, new THREE.Vector2(1000, posMouse.y));
+                cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(1000, posMouse.y));
             } else {
-                cross = this.crossSection(f.a, f.c, posMouse, new THREE.Vector2(-1000, posMouse.y));
+                cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(-1000, posMouse.y));
             }
         }
     } else {
         if (posMouse.y < f.a.y) {
-            cross = this.crossSection(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, 1000));
+            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, 1000));
         } else {
-            cross = this.crossSection(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, -1000));
+            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, -1000));
         }
     }
     return cross;
 };
 
 ControlDesigner.prototype.getLastPosition = function ( f, posMouse ){
+    f.a.round();
+    f.c.round();
     if (f.a.x !== f.c.x) {
         if (new THREE.Vector2(f.c.x - f.a.x, 0).length() >
             new THREE.Vector2(0, f.c.y - f.a.y).length() ) {
@@ -3024,6 +3131,15 @@ ControlDesigner.prototype.positionCursor2D = function ( updatedWall, posMouse, c
 
         cursorObject.rotation.z = angle;
         if (cross.overlapping) {
+            var shape = new THREE.Shape([new THREE.Vector2(cross.x, cross.y), new THREE.Vector2(posMouse.x, posMouse.y)])
+            var points = shape.getPoints();
+            var geometryPoints = new THREE.Geometry().setFromPoints( points );
+            // solid this.line
+            var line = new THREE.Line( geometryPoints, new THREE.LineBasicMaterial( { color: "#001fff", linewidth: 10, transparent: true } ) );
+            line.frustumCulled = false;
+            line.position.set( 0, 0, 200 );
+            this.add( line );
+
             cursorObject.position.copy(new THREE.Vector3(cross.x, cross.y, posMouse.z));
             f = this.getDistanceToPoint2D(cross, f, v, width);
             this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));

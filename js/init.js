@@ -238,9 +238,9 @@ function setTransformControls() {
     } );
     dragcontrols.addEventListener( 'drag', function ( event ) {
 
-     //   designer.updateHelperLines(transformControl.object); ////////////!!!!!!!!!!!!!!!
+       designer.updateHelperLines(transformControl.object); ////////////!!!!!!!!!!!!!!!
       //  designer.updateObject(transformControl.object); ////////////!!!!!!!!!!!!!!!
-        dragEnd();
+        drag();
     } );
     dragcontrols.addEventListener( 'dragend', dragEnd );
     dragcontrols.addEventListener( 'dragstart', function( e ) {
@@ -249,8 +249,8 @@ function setTransformControls() {
             designer.selectedPoint = null;
         }
 
-        designer.mapX.delete(Math.round(transformControl.object.position.x));
-        designer.mapY.delete(Math.round(transformControl.object.position.y));
+        // designer.mapX.delete(Math.round(transformControl.object.position.x));
+        // designer.mapY.delete(Math.round(transformControl.object.position.y));
     } );
 
     /* var hiding;
@@ -268,21 +268,21 @@ function setTransformControls() {
      }*/
 }
 
-function dragEnd( event ) {
-    var objectlines = null;
-    if (designer.mapLines.has("line_" + designer.updatedWall.toString())) {
-        objectlines = designer.mapLines.get("line_" + designer.updatedWall.toString());
-    }
-    // designer.updateExtrudePath(objectlines.geometry.attributes.position.array); ////////////!!!!!!!!!!!!!!!
-    // console.log(transformControl.object);
-    designer.updateExtrudePathX(transformControl.object);
-   designer.lineHorizontal.visible = false;
-   designer.lineVertical.visible = false;
+function drag( event ) {
+   designer.updateLinePath(transformControl.object);
+}
 
-    for (var i = 0; i < designer.groupPoints.children.length; i++ ) {
-        designer.mapX.set(Math.round(designer.groupPoints.children[i].position.x), designer.groupPoints.children[i].position);
-        designer.mapY.set(Math.round(designer.groupPoints.children[i].position.y), designer.groupPoints.children[i].position);
-    }
+function dragEnd( event ) {
+    designer.updateExtrudePathX(transformControl.object);
+    designer.lineHorizontal.visible = false;
+    designer.lineVertical.visible = false;
+
+    // designer.mapX.clear();
+    // designer.mapY.clear();
+   /* for (var i = 0; i < designer.groupPoints.children.length; i++ ) {
+        designer.mapX.set(designer.groupPoints.children[i].position.x, designer.groupPoints.children[i].position);
+        designer.mapY.set(designer.groupPoints.children[i].position.y, designer.groupPoints.children[i].position);
+    }*/
 }
 
 function visibilityHelp(event) {
