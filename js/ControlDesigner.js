@@ -1506,13 +1506,13 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
 
         // console.log("counterСlockwiseMap", counterСlockwiseMap);
         // console.log("bufferMap", bufferMap);
-         counterСlockwiseMap.forEach(function (value, key, map) {
+     /*    counterСlockwiseMap.forEach(function (value, key, map) {
              var mesh = new THREE.Mesh(new THREE.SphereGeometry(10), new THREE.MeshBasicMaterial({color: "#ff00cf", transparent: true}));
              mesh.position.x = value.x;
              mesh.position.y = value.y;
              mesh.position.z = 800;
              scene.add(mesh);
-         });
+         });*/
 
         pOut.push(p);
     }
@@ -1952,6 +1952,7 @@ ControlDesigner.prototype.addShape = function ( shape, extrudeSettings, colorCup
     // extruded shape
     var geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
     geometry.rotateX(-Math.PI / 2);
+    geometry.mergeVertices();
     var mesh = new THREE.Mesh( geometry, new THREE.MeshPhongMaterial( { color: colorWall/*, transparent: true, opacity: 0.75, side: THREE.DoubleSide, depthTest: false*/ } ) );
     mesh.position.set( x, y, z );
     mesh.rotation.set( rx, ry, rz );
@@ -1962,6 +1963,7 @@ ControlDesigner.prototype.addShape = function ( shape, extrudeSettings, colorCup
     this.groupExtrude.getObjectByName("walls_" + nameWall.toString()).add( mesh );
     // flat shape
     var geometry = new THREE.ShapeGeometry( shape );
+    geometry.mergeVertices();
     var mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { color: colorCup/*, wireframe: true*/ } ) );
     mesh.position.set( x, y, z + 700 );
     mesh.rotation.set( rx, ry, rz );
