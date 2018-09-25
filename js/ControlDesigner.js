@@ -2724,7 +2724,7 @@ ControlDesigner.prototype.getLength = function (posMouse){
 
 ControlDesigner.prototype.getBetweenPoints = function (pointsLine, intersectPoint){
     var minD = 10000;
-    var index = 1;
+    var index = null;
     for (var i = 1; i  < pointsLine.length; i++) {
         if ( new THREE.Vector2().subVectors(pointsLine[i], pointsLine[i-1]).length() > this.widthSubtractObject && !pointsLine[i-1].end) {
 
@@ -2745,13 +2745,17 @@ ControlDesigner.prototype.getBetweenPoints = function (pointsLine, intersectPoin
             }
         }
     }
-    return {
-        start: new THREE.Vector2(pointsLine[index-1].x, pointsLine[index-1].y),
-        end: new THREE.Vector2(pointsLine[index].x, pointsLine[index].y)
+    if (index) {
+        return {
+            start: new THREE.Vector2(pointsLine[index - 1].x, pointsLine[index - 1].y),
+            end: new THREE.Vector2(pointsLine[index].x, pointsLine[index].y)
+        }
+    } else {
+        return false
     }
 };
 
-ControlDesigner.prototype.middleWall = function ( f, posMouse ){
+/*ControlDesigner.prototype.middleWall = function ( f, posMouse ){
     f.a.round();
     f.c.round();
     var cross;
@@ -2761,42 +2765,42 @@ ControlDesigner.prototype.middleWall = function ( f, posMouse ){
                 new THREE.Vector2(0, f.c.y - f.a.y).length() ) {
                 if (f.a.y < f.c.y) {
                     if (f.a.x < f.c.x) {
-                        /*   >
+                        /!*   >
                             -
-                           -  */
+                           -  *!/
                         if (posMouse.y < f.a.y || posMouse.y < f.c.y) {
-                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, -1000 * f.NvectorA.y));
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, -10000 * f.NvectorA.y));
                         } else {
-                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, 1000 * f.NvectorA.y));
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, 10000 * f.NvectorA.y));
                         }
                     } else {
-                        /* <
+                        /!* <
                             -
-                             - */
+                             - *!/
                         if (posMouse.y < f.a.y || posMouse.y < f.c.y) {
-                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, 1000 * f.NvectorA.y));
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, 10000 * f.NvectorA.y));
                         } else {
-                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, -1000 * f.NvectorA.y));
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, -10000 * f.NvectorA.y));
                         }
                     }
                 } else {
                     if (f.a.x < f.c.x) {
-                        /* -
+                        /!* -
                             -
-                             > */
-                        if (posMouse.y < f.c.y || posMouse.y < f.c.y) {
-                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, -1000 * f.NvectorA.y));
+                             > *!/
+                        if (posMouse.y < f.a.y || posMouse.y < f.c.y) {
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, -10000 * f.NvectorA.y));
                         } else {
-                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, 1000 * f.NvectorA.y));
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, 10000 * f.NvectorA.y));
                         }
                     } else {
-                        /*   -
+                        /!*   -
                             -
-                           < */
-                        if (posMouse.y < f.c.y || posMouse.y < f.c.y) {
-                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, 1000 * f.NvectorA.y));
+                           < *!/
+                        if (posMouse.y < f.a.y || posMouse.y < f.c.y) {
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, 10000 * f.NvectorA.y));
                         } else {
-                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, -1000 * f.NvectorA.y));
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, -10000 * f.NvectorA.y));
                         }
                     }
                 }
@@ -2804,23 +2808,98 @@ ControlDesigner.prototype.middleWall = function ( f, posMouse ){
             } else {
                 if (f.a.y < f.c.y) {
                     if (f.a.x < f.c.x) {
+                        /!*   >
+                            /
+                           /  *!/
+                        if (posMouse.x > f.a.x || posMouse.x > f.c.x) {
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(-10000 * f.NvectorA.x, posMouse.y));
+                        } else {
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(10000 * f.NvectorA.x, posMouse.y));
+                        }
+                    } else {
+                        /!* <
+                            \
+                             \ *!/
+                        if (posMouse.x < f.a.x || posMouse.x < f.c.x) {
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(10000 * f.NvectorA.x, posMouse.y));
+                        } else {
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(-10000 * f.NvectorA.x, posMouse.y));
+                        }
+                    }
+                } else {
+
+                    if (f.a.x < f.c.x) {
+                        /!* \
+                            \
+                             > *!/
+                        if (posMouse.x < f.a.x || posMouse.x < f.c.x) {
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(-1000 * f.NvectorA.x, posMouse.y));
+                        } else {
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(10000 * f.NvectorA.x, posMouse.y));
+                        }
+                    } else {
+                        /!*   /
+                            /
+                           < *!/
+                        if (posMouse.x > f.a.x || posMouse.x > f.c.x) {
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(10000 * f.NvectorA.x, posMouse.y));
+                        } else {
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(-10000 * f.NvectorA.x, posMouse.y));
+                        }
+                    }
+                }
+            }
+        } else {
+            if (posMouse.x < f.a.x) {
+                cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(10000, posMouse.y));
+            } else {
+                cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(-10000, posMouse.y));
+            }
+        }
+    } else {
+        if (posMouse.y < f.a.y) {
+            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, 10000));
+        } else {
+            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, -10000));
+        }
+    }
+    return cross;
+};*/
+
+ControlDesigner.prototype.middleWall = function ( f, posMouse ){
+    f.a.round();
+    f.c.round();
+    var cross;
+    if (f.a.y !== f.c.y) {
+        if (f.a.x !== f.c.x) {
+            if (new THREE.Vector2(f.c.x - f.a.x, 0).length() >
+                new THREE.Vector2(0, f.c.y - f.a.y).length() ) {
+                        /*   >
+                            -
+                           -  */
+                        /* <
+                            -
+                             - */
+                        /* -
+                            -
+                             > */
+                        /*   -
+                            -
+                           < */
+                    cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, -10000 * f.NvectorA.y));
+                //////////////////////////
+            } else {
+                if (f.a.y < f.c.y) {
+                    if (f.a.x < f.c.x) {
                         /*   >
                             /
                            /  */
-                        if (posMouse.x < f.a.x || posMouse.x < f.c.x) {
-                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(-1000 * f.NvectorA.y, posMouse.y));
-                        } else {
-                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(1000 * f.NvectorA.y, posMouse.y));
-                        }
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(-10000 * f.NvectorA.x, posMouse.y));
                     } else {
                         /* <
                             \
                              \ */
-                        if (posMouse.x < f.a.x || posMouse.x < f.c.x) {
-                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(1000 * f.NvectorA.y, posMouse.y));
-                        } else {
-                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(-1000 * f.NvectorA.y, posMouse.y));
-                        }
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(-10000 * f.NvectorA.x, posMouse.y));
                     }
                 } else {
 
@@ -2828,35 +2907,27 @@ ControlDesigner.prototype.middleWall = function ( f, posMouse ){
                         /* \
                             \
                              > */
-                        if (posMouse.x < f.c.x || posMouse.x < f.c.x) {
-                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(-1000 * f.NvectorA.y, posMouse.y));
-                        } else {
-                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(1000 * f.NvectorA.y, posMouse.y));
-                        }
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(-10000 * f.NvectorA.x, posMouse.y));
                     } else {
                         /*   /
                             /
                            < */
-                        if (posMouse.x < f.c.x || posMouse.x < f.c.x) {
-                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(1000 * f.NvectorA.y, posMouse.y));
-                        } else {
-                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(-1000 * f.NvectorA.y, posMouse.y));
-                        }
+                            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(-10000 * f.NvectorA.x, posMouse.y));
                     }
                 }
             }
         } else {
             if (posMouse.x < f.a.x) {
-                cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(1000, posMouse.y));
+                cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(10000, posMouse.y));
             } else {
-                cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(-1000, posMouse.y));
+                cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(-10000, posMouse.y));
             }
         }
     } else {
         if (posMouse.y < f.a.y) {
-            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, 1000));
+            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, 10000));
         } else {
-            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, -1000));
+            cross = this.crossSectionX(f.a, f.c, posMouse, new THREE.Vector2(posMouse.x, -10000));
         }
     }
     return cross;
@@ -3110,7 +3181,7 @@ ControlDesigner.prototype.positionCursor2D = function ( updatedWall, posMouse, c
     var line = this.mapLinesWalls.get(updatedWall);
 
     var v = this.getBetweenPoints(line, posMouse);
-
+console.log(v);
     if (v) {
         var angle = this.getAngleDoorAndWindow(v.start, v.end);
 
@@ -3131,23 +3202,17 @@ ControlDesigner.prototype.positionCursor2D = function ( updatedWall, posMouse, c
 
         cursorObject.rotation.z = angle;
         if (cross.overlapping) {
-            var shape = new THREE.Shape([new THREE.Vector2(cross.x, cross.y), new THREE.Vector2(posMouse.x, posMouse.y)])
-            var points = shape.getPoints();
-            var geometryPoints = new THREE.Geometry().setFromPoints( points );
-            // solid this.line
-            var line = new THREE.Line( geometryPoints, new THREE.LineBasicMaterial( { color: "#001fff", linewidth: 10, transparent: true } ) );
-            line.frustumCulled = false;
-            line.position.set( 0, 0, 200 );
-            this.add( line );
-
             cursorObject.position.copy(new THREE.Vector3(cross.x, cross.y, posMouse.z));
             f = this.getDistanceToPoint2D(cross, f, v, width);
             this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
             this.positionProportions(f.b, f.d, "distance", "wall");
         } else {
-            cursorObject.position.copy(this.getLastPosition(f, posMouse));
-            this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
-            this.clearDistanceToPoint();
+            var lastPos = this.getLastPosition(f, posMouse);
+            if (lastPos) {
+                cursorObject.position.copy(lastPos);
+                this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
+                this.clearDistanceToPoint();
+            }
         }
     }
 };
@@ -3182,9 +3247,11 @@ ControlDesigner.prototype.positionCursor3D = function ( updatedWall, posMouse, c
             this.positionProportions3D(f.b, f.d, "distance", "wall");
         } else {
             var pos = this.getLastPosition(f, new THREE.Vector3(posMouse.x, -posMouse.z, 0));
-            cursorObject.position.copy(new THREE.Vector3(pos.x, (height/2 + fromFloor), -pos.y ));
-            this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
-            this.clearDistanceToPoint();
+            if (pos) {
+                cursorObject.position.copy(new THREE.Vector3(pos.x, (height / 2 + fromFloor), -pos.y));
+                this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
+                this.clearDistanceToPoint();
+            }
         }
     }
 };
@@ -3226,15 +3293,17 @@ ControlDesigner.prototype.positionSelectedObject3D = function ( updatedWall, pos
             this.positionProportions3D(f.b, f.d, "distance", "wall");
         } else {
             var pos = this.getLastPosition(f, new THREE.Vector3(posMouse.x, -posMouse.z, 0));
-            cursorObject.position.copy(new THREE.Vector3(pos.x, fromFloor, -pos.y ));
-            mapSubtract.get(cursorObject.name).position.x = cursorObject.position.x;
-            mapSubtract.get(cursorObject.name).position.y = -cursorObject.position.z;
-            mapSubtract.get(cursorObject.name).rotation.z = cursorObject.rotation.y;
-            cursorObject = mapObject.get(cursorObject.name);
-            cursorObject.scale.z = 1.05;
-            this.selectSubtractObject(cursorObject);
-            this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
-            this.clearDistanceToPoint();
+            if (pos) {
+                cursorObject.position.copy(new THREE.Vector3(pos.x, fromFloor, -pos.y));
+                mapSubtract.get(cursorObject.name).position.x = cursorObject.position.x;
+                mapSubtract.get(cursorObject.name).position.y = -cursorObject.position.z;
+                mapSubtract.get(cursorObject.name).rotation.z = cursorObject.rotation.y;
+                cursorObject = mapObject.get(cursorObject.name);
+                cursorObject.scale.z = 1.05;
+                this.selectSubtractObject(cursorObject);
+                this.removeObject(this.groupProportions3D, this.mapProportions.get("distance_wall"));
+                this.clearDistanceToPoint();
+            }
         }
     }
 };
