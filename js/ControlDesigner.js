@@ -1333,12 +1333,12 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
             ];
         }
         groupCross.push(pX[0]);
-        // console.log("i", i);
+        console.log("!!!!!!!!! - i", i);
         //intersection calculation
         for (var j = 0; j < pathPts.length; j++) {
             // index ++;
             if (i !== j) {
-                // console.log("j", j);
+                console.log("j", j);
                 if (j === pathPts.length - 1) {
                    var cross = this.crossSectionX(pX[0], pX[1], pathPts[j], pathPts[0]);
                    if (!p1Intersections && j !== i + 1 && j !== i - 1) {
@@ -1358,28 +1358,32 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
                            p2Intersections = this.pointInsideThePolygon([pathPts[j], pathPts[j + 1], pathPts[pathPts.length - j - 2], pathPts[pathPts.length - j - 1]], pX[1]);
                        }
                    } else {
-                      /* if (!p1Intersections) {
+                       if (!p1Intersections) {
                            p1Intersections = this.pointInsideThePolygon([pathPts[j], pathPts[j + 1], pathPts[j + 2], pathPts[j - 1]], pX[0]);
                        }
                        if (!p2Intersections) {
                            p2Intersections = this.pointInsideThePolygon([pathPts[j], pathPts[j + 1], pathPts[j + 2], pathPts[j - 1]], pX[1]);
-                       }*/
+                       }
                    }
                 }
-                // console.log("cross", cross);
+                console.log("cross", cross);
                 if (cross && cross.overlapping) {
                     var point = new THREE.Vector2(cross.x, cross.y);
                     if (
                         (Math.round(point.x) === Math.round(pX[0].x) && Math.round(point.y) === Math.round(pX[0].y)) ||
                         (Math.round(point.x) === Math.round(pX[1].x) && Math.round(point.y) === Math.round(pX[1].y))
                     ) {
+                        var D = (pathPts[j].x - pX[0].x) * (pX[1].y - pX[0].y) - (pathPts[j].y - pX[0].y) * (pX[1].x - pX[0].x);
                         if ( Math.round(point.x) === Math.round(pX[0].x) && Math.round(point.y) === Math.round(pX[0].y) ) {
-                            p1Intersections = true;
+                            if (Math.round(D) < 0) {
+                                p1Intersections = true;
+                            }
                         }
-                      /*  if ( Math.round(point.x) === Math.round(pX[1].x) && Math.round(point.y) === Math.round(pX[1].y) ) {
-                            p2Intersections = true;
-                            console.log("p2Intersections", p2Intersections);
-                        }*/
+                        if (Math.round(point.x) === Math.round(pX[1].x) && Math.round(point.y) === Math.round(pX[1].y)) {
+                            if (Math.round(D) > 0) {
+                                p2Intersections = true;
+                            }
+                        }
                     } else {
                         var D = (pathPts[j].x - pX[0].x) * (pX[1].y - pX[0].y) - (pathPts[j].y - pX[0].y) * (pX[1].x - pX[0].x);
                         if (j === pathPts.length - 1) {
@@ -1390,13 +1394,23 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
                         if (Math.round(D) > 0 || Math.round(D1) > 0) {
                                 groupCross.push(point);
                         }
-                        if (cross.startOn) {
+                      /*  if (cross.startOn) {
                             p1Intersections = true;
                             bufferMap.set(Math.round(point.x) + "-" + Math.round(point.y), pX[0]);
                         }
                         if (cross.endOn) {
                             p2Intersections = true;
                             bufferMap.set(Math.round(pX[1].x) + "-" + Math.round(pX[1].y), point);
+                        }*/
+                        if (cross.startOn) {
+                            p1Intersections = true;
+                            bufferMap.set(Math.round(pX[0].x) + "-" + Math.round(pX[0].y), point);
+                            groupCross.push(point);
+                        }
+                        if (cross.endOn) {
+                            p2Intersections = true;
+                            bufferMap.set(Math.round(point.x) + "-" + Math.round(point.y), pX[1]);
+                            groupCross.push(point);
                         }
                     }
                 } else {
@@ -1404,10 +1418,10 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
                             p1Intersections = true;
                             p2Intersections = true;
                     }
-                    if (cross.commonVertexStart && j > i+1 && j !== pathPts.length - 1 ) {
+                    if (cross.commonVertexStart && j !== i + 1 && j !== i - 1 && j !== 0 && j !== pathPts.length - 1) {
                         p1Intersections = true;
                     }
-                    if (cross.commonVertexEnd && j > i+1) {
+                    if (cross.commonVertexEnd && j !== i + 1 && j !== i - 1 && j !== 0 && j !== pathPts.length - 1) {
                         p2Intersections = true;
                     }
                 }
@@ -1415,6 +1429,10 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
         }
 
         groupCross.push(pX[1]);
+
+        console.log("groupCross", groupCross);
+        console.log("p1Intersections", p1Intersections);
+        console.log("p2Intersections", p2Intersections);
 
         for (var k = 1; k < groupCross.length; k++) {
             for (var g = k; g > 0; g--) {
@@ -1431,10 +1449,6 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
                 }
             }
         }
-
-        // console.log("p1Intersections", p1Intersections);
-
-
 
         if (groupCross.length % 2 !== 0) {
             if (p1Intersections && p2Intersections) {
@@ -1454,7 +1468,7 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
                 groupCross.splice(-1, 1);
             }
         }
-        // console.log("groupCross", groupCross);
+        console.log("groupCross", groupCross);
         for (var k = 0; k < groupCross.length; k += 2) {
             if ( groupCross[k] && groupCross[k + 1] ) {
                 if (counterСlockwiseMap.has(Math.round(groupCross[k].x) + "-" + Math.round(groupCross[k].y))) {
@@ -1476,11 +1490,6 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
             begin = beginPoint;
             beginPoint = null;
         }
-        var mesh = new THREE.Mesh(new THREE.SphereGeometry(10), new THREE.MeshBasicMaterial({color: "#ff00cf", transparent: true}));
-        mesh.position.x = begin.x;
-        mesh.position.y = begin.y;
-        mesh.position.z = 800;
-        scene.add(mesh);
         p.push(begin);
         // console.log("begin", begin);
         var current = counterСlockwiseMap.get(Math.round(begin.x) + "-" + Math.round(begin.y));
@@ -1505,13 +1514,13 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
 
         // console.log("counterСlockwiseMap", counterСlockwiseMap);
         // console.log("bufferMap", bufferMap);
-       /*  counterСlockwiseMap.forEach(function (value, key, map) {
+         counterСlockwiseMap.forEach(function (value, key, map) {
              var mesh = new THREE.Mesh(new THREE.SphereGeometry(10), new THREE.MeshBasicMaterial({color: "#ff00cf", transparent: true}));
              mesh.position.x = value.x;
              mesh.position.y = value.y;
              mesh.position.z = 800;
              scene.add(mesh);
-         });*/
+         });
 
         pOut.push(p);
     }
@@ -2368,13 +2377,17 @@ ControlDesigner.prototype.crossSectionX = function (start1, end1, start2, end2) 
                     end1.y >= start2.y &&
                     end1.y <= end2.y
                 ) {
-                    ret.x = start2.x;
-                    ret.y = start2.y;
-                    ret.overlapping = true;
-                    if (turn1) {
-                        ret.startOn = true;
+                    if (Math.round(end1.y-start2.y) !== 0) {
+                        ret.x = start2.x;
+                        ret.y = start2.y;
+                        ret.overlapping = true;
+                        if (turn1) {
+                            ret.startOn = true;
+                        } else {
+                            ret.endOn = true;
+                        }
                     } else {
-                        ret.endOn = true;
+                        return ret; // линии имеют одну общую вершину
                     }
                 }
             } else {
@@ -2417,13 +2430,17 @@ ControlDesigner.prototype.crossSectionX = function (start1, end1, start2, end2) 
                 end1.x >= start2.x &&
                 end1.x <= end2.x
             ) {
-                ret.x = start2.x;
-                ret.y = start2.y;
-                ret.overlapping = true;
-                if (turn1) {
-                    ret.startOn = true;
+                if (Math.round(end1.x-start2.x) !== 0) {
+                    ret.x = start2.x;
+                    ret.y = start2.y;
+                    ret.overlapping = true;
+                    if (turn1) {
+                        ret.startOn = true;
+                    } else {
+                        ret.endOn = true;
+                    }
                 } else {
-                    ret.endOn = true;
+                    return ret; // линии имеют одну общую вершину
                 }
             }
         } else {
@@ -2431,6 +2448,8 @@ ControlDesigner.prototype.crossSectionX = function (start1, end1, start2, end2) 
         }
         return ret; //отрезки параллельны
     }
+
+// Момент, когда линии имеют одну общую вершину...
     if (
         (start1.x === start2.x && start1.y === start2.y) ||
         (start1.x === end2.x && start1.y === end2.y) ||
@@ -2451,9 +2470,7 @@ ControlDesigner.prototype.crossSectionX = function (start1, end1, start2, end2) 
                 ret.commonVertexEnd = true;
             }
         }
-
-         //   ret.commonVertex = true;
-        return ret; // Момент, када линии имеют одну общую вершину...
+        return ret; // Момент, когда линии имеют одну общую вершину...
     }
 
 //найдём коэффициенты уравнений, содержащих отрезки
@@ -3181,7 +3198,7 @@ ControlDesigner.prototype.positionCursor2D = function ( updatedWall, posMouse, c
     var line = this.mapLinesWalls.get(updatedWall);
 
     var v = this.getBetweenPoints(line, posMouse);
-console.log(v);
+// console.log(v);
     if (v) {
         var angle = this.getAngleDoorAndWindow(v.start, v.end);
 
