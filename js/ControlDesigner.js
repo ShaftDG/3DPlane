@@ -1394,14 +1394,6 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
                         if (Math.round(D) > 0 || Math.round(D1) > 0) {
                                 groupCross.push(point);
                         }
-                      /*  if (cross.startOn) {
-                            p1Intersections = true;
-                            bufferMap.set(Math.round(point.x) + "-" + Math.round(point.y), pX[0]);
-                        }
-                        if (cross.endOn) {
-                            p2Intersections = true;
-                            bufferMap.set(Math.round(pX[1].x) + "-" + Math.round(pX[1].y), point);
-                        }*/
                         if (cross.startOn) {
                             p1Intersections = true;
                             bufferMap.set(Math.round(pX[0].x) + "-" + Math.round(pX[0].y), point);
@@ -1445,7 +1437,7 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
                     groupCross[g] = tmp;
                 } else if (lengthA === lengthB) {
                     groupCross.splice(g, 1);
-                    groupCross.splice(g-1, 1);
+                 //   groupCross.splice(g-1, 1);
                 }
             }
         }
