@@ -1312,6 +1312,8 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
     var bufferMap = new Map();
     var indexPointBegin = 0;
     var lengthPointBegin = 0;
+    var indexFirstIntersection = null;
+    var indexLastIntersection = null;
     for (var i = 0; i < pathPts.length; i++) {
 
         var p1Intersections = false, p2Intersections = false;
@@ -1321,59 +1323,57 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
             indexPointBegin = i;
         }
         var groupCross = [];
+        var pX;
         if (i === pathPts.length - 1) {
-            var pX = [
+            pX = [
                 pathPts[i],
                 pathPts[0]
             ];
         } else {
-            var pX = [
+            pX = [
                 pathPts[i],
                 pathPts[i + 1]
             ];
         }
         groupCross.push(pX[0]);
-        console.log("!!!!!!!!! - i", i);
+        // console.log("!!!!!!!!! - i", i);
         //intersection calculation
         for (var j = 0; j < pathPts.length; j++) {
-            // index ++;
             if (i !== j) {
-                console.log("j", j);
+                // console.log("j", j);
+                var points = [];
+                var D = (pathPts[j].x - pX[0].x) * (pX[1].y - pX[0].y) - (pathPts[j].y - pX[0].y) * (pX[1].x - pX[0].x);
+                var D1, cross;
                 if (j === pathPts.length - 1) {
-                   var cross = this.crossSectionX(pX[0], pX[1], pathPts[j], pathPts[0]);
-                   if (!p1Intersections && j !== i + 1 && j !== i - 1) {
-                       p1Intersections = this.pointInsideThePolygon([pathPts[0], pathPts[1], pathPts[j - 1], pathPts[j]], pX[0]);
-                   }
-                    if (!p2Intersections && j !== i + 1 && j !== i - 1) {
-                        p2Intersections = this.pointInsideThePolygon([pathPts[0], pathPts[1], pathPts[j - 1], pathPts[j]], pX[1]);
-                    }
+                   cross = this.crossSectionX(pX[0], pX[1], pathPts[j], pathPts[0]);
+                   points = [pathPts[0], pathPts[1], pathPts[j - 1], pathPts[j]];
+                   D1 = (pathPts[0].x - pX[0].x) * (pX[1].y - pX[0].y) - (pathPts[0].y - pX[0].y) * (pX[1].x - pX[0].x);
                 } else {
-
-                   var cross = this.crossSectionX(pX[0], pX[1], pathPts[j], pathPts[j + 1]);
+                   cross = this.crossSectionX(pX[0], pX[1], pathPts[j], pathPts[j + 1]);
                    if (j !== (pathPts.length/2)-1) {
-                       if (!p1Intersections && j !== i + 1 && j !== i - 1) {
-                           p1Intersections = this.pointInsideThePolygon([pathPts[j], pathPts[j + 1], pathPts[pathPts.length - j - 2], pathPts[pathPts.length - j - 1]], pX[0]);
-                       }
-                       if (!p2Intersections && j !== i + 1 && j !== i - 1) {
-                           p2Intersections = this.pointInsideThePolygon([pathPts[j], pathPts[j + 1], pathPts[pathPts.length - j - 2], pathPts[pathPts.length - j - 1]], pX[1]);
-                       }
+                       points = [pathPts[j], pathPts[j + 1], pathPts[pathPts.length - j - 2], pathPts[pathPts.length - j - 1]];
                    } else {
-                       if (!p1Intersections) {
-                           p1Intersections = this.pointInsideThePolygon([pathPts[j], pathPts[j + 1], pathPts[j + 2], pathPts[j - 1]], pX[0]);
-                       }
-                       if (!p2Intersections) {
-                           p2Intersections = this.pointInsideThePolygon([pathPts[j], pathPts[j + 1], pathPts[j + 2], pathPts[j - 1]], pX[1]);
-                       }
+                       points = [pathPts[j], pathPts[j + 1], pathPts[j + 2], pathPts[j - 1]];
                    }
+                   D1 = (pathPts[j + 1].x - pX[0].x) * (pX[1].y - pX[0].y) - (pathPts[j + 1].y - pX[0].y) * (pX[1].x - pX[0].x);
                 }
-                console.log("cross", cross);
+                if (!p1Intersections) {
+                    p1Intersections = this.pointInsideThePolygon(points, pX[0]);
+                }
+                if (!p2Intersections) {
+                    p2Intersections = this.pointInsideThePolygon(points, pX[1]);
+                }
+                // console.log("cross", cross);
                 if (cross && cross.overlapping) {
+                    if (!indexFirstIntersection) {
+                        indexFirstIntersection = j;
+                    }
+                    indexLastIntersection = j;
                     var point = new THREE.Vector2(cross.x, cross.y);
                     if (
                         (Math.round(point.x) === Math.round(pX[0].x) && Math.round(point.y) === Math.round(pX[0].y)) ||
                         (Math.round(point.x) === Math.round(pX[1].x) && Math.round(point.y) === Math.round(pX[1].y))
                     ) {
-                        var D = (pathPts[j].x - pX[0].x) * (pX[1].y - pX[0].y) - (pathPts[j].y - pX[0].y) * (pX[1].x - pX[0].x);
                         if ( Math.round(point.x) === Math.round(pX[0].x) && Math.round(point.y) === Math.round(pX[0].y) ) {
                             if (Math.round(D) < 0) {
                                 p1Intersections = true;
@@ -1385,12 +1385,6 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
                             }
                         }
                     } else {
-                        var D = (pathPts[j].x - pX[0].x) * (pX[1].y - pX[0].y) - (pathPts[j].y - pX[0].y) * (pX[1].x - pX[0].x);
-                        if (j === pathPts.length - 1) {
-                            var D1 = (pathPts[0].x - pX[0].x) * (pX[1].y - pX[0].y) - (pathPts[0].y - pX[0].y) * (pX[1].x - pX[0].x);
-                        } else {
-                            var D1 = (pathPts[j + 1].x - pX[0].x) * (pX[1].y - pX[0].y) - (pathPts[j + 1].y - pX[0].y) * (pX[1].x - pX[0].x);
-                        }
                         if (Math.round(D) > 0 || Math.round(D1) > 0) {
                                 groupCross.push(point);
                         }
@@ -1410,10 +1404,10 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
                             p1Intersections = true;
                             p2Intersections = true;
                     }
-                    if (cross.commonVertexStart && j !== i + 1 && j !== i - 1 && j !== 0 && j !== pathPts.length - 1) {
+                    if (cross.commonVertexStart /*&& j !== i + 1 && j !== 0 && j !== i - 1  && j !== pathPts.length - 1*/) {
                         p1Intersections = true;
                     }
-                    if (cross.commonVertexEnd && j !== i + 1 && j !== i - 1 && j !== 0 && j !== pathPts.length - 1) {
+                    if (cross.commonVertexEnd /*&& j !== i + 1 && j !== 0 && j !== i - 1 && j !== pathPts.length - 1*/) {
                         p2Intersections = true;
                     }
                 }
@@ -1422,9 +1416,9 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
 
         groupCross.push(pX[1]);
 
-        console.log("groupCross", groupCross);
-        console.log("p1Intersections", p1Intersections);
-        console.log("p2Intersections", p2Intersections);
+        // console.log("groupCross", groupCross);
+        // console.log("p1Intersections", p1Intersections);
+        // console.log("p2Intersections", p2Intersections);
 
         for (var k = 1; k < groupCross.length; k++) {
             for (var g = k; g > 0; g--) {
@@ -1460,7 +1454,7 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
                 groupCross.splice(-1, 1);
             }
         }
-        console.log("groupCross", groupCross);
+        // console.log("groupCross", groupCross);
         for (var k = 0; k < groupCross.length; k += 2) {
             if ( groupCross[k] && groupCross[k + 1] ) {
                 if (counterСlockwiseMap.has(Math.round(groupCross[k].x) + "-" + Math.round(groupCross[k].y))) {
@@ -1471,6 +1465,7 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
         }
     }
     var beginPoint = pathPts[indexPointBegin];
+    var firstPath = true;
 /////////////////////////////////////////////////
     var pOut = [];
     // console.log("counterСlockwiseMap", counterСlockwiseMap);
@@ -1488,11 +1483,37 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
         counterСlockwiseMap.delete(Math.round(begin.x) + "-" + Math.round(begin.y));
         // var index = 0;
         do {
+            //optimize points
+           /* var lengthA = new THREE.Vector2().subVectors(p[p.length-1], current).length();
+            if (Math.round(lengthA) >= 5 ) {
+                p.push(current);
+            } else {
+                if (p[p.length-1].x === current.x) {
+                    var lengthB = new THREE.Vector2().subVectors(new THREE.Vector2(), current).length();
+                    var lengthC = new THREE.Vector2().subVectors(new THREE.Vector2(), p[p.length-1]).length();
+                    if (lengthB > lengthC ) {
+                        p[p.length-1] = current;
+                    } else {
+
+                    }
+                }
+            }*/
             p.push(current);
             // console.log("111111", current);
             // console.log("has", counterСlockwiseMap.has(current.x));
             var tempCurrent = current;
             current = counterСlockwiseMap.get(Math.round(current.x) + "-" + Math.round(current.y));
+
+         /*   var shape = new THREE.Shape( [tempCurrent, current] );
+            var points = shape.getPoints();
+            var geometryPoints = new THREE.Geometry().setFromPoints( points );
+            // solid this.line
+            var line = new THREE.Line( geometryPoints, new THREE.LineBasicMaterial( { color: "#ff0002", linewidth: 10, transparent: true } ) );
+            line.frustumCulled = false;
+            line.position.set( 0,0,720 );
+            line.name = "!!!!!!!!";
+            this.add( line );*/
+
             if (current === undefined) {
                 current = bufferMap.get(Math.round(tempCurrent.x) + "-" + Math.round(tempCurrent.y));
                 bufferMap.delete(Math.round(tempCurrent.x) + "-" + Math.round(tempCurrent.y));
@@ -1501,12 +1522,12 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
             // console.log("222222", current);
             // index++
         }
-        while (begin !== current);
+        while (!begin.equals(current));
         // while (index <= 3);
 
         // console.log("counterСlockwiseMap", counterСlockwiseMap);
         // console.log("bufferMap", bufferMap);
-     /*    counterСlockwiseMap.forEach(function (value, key, map) {
+       /*  counterСlockwiseMap.forEach(function (value, key, map) {
              var mesh = new THREE.Mesh(new THREE.SphereGeometry(10), new THREE.MeshBasicMaterial({color: "#ff00cf", transparent: true}));
              mesh.position.x = value.x;
              mesh.position.y = value.y;
@@ -1514,7 +1535,16 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
              scene.add(mesh);
          });*/
 
-        pOut.push(p);
+       var s = this.areaPolygons(p);
+
+       if (s > this.widthWall*this.widthWall*2) {
+           pOut.push(p);
+       }
+       if (firstPath && !pOut.length) {
+           pOut.push(p);
+           firstPath = false;
+       }
+        // pOut.push(p);
     }
     bufferMap.clear();
     counterСlockwiseMap.clear();
@@ -1569,18 +1599,74 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
     this.addShape( inputShape, extrudeSettings, "#9cc2d7", "#39424e", 0, 0, 0, 0, 0, 0, 1, this.numWalls );
 };
 
+ControlDesigner.prototype.areaPolygons = function (points) {
+    var s = 0;
+    if (points.length >= 3) {
+        var p = [];
+        var perimeter = 0;
+        for (var i = 0; i < points.length; i++) {
+            if (i >= 1 && i < 3) {
+                var vec1 = new THREE.Vector2().subVectors(points[i - 1], points[i]).normalize();
+                if (i !== points.length-1) {
+                    var vec2 = new THREE.Vector2().subVectors(points[i + 1], points[i]).normalize();
+                } else {
+                    var vec2 = new THREE.Vector2().subVectors(points[0], points[i]).normalize();
+                }
+                var vecTotal = vec1.add(vec2).setLength(1000);
+                p.push({
+                    vecTotal: vecTotal,
+                    beginPoint: points[i],
+                    endPoint: new THREE.Vector2(points[i].x + vecTotal.x, points[i].y + vecTotal.y)
+                });
+            }
+            if (i !== points.length-1) {
+                perimeter += new THREE.Vector2().subVectors(points[i + 1], points[i]).length();
+            } else {
+                perimeter += new THREE.Vector2().subVectors(points[0], points[i]).length();
+            }
+
+        }
+
+        var cross = this.crossSectionX(p[0].beginPoint, p[0].endPoint, p[1].beginPoint, p[1].endPoint);
+        var pointIntersection = new THREE.Vector2(cross.x, cross.y);
+        var v = new THREE.Vector2().subVectors(points[1], points[0]);
+        var w = new THREE.Vector2().subVectors(pointIntersection, points[0]);
+        var c1 = v.dot(w);
+        var c2 = v.dot(v);
+
+        var radius = 0;
+        if (c1 >= 0 && c2 >= c1) {
+           /* var zn = Math.sqrt(Math.pow((points[1].x - points[0].x), 2) + Math.pow((points[1].y - points[0].y), 2));
+            var ch = (points[0].y - points[1].y) * pointIntersection.x + (points[1].x - points[0].x) * pointIntersection.y +
+                (points[0].x * points[1].y - points[1].x * points[0].y);
+            radius = ch / zn;*/
+            var b = c1 / c2;
+            var pp = new THREE.Vector2(points[0].x, points[0].y);
+            var Pb = pp.add(v.multiplyScalar(b));
+            radius = new THREE.Vector2().subVectors(Pb, pointIntersection).length();
+        }
+        console.log("perimeter",perimeter);
+        console.log("radius", radius);
+        s = (perimeter * radius) / 2;
+        console.log("s", s);
+    }
+    return s;
+};
+
 ControlDesigner.prototype.pointInsideThePolygon = function (points, pointStart) {
 
-    var v = new THREE.Vector2().subVectors(points[1], points[0]);
+/*    var v = new THREE.Vector2().subVectors(points[1], points[0]);
     var w = new THREE.Vector2().subVectors(pointStart, points[0]);
     var c1 = v.dot(w);
-    var c2 = v.dot(v);
+    var c2 = v.dot(v);*/
 
     var D = (pointStart.x - points[0].x) * (points[1].y - points[0].y) - (pointStart.y - points[0].y) * (points[1].x - points[0].x);
-    var D1 = (pointStart.x - points[2].x) * (points[3].y - points[2].y) - (pointStart.y - points[2].y) * (points[3].x - points[2].x);
+    var D1 = (pointStart.x - points[1].x) * (points[2].y - points[1].y) - (pointStart.y - points[1].y) * (points[2].x - points[1].x);
+    var D2 = (pointStart.x - points[2].x) * (points[3].y - points[2].y) - (pointStart.y - points[2].y) * (points[3].x - points[2].x);
+    var D3 = (pointStart.x - points[3].x) * (points[0].y - points[3].y) - (pointStart.y - points[3].y) * (points[0].x - points[3].x);
     // console.log("D", D);
     // console.log("D1", D1);
-    if (D < 0 && D1 < 0 && c1 >= 0 && c2 >= c1) {
+    if (D < 0 && D1 < 0 && D2 < 0 && D3 < 0/*&& c1 >= 0 && c2 >= c1*/) {
         // console.log("true", true);
         return true;
     } else {
@@ -2292,6 +2378,10 @@ ControlDesigner.prototype.crossSection = function (start1, end1, start2, end2) {
 
 ControlDesigner.prototype.crossSectionX = function (start1, end1, start2, end2) {
 
+    var tempStart1 = start1;
+    var tempEnd1 = end1;
+    var tempStart2 = start2;
+    var tempEnd2 = end2;
     var ret = {
         overlapping: false,
         commonVertexStart: false,
@@ -2451,18 +2541,10 @@ ControlDesigner.prototype.crossSectionX = function (start1, end1, start2, end2) 
         (end1.x === end2.x && end1.y === end2.y)
     ) {
 
-        if ( (start1.x === start2.x && start1.y === start2.y) || (start1.x === end2.x && start1.y === end2.y) ) {
-            if (turn1) {
-                ret.commonVertexEnd = true;
-            } else {
+        if ( (tempStart1.x === tempStart2.x && tempStart1.y === tempStart2.y) ) {
                 ret.commonVertexStart = true;
-            }
-        } else if ( (end1.x === start2.x && end1.y === start2.y) || (end1.x === end2.x && end1.y === end2.y) ) {
-            if (turn1) {
-                ret.commonVertexStart = true;
-            } else {
+        } else if ( (tempEnd1.x === tempEnd2.x && tempEnd1.y === tempEnd2.y) ) {
                 ret.commonVertexEnd = true;
-            }
         }
         return ret; // Момент, когда линии имеют одну общую вершину...
     }
@@ -2745,10 +2827,14 @@ ControlDesigner.prototype.getBetweenPoints = function (pointsLine, intersectPoin
             var c2 = v.dot(v);
 
             if (c1 >= 0 && c2 >= c1) {
-                var zn = Math.sqrt(Math.pow((pointsLine[i].x - pointsLine[i - 1].x), 2) + Math.pow((pointsLine[i].y - pointsLine[i - 1].y), 2));
+               /* var zn = Math.sqrt(Math.pow((pointsLine[i].x - pointsLine[i - 1].x), 2) + Math.pow((pointsLine[i].y - pointsLine[i - 1].y), 2));
                 var ch = (pointsLine[i - 1].y - pointsLine[i].y) * intersectPoint.x + (pointsLine[i].x - pointsLine[i - 1].x) * intersectPoint.y +
                     (pointsLine[i - 1].x * pointsLine[i].y - pointsLine[i].x * pointsLine[i - 1].y);
-                var d = ch / zn;
+                var d = ch / zn;*/
+                var b = c1 / c2;
+                var pp = new THREE.Vector2(pointsLine[i-1].x, pointsLine[i-1].y);
+                var Pb = pp.add(v.multiplyScalar(b));
+                var d = new THREE.Vector2().subVectors(Pb, intersectPoint).length();
                 if (Math.abs(d) < minD) {
                     minD = Math.abs(d);
                     index = i;
