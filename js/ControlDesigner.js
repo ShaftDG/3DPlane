@@ -1645,10 +1645,10 @@ ControlDesigner.prototype.areaPolygons = function (points) {
             var Pb = pp.add(v.multiplyScalar(b));
             radius = new THREE.Vector2().subVectors(Pb, pointIntersection).length();
         }
-        console.log("perimeter",perimeter);
-        console.log("radius", radius);
+        // console.log("perimeter",perimeter);
+        // console.log("radius", radius);
         s = (perimeter * radius) / 2;
-        console.log("s", s);
+        // console.log("s", s);
     }
     return s;
 };
