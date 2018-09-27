@@ -606,7 +606,7 @@ function onKeyDown ( event ) {
             // console.log(" designer.mapX",  designer.mapX);
             // console.log(" designer.mapY",  designer.mapY);
             // console.log(" groupSubtract",  designer.groupSubtract);
-            console.log(" objects",  designer.clockwiseMap);
+            // console.log(" objects",  designer.clockwiseMap);
             break;
         case 83: // s
             break;
