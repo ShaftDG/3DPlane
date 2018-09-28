@@ -199,9 +199,8 @@ function setTransformControls() {
             designer.hoverOffPointObject(designer.hoverOnObject);
     } );
     dragcontrols.addEventListener( 'drag', function ( event ) {
-       designer.updateHelperLines(transformControl.object); ////////////!!!!!!!!!!!!!!!
-      //  designer.updateObject(transformControl.object); ////////////!!!!!!!!!!!!!!!
-        drag();
+       designer.updateHelperLines(event.object);
+       drag(event.object);
     } );
     dragcontrols.addEventListener( 'dragend', dragEnd );
     dragcontrols.addEventListener( 'dragstart', function( event ) {
@@ -211,11 +210,13 @@ function setTransformControls() {
 
 }
 
-function drag( event ) {
+function drag( object ) {
+   transformControl.attach( object );
    designer.updateLinePath(transformControl.object);
 }
 
 function dragEnd( event ) {
+    designer.endUpdateLinePath(transformControl.object);
     designer.updateExtrudePathX();
     designer.lineHorizontal.visible = false;
     designer.lineVertical.visible = false;
