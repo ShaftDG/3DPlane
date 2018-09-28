@@ -1127,125 +1127,79 @@ ControlDesigner.prototype.deletePointObject = function (point) {
     var arr = namePoint.split('-');
     var nameLine = arr[0];
     var nameVertex = +arr[1];
-    var index = nameVertex;
+    var index = nameVertex === 0 ? 0 : nameVertex-1;
     var object = this.groupLinesUpdate.getObjectByName("line_" + this.updatedWall + "-" + nameLine);
     var mainLine = this.mapLinesWalls.get(this.updatedWall.toString());
-    console.log("object.geometry.vertices.length", object.geometry.vertices.length);
+
     if (object.geometry.vertices.length > 4) {
 
         var indexMain = mainLine.findIndex(obj => obj.x === object.geometry.vertices[nameVertex].x && obj.y === object.geometry.vertices[nameVertex].y);
         if (indexMain >= 0) {
             mainLine.splice(indexMain, 1);
         }
-
         object.geometry.vertices.splice(nameVertex, 1);
-        console.log("nameVertex", nameVertex);
         var indexIn = undefined;
-
         this.removeObject(this.groupPoints, this.mapPointObjects.get(point.name));
         this.removeIntersectObjectsArray(this.objects, this.mapPointObjects.get(point.name));
         this.mapPointObjects.delete(point.name);
-
-        // this.removeObject(this.groupProportions, this.mapProportions.get(nameLine + "/" + nameVertex + "_" +  this.updatedWall));
         for (var i = 0; i < this.groupPoints.children.length; i++) {
             var nameP = this.groupPoints.children[i].name.split('_')[1].split('-');
             if (nameP[0] === nameLine) {
                 if (indexIn === undefined) {
                     indexIn = i;
-                    console.log("indexIn", indexIn);
                 }
                 if (+nameP[1] >= nameVertex-1) {
-                    console.log("-----------------------------");
-                    console.log("nameP[1]", nameP[1]);
                     this.mapPointObjects.delete(this.groupPoints.children[i].name);
                     this.groupPoints.children[i].name = this.updatedWall + "_" + nameLine + "-" + index;
                     this.mapPointObjects.set(this.groupPoints.children[i].name, this.groupPoints.children[i]);
 
                     var endPoint = new THREE.Vector2();
-
-                    console.log("start", index);
-                   // endPoint.set(this.groupPoints.children[i + 1].x, this.groupPoints.children[i + 1].y);
                     if ((i + 1) < this.groupPoints.children.length) {
                         var namePnext = this.groupPoints.children[i + 1].name.split('_')[1].split('-');
                         if (namePnext[0] === nameLine) {
-                            console.log("!!!-1");
                             endPoint.set(this.groupPoints.children[i + 1].position.x, this.groupPoints.children[i + 1].position.y);
-                            console.log("end", (i+1)-indexIn);
                         } else {
-                            console.log("!!!-2");
                             endPoint.set(this.groupPoints.children[indexIn].position.x, this.groupPoints.children[indexIn].position.y);
-                            console.log("end", i-indexIn);
                         }
                     } else {
                         var namePnext = this.groupPoints.children[0].name.split('_')[1].split('-');
                         if (namePnext[0] === nameLine) {
-                            console.log("!!!-3");
                             endPoint.set(this.groupPoints.children[0].position.x, this.groupPoints.children[0].position.y);
-                            console.log("end", 0);
                         } else {
-                            console.log("!!!-4");
                             endPoint.set(this.groupPoints.children[indexIn].position.x, this.groupPoints.children[indexIn].position.y);
-                            console.log("end", indexIn);
-                        }
-                    }
-
-
-                    console.log("endPoint", endPoint);
-                        this.positionProportions(
+                        }                    }
+                    this.positionProportions(
                             new THREE.Vector2(this.groupPoints.children[i].position.x, this.groupPoints.children[i].position.y),
                             endPoint,
                             nameLine + "/" + index, this.updatedWall);
-                   /* this.positionProportions(
-                        new THREE.Vector2(this.groupPoints.children[indexIn + index].position.x, this.groupPoints.children[indexIn + index].position.y),
-                        new THREE.Vector2(this.groupPoints.children[i].position.x, this.groupPoints.children[i].position.y),
-                        nameLine + "/" + index, this.updatedWall);*/
                     index++;
-                } else {
-                   /* console.log("!!!!", indexIn);
-                    this.positionProportions(
-                        new THREE.Vector2(this.groupPoints.children[indexIn + nameVertex - 1].position.x, this.groupPoints.children[indexIn + nameVertex - 1].position.y),
-                        new THREE.Vector2(this.groupPoints.children[indexIn].position.x, this.groupPoints.children[indexIn].position.y),
-                        nameLine + "/" + (nameVertex-1), this.updatedWall);*/
                 }
-
             }
         }
 
       this.removeObject(this.groupProportions, this.mapProportions.get(nameLine + "/" + index + "_" +  this.updatedWall));
       this.mapProportions.delete(nameLine + "/" + index + "_" +  this.updatedWall);
+
         if (nameVertex === 0) {
             object.geometry.vertices[object.geometry.vertices.length - 1].copy(object.geometry.vertices[0]);
-        } else {
-            /*this.positionProportions(
-                new THREE.Vector2(this.groupPoints.children[indexIn-1].position.x, this.groupPoints.children[indexIn-1].position.y),
-                new THREE.Vector2(this.groupPoints.children[indexIn].position.x, this.groupPoints.children[indexIn].position.y),
-                nameLine + "/" + (indexIn-1), this.updatedWall);*/
         }
 
         this.mapX.delete(Math.round(point.position.x));
         this.mapY.delete(Math.round(point.position.y));
-
-
-        /*   if (i < object.geometry.vertices.length - 1) {
-               this.positionProportions(object.geometry.vertices[i], object.geometry.vertices[i + 1], nameLine + "/" + i, this.updatedWall);
-           } else {
-               this.positionProportions(object.geometry.vertices[i], object.geometry.vertices[0], nameLine + "/" + i, this.updatedWall);
-           }*/
-        // }
 
         object.geometry.verticesNeedUpdate = true;
         object.geometry._bufferGeometry.setDrawRange(0, object.geometry.vertices.length);
         object.geometry._bufferGeometry.attributes.position.needsUpdate = true;
     } else {
         var iter = 0;
-        while (iter < this.groupPoints.children.length) {
+        var length = this.groupPoints.children.length;
+        while (iter < length) {
             if (this.mapPointObjects.has(this.updatedWall + "_" + nameLine + "-" + iter)) {
                 var obj = this.mapPointObjects.get(this.updatedWall + "_" + nameLine + "-" + iter);
                 this.removeObject(this.groupPoints, obj);
                 this.removeIntersectObjectsArray(this.objects, obj);
                 this.removeObject(this.groupProportions, this.mapProportions.get(nameLine + "/" + iter + "_" +  this.updatedWall));
                 this.mapPointObjects.delete(obj.name);
-
                 var indexMain = mainLine.findIndex(obj => obj.x === object.geometry.vertices[iter].x && obj.y === object.geometry.vertices[iter].y);
                 if (indexMain >= 0) {
                     mainLine.splice(indexMain, 1);
@@ -2043,81 +1997,90 @@ ControlDesigner.prototype.updateLinePath = function (point) {
     object.geometry.verticesNeedUpdate = true;
 };
 
-ControlDesigner.prototype.updateExtrudePathX = function (position) {
+ControlDesigner.prototype.updateExtrudePathX = function () {
 
-    this.removeIntersectObjectsArray(this.objects, this.mapWallsCup.get("wallsCup_" + this.updatedWall.toString()));
 
-    this.removeIntersectObjectsArray(this.objects,
-        this.groupExtrude.getObjectByName("walls_" + this.updatedWall.toString()).getObjectByName("walls_" + this.updatedWall.toString() + "-0"));
-    this.removeObject(this.groupExtrude.getObjectByName("walls_" + this.updatedWall.toString()),
-        this.groupExtrude.getObjectByName("walls_" + this.updatedWall.toString()).getObjectByName("walls_" + this.updatedWall.toString() + "-0"));
+        this.removeIntersectObjectsArray(this.objects, this.mapWallsCup.get("wallsCup_" + this.updatedWall.toString()));
 
-    this.removeObject(this.groupPlane, this.mapWallsCup.get("wallsCup_" + this.updatedWall.toString()));
+        this.removeIntersectObjectsArray(this.objects,
+            this.groupExtrude.getObjectByName("walls_" + this.updatedWall.toString()).getObjectByName("walls_" + this.updatedWall.toString() + "-0"));
+        this.removeObject(this.groupExtrude.getObjectByName("walls_" + this.updatedWall.toString()),
+            this.groupExtrude.getObjectByName("walls_" + this.updatedWall.toString()).getObjectByName("walls_" + this.updatedWall.toString() + "-0"));
 
-  /*  var pathPts = [];
-    for (var i = 0; i < this.groupLinesUpdate.children.length; i++) {
-        for (var j = 0; j < this.groupLinesUpdate.children[i].geometry.vertices.length; j++) {
-            if (j < this.groupLinesUpdate.children[i].geometry.vertices.length - 1) {
-                pathPts.push( new THREE.Vector2 ( this.groupLinesUpdate.children[i].geometry.vertices[j].x, this.groupLinesUpdate.children[i].geometry.vertices[j].y ) );
+        this.removeObject(this.groupPlane, this.mapWallsCup.get("wallsCup_" + this.updatedWall.toString()));
+
+        /*  var pathPts = [];
+          for (var i = 0; i < this.groupLinesUpdate.children.length; i++) {
+              for (var j = 0; j < this.groupLinesUpdate.children[i].geometry.vertices.length; j++) {
+                  if (j < this.groupLinesUpdate.children[i].geometry.vertices.length - 1) {
+                      pathPts.push( new THREE.Vector2 ( this.groupLinesUpdate.children[i].geometry.vertices[j].x, this.groupLinesUpdate.children[i].geometry.vertices[j].y ) );
+                  }
+              }
+          }
+
+          console.log("pathPts", pathPts);
+          this.createCup_alternative(pathPts, mainLine);*/
+    if (this.groupLinesUpdate.children.length) {
+        var mainLine = [];
+        var inputShape = new THREE.Shape(this.groupLinesUpdate.children[0].geometry.vertices);
+
+        for (var j = 0; j < this.groupLinesUpdate.children[0].geometry.vertices.length; j++) {
+            if (j < this.groupLinesUpdate.children[0].geometry.vertices.length - 1) {
+                this.extrudeFaceWall(this.groupLinesUpdate.children[0].geometry.vertices[j], this.groupLinesUpdate.children[0].geometry.vertices[j + 1], this.updatedWall, 0 + "/" + j);
+                this.positionProportions(
+                    new THREE.Vector2(this.groupLinesUpdate.children[0].geometry.vertices[j].x, this.groupLinesUpdate.children[0].geometry.vertices[j].y),
+                    new THREE.Vector2(this.groupLinesUpdate.children[0].geometry.vertices[j+1].x, this.groupLinesUpdate.children[0].geometry.vertices[j+1].y),
+                    0 + "/" + j, this.updatedWall);
             }
+            mainLine.push(new THREE.Vector2(this.groupLinesUpdate.children[0].geometry.vertices[j].x, this.groupLinesUpdate.children[0].geometry.vertices[j].y));
         }
-    }
-
-    console.log("pathPts", pathPts);
-    this.createCup_alternative(pathPts, mainLine);*/
-
-    var mainLine = [];
-    var inputShape = new THREE.Shape( this.groupLinesUpdate.children[0].geometry.vertices );
-
-    for (var j = 0; j < this.groupLinesUpdate.children[0].geometry.vertices.length; j++) {
-        if (j < this.groupLinesUpdate.children[0].geometry.vertices.length - 1) {
-            this.extrudeFaceWall(this.groupLinesUpdate.children[0].geometry.vertices[j], this.groupLinesUpdate.children[0].geometry.vertices[j+1], this.updatedWall, 0 + "/" + j);
-        }
-        mainLine.push( new THREE.Vector2(this.groupLinesUpdate.children[0].geometry.vertices[j].x, this.groupLinesUpdate.children[0].geometry.vertices[j].y) );
-    }
-    mainLine[mainLine.length-1] = {
-        x: mainLine[mainLine.length-1].x,
-        y: mainLine[mainLine.length-1].y,
-        end: true
-    };
-
-    for (var i = 1; i < this.groupLinesUpdate.children.length; i++) {
-        for (var j = 0; j < this.groupLinesUpdate.children[i].geometry.vertices.length; j++) {
-            if (j < this.groupLinesUpdate.children[i].geometry.vertices.length - 1) {
-                this.extrudeFaceWall(this.groupLinesUpdate.children[i].geometry.vertices[j], this.groupLinesUpdate.children[i].geometry.vertices[j + 1], this.updatedWall, i + "/" + j);
-            }
-            mainLine.push( new THREE.Vector2(this.groupLinesUpdate.children[i].geometry.vertices[j].x, this.groupLinesUpdate.children[i].geometry.vertices[j].y) );
-        }
-        mainLine[mainLine.length-1] = {
-            x: mainLine[mainLine.length-1].x,
-            y: mainLine[mainLine.length-1].y,
+        mainLine[mainLine.length - 1] = {
+            x: mainLine[mainLine.length - 1].x,
+            y: mainLine[mainLine.length - 1].y,
             end: true
         };
-        var smileyEye1Path = new THREE.Path(this.groupLinesUpdate.children[i].geometry.vertices);
-        smileyEye1Path.moveTo(0, 0);
-        inputShape.holes.push(smileyEye1Path);
+
+        for (var i = 1; i < this.groupLinesUpdate.children.length; i++) {
+            for (var j = 0; j < this.groupLinesUpdate.children[i].geometry.vertices.length; j++) {
+                if (j < this.groupLinesUpdate.children[i].geometry.vertices.length - 1) {
+                    this.extrudeFaceWall(this.groupLinesUpdate.children[i].geometry.vertices[j], this.groupLinesUpdate.children[i].geometry.vertices[j + 1], this.updatedWall, i + "/" + j);
+                    this.positionProportions(
+                        new THREE.Vector2(this.groupLinesUpdate.children[i].geometry.vertices[j].x, this.groupLinesUpdate.children[i].geometry.vertices[j].y),
+                        new THREE.Vector2(this.groupLinesUpdate.children[i].geometry.vertices[j+1].x, this.groupLinesUpdate.children[i].geometry.vertices[j+1].y),
+                        i + "/" + j, this.updatedWall);
+                }
+                mainLine.push(new THREE.Vector2(this.groupLinesUpdate.children[i].geometry.vertices[j].x, this.groupLinesUpdate.children[i].geometry.vertices[j].y));
+            }
+            mainLine[mainLine.length - 1] = {
+                x: mainLine[mainLine.length - 1].x,
+                y: mainLine[mainLine.length - 1].y,
+                end: true
+            };
+            var smileyEye1Path = new THREE.Path(this.groupLinesUpdate.children[i].geometry.vertices);
+            smileyEye1Path.moveTo(0, 0);
+            inputShape.holes.push(smileyEye1Path);
+        }
+
+        var extrudeSettings = {depth: this.heightWall, bevelEnabled: false, steps: 1};
+        this.addShape(inputShape, extrudeSettings, "#9cc2d7", "#39424e", 0, 0, 0, 0, 0, 0, 1, this.updatedWall);
+        this.rebuildWall(this.updatedWall);
+
+        this.mapLinesWalls.set(this.updatedWall.toString(), mainLine);
+        /* var m = new Boolean2D();
+         var x = m.union(this.groupLinesUpdate.children[0].geometry.vertices, this.groupLinesUpdate.children[1].geometry.vertices);
+         var s = new THREE.Shape( x[0] );
+
+         var smileyEye1Path = new THREE.Path(this.groupLinesUpdate.children[1].geometry.vertices);
+         smileyEye1Path.moveTo(0, 0);
+         s.holes.push(smileyEye1Path);
+
+         var geometry = new THREE.ShapeGeometry( s );
+         var mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { color: "#ff009d"/!*, wireframe: true*!/ } ) );
+         mesh.position.set( 0, 0, 750 );
+         mesh.name = "!!!!!!!!!!!";
+         this.removeObject(this, this.getObjectByName("!!!!!!!!!!!") );
+         this.add( mesh );*/
     }
-
-    var extrudeSettings = {depth: this.heightWall, bevelEnabled: false, steps: 1};
-    this.addShape(inputShape, extrudeSettings, "#9cc2d7", "#39424e", 0, 0, 0, 0, 0, 0, 1, this.updatedWall);
-    this.rebuildWall(this.updatedWall);
-
-    this.mapLinesWalls.set(this.updatedWall.toString(), mainLine);
-   /* var m = new Boolean2D();
-    var x = m.union(this.groupLinesUpdate.children[0].geometry.vertices, this.groupLinesUpdate.children[1].geometry.vertices);
-    var s = new THREE.Shape( x[0] );
-
-    var smileyEye1Path = new THREE.Path(this.groupLinesUpdate.children[1].geometry.vertices);
-    smileyEye1Path.moveTo(0, 0);
-    s.holes.push(smileyEye1Path);
-
-    var geometry = new THREE.ShapeGeometry( s );
-    var mesh = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial( { color: "#ff009d"/!*, wireframe: true*!/ } ) );
-    mesh.position.set( 0, 0, 750 );
-    mesh.name = "!!!!!!!!!!!";
-    this.removeObject(this, this.getObjectByName("!!!!!!!!!!!") );
-    this.add( mesh );*/
-
 };
 
 ControlDesigner.prototype.addEdgeLine = function (object, nameWall) {
