@@ -13,6 +13,7 @@ function ControlDesigner(textureSpritePointScale) {
 
     this.selectedObject = null;
     this.selectedPoint = null;
+    this.hoverOnObject = null;
 
     this.selectedSubtractObject = null;
 
@@ -986,237 +987,160 @@ ControlDesigner.prototype.updateObject = function (object) {
     objectlines.material.needsUpdate = true;
 };
 
-ControlDesigner.prototype.deletePointObject = function (point) {
-
-    transformControl.detach( transformControl.object );
-   /* var arr = object.name.split('_');
-    var num = +arr[0];
-    this.updatedWall = +arr[1];
-    var indexDeleteElement;
-    var position;
-    var objectlines = null;
-    if (this.mapLines.has("line_" + arr[1])) {
-        objectlines = this.mapLines.get("line_" + arr[1]);
+ControlDesigner.prototype.deleteSelectedSubtractObject = function (trControl) {
+    if (trControl.object) {
+        trControl.detach(trControl.object);
     }
-    position = objectlines.geometry.attributes.position.array;
-    var length = position.length / 3;
-    if (num === 0) {
-        var array =  Array.prototype.slice.call(position);
-        array.splice(num * 3, 3);
-        array.splice((length-2) * 3, 3);
+    if (this.selectedSubtractObject) {
+        var arr = this.selectedSubtractObject.name.split('_');
+        this.removeIntersectObjectsArray(this.objects, this.mapSubtract.get(this.selectedSubtractObject.name));
+        this.removeObject(this.groupSubtract, this.mapSubtract.get(this.selectedSubtractObject.name));
+        this.deleteNumSubtract(this.groupSubtract, arr[1], this.selectedSubtractObject.name);
+        this.mapSubtract.delete(this.selectedSubtractObject.name);
 
-        this.removeObject(this.groupPoints, this.mapPointObjects.get(arr[0] + "_" + arr[1]));
-        this.removeIntersectObjectsArray(this.objects, this.mapPointObjects.get(arr[0] + "_" + arr[1]));
-        for (var i = 0; i < this.groupPoints.children.length; i++ ) {
+        if (this.mapSubtractObjects.has(this.selectedSubtractObject.name)) {
+            this.removeIntersectObjectsArray(this.objects, this.mapSubtractObjects.get(this.selectedSubtractObject.name));
+            this.removeObject(this.groupSubtractObjects, this.mapSubtractObjects.get(this.selectedSubtractObject.name));
+            this.mapSubtractObjects.delete(this.selectedSubtractObject.name);
+            this.rebuildWall(arr[1]);
+        }
+
+        this.selectedSubtractObject = null;
+        this.removeObject(this.groupProportions, this.mapProportions.get("distance_wall"));
+        this.clearDistanceToPoint();
+    }
+};
+
+ControlDesigner.prototype.deleteSelectedObject = function (trControl) {
+    if (trControl.object) {
+        trControl.detach(trControl.object);
+    }
+    if (this.selectedObject) {
+        var arr = this.selectedObject.name.split('_');
+
+        this.removeIntersectObjectsArray(this.objects, this.mapWallsCup.get("wallsCup_" + arr[1]));
+        this.removeIntersectObjectsArray(this.objects, this.mapWalls.get("walls_" + arr[1]));
+
+        this.removeObject(this.groupExtrude, this.mapWalls.get("walls_" + arr[1]));
+        this.removeObject(this.groupPlane, this.mapWallsCup.get("wallsCup_" + arr[1]));
+        this.removeObject(this.groupLinesUpdate, this.mapLines.get("line_" + arr[1]));
+
+
+        for (var i = this.groupPoints.children.length - 1; i > -1; i--) {
             var name = this.groupPoints.children[i].name;
-
-            var arr = name.split('_');
-            if (+arr[1] === this.updatedWall) {
-                if (+arr[0] === num) {
-                    indexDeleteElement = i;
-                } else if (+arr[0] > num) {
-                    var n = +arr[0];
-                    n--;
-                    if (n < 0) {
-                        n = 0
-                    }
-                    this.mapPointObjects.delete(this.groupPoints.children[i].name);
-                    this.groupPoints.children[i].name = n.toString() + "_" + arr[1];
-                    this.mapPointObjects.set(this.groupPoints.children[i].name, this.groupPoints.children[i]);
-                }
+            var a = name.split('_');
+            if (a[1] === arr[1]) {
+                this.removeIntersectObjectsArray(this.objects, this.mapPointObjects.get(this.groupPoints.children[i].name));
+                this.removeObject(this.groupPoints, this.mapPointObjects.get(this.groupPoints.children[i].name));
+                this.removeObject(this.groupProportions, this.mapProportions.get(this.groupProportions.children[i].name));
             }
         }
-        position[(length-1) * 3 + 0] = array[0];
-        position[(length-1) * 3 + 1] = array[1];
-        position[(length-1) * 3 + 2] = array[2];
-    } else {
-        var array =  Array.prototype.slice.call(position);
-        array.splice(num * 3, 3);
-
-        this.removeObject(this.groupPoints, this.mapPointObjects.get(object.name));
-        this.removeIntersectObjectsArray(this.objects, this.mapPointObjects.get(arr[0] + "_" + arr[1]));
-        for (var i = 0; i < this.groupPoints.children.length; i++ ) {
-            var name = this.groupPoints.children[i].name;
-
-            var arr = name.split('_');
-            if (+arr[1] === this.updatedWall) {
-                if (+arr[0] === num) {
-                    indexDeleteElement = i;
-                } else if (+arr[0] > num) {
-                    var n = +arr[0];
-                    n--;
-                    if (n < 0) {
-                        n = 0
-                    }
-                    this.mapPointObjects.delete(this.groupPoints.children[i].name);
-                    this.groupPoints.children[i].name = n.toString() + "_" + arr[1];
-                    this.mapPointObjects.set(this.groupPoints.children[i].name, this.groupPoints.children[i]);
-                }
-            }
-        }
-
-    }
-
-    if (length > 3) {
-        this.removeObject(this.groupProportions, this.mapProportions.get((length - 2).toString() + "_" + this.updatedWall.toString()));
-        this.mapProportions.delete((length - 2).toString() + "_" + this.updatedWall.toString());
-    } else {
-        this.removeObject(this.groupProportions, this.mapProportions.get("0_" + this.updatedWall.toString()));
-        this.mapProportions.delete("0_" + this.updatedWall.toString());
-
-        this.removeObject(this.groupProportions, this.mapProportions.get("1_" + this.updatedWall.toString()));
-        this.mapProportions.delete("1_" + this.updatedWall.toString());
-    }
-
-    position[(length-2) * 3 + 0] = array[0];
-    position[(length-2) * 3 + 1] = array[1];
-    position[(length-2) * 3 + 2] = array[2];
-
-    var lengthArray = array.length/3;
-    for (var i = 0; i < lengthArray; i++ ) {
-
-        position[i * 3 + 0] = array[i * 3 + 0];
-        position[i * 3 + 1] = array[i * 3 + 1];
-        position[i * 3 + 2] = array[i * 3 + 2];
-
-        if (lengthArray > 1) {
-            if (i === 0) {
-                this.removeObject(this.groupProportions, this.mapProportions.get(i.toString() + "_" + this.updatedWall.toString()));
-                var end = new THREE.Vector2(position[(i + 1) * 3 + 0], position[(i + 1) * 3 + 1], position[(i + 1) * 3 + 2]);
-                var start = new THREE.Vector2(position[i * 3 + 0], position[i * 3 + 1], position[i * 3 + 2]);
-                this.positionProportions(start, end, i, this.updatedWall.toString());
-
-                this.removeObject(this.groupProportions, this.mapProportions.get((lengthArray - 2).toString() + "_" + this.updatedWall.toString()));
-                var start = new THREE.Vector2(position[(lengthArray - 2) * 3 + 0], position[(lengthArray - 2) * 3 + 1], position[(lengthArray - 2) * 3 + 2]);
-                var end = new THREE.Vector2(position[i * 3 + 0], position[i * 3 + 1], position[i * 3 + 2]);
-                this.positionProportions(start, end, (lengthArray - 2), this.updatedWall.toString());
-
-            } else {
-                this.removeObject(this.groupProportions, this.mapProportions.get(i.toString() + "_" + this.updatedWall.toString()));
-                var end = new THREE.Vector2(position[(i + 1) * 3 + 0], position[(i + 1) * 3 + 1], position[(i + 1) * 3 + 2]);
-                var start = new THREE.Vector2(position[i * 3 + 0], position[i * 3 + 1], position[i * 3 + 2]);
-                this.positionProportions(start, end, i, this.updatedWall.toString());
-
-                this.removeObject(this.groupProportions, this.mapProportions.get((i - 1).toString() + "_" + this.updatedWall.toString()));
-                var start = new THREE.Vector2(position[(i - 1) * 3 + 0], position[(i - 1) * 3 + 1], position[(i - 1) * 3 + 2]);
-                var end = new THREE.Vector2(position[i * 3 + 0], position[i * 3 + 1], position[i * 3 + 2]);
-                this.positionProportions(start, end, i - 1, this.updatedWall.toString());
-            }
-        }
-    }
-
-    objectlines.geometry.attributes.position.needsUpdate = true;
-
-    this.mapX.delete(Math.round(object.position.x));
-    this.mapY.delete(Math.round(object.position.y));
-
-    if (array.length) {
-        this.updateExtrudePath(position);
-    }
-    if (!array.length) {
-        this.removeObject(this.groupExtrude, this.mapWalls.get("walls_" + this.updatedWall.toString()));
-        this.removeObject(this.groupPlane, this.mapWallsCup.get("wallsCup_" + this.updatedWall.toString()));
-        this.removeObject(this.groupLinesUpdate, this.mapLines.get("line_" + this.updatedWall.toString()));
-
-        this.removeIntersectObjectsArray(this.objects, this.mapWallsCup.get("wallsCup_" + this.updatedWall.toString()));
-        this.removeIntersectObjectsArray(this.objects, this.mapWalls.get("walls_" + this.updatedWall.toString()));
-        this.removeIntersectObjectsArray(this.objects, this.mapPointObjects.get("0_0"));
+        this.selectedObject = null;
         this.clearMap();
-    }*/
-    var namePoint = point.name.split('_')[1];
-    var arr = namePoint.split('-');
-    var nameLine = arr[0];
-    var nameVertex = +arr[1];
-    var index = nameVertex === 0 ? 0 : nameVertex-1;
-    var object = this.groupLinesUpdate.getObjectByName("line_" + this.updatedWall + "-" + nameLine);
-    var mainLine = this.mapLinesWalls.get(this.updatedWall.toString());
+    }
+};
 
-    if (object.geometry.vertices.length > 4) {
+ControlDesigner.prototype.deletePointObject = function (trControl) {
+    if (this.groupPoints.children.length && trControl.object) {
+        var point = trControl.object;
+        trControl.detach(trControl.object);
 
-        var indexMain = mainLine.findIndex(obj => obj.x === object.geometry.vertices[nameVertex].x && obj.y === object.geometry.vertices[nameVertex].y);
-        if (indexMain >= 0) {
-            mainLine.splice(indexMain, 1);
-        }
-        object.geometry.vertices.splice(nameVertex, 1);
-        var indexIn = undefined;
-        this.removeObject(this.groupPoints, this.mapPointObjects.get(point.name));
-        this.removeIntersectObjectsArray(this.objects, this.mapPointObjects.get(point.name));
-        this.mapPointObjects.delete(point.name);
-        for (var i = 0; i < this.groupPoints.children.length; i++) {
-            var nameP = this.groupPoints.children[i].name.split('_')[1].split('-');
-            if (nameP[0] === nameLine) {
-                if (indexIn === undefined) {
-                    indexIn = i;
-                }
-                if (+nameP[1] >= nameVertex-1) {
-                    this.mapPointObjects.delete(this.groupPoints.children[i].name);
-                    this.groupPoints.children[i].name = this.updatedWall + "_" + nameLine + "-" + index;
-                    this.mapPointObjects.set(this.groupPoints.children[i].name, this.groupPoints.children[i]);
+        var namePoint = point.name.split('_')[1];
+        var arr = namePoint.split('-');
+        var nameLine = arr[0];
+        var nameVertex = +arr[1];
+        var index = nameVertex === 0 ? 0 : nameVertex - 1;
+        var object = this.groupLinesUpdate.getObjectByName("line_" + this.updatedWall + "-" + nameLine);
+        var mainLine = this.mapLinesWalls.get(this.updatedWall.toString());
 
-                    var endPoint = new THREE.Vector2();
-                    if ((i + 1) < this.groupPoints.children.length) {
-                        var namePnext = this.groupPoints.children[i + 1].name.split('_')[1].split('-');
-                        if (namePnext[0] === nameLine) {
-                            endPoint.set(this.groupPoints.children[i + 1].position.x, this.groupPoints.children[i + 1].position.y);
+        if (object.geometry.vertices.length > 4) {
+
+            var indexMain = mainLine.findIndex(obj => obj.x === object.geometry.vertices[nameVertex].x && obj.y === object.geometry.vertices[nameVertex].y);
+            if (indexMain >= 0) {
+                mainLine.splice(indexMain, 1);
+            }
+            object.geometry.vertices.splice(nameVertex, 1);
+            var indexIn = undefined;
+            this.removeObject(this.groupPoints, this.mapPointObjects.get(point.name));
+            this.removeIntersectObjectsArray(this.objects, this.mapPointObjects.get(point.name));
+            this.mapPointObjects.delete(point.name);
+            for (var i = 0; i < this.groupPoints.children.length; i++) {
+                var nameP = this.groupPoints.children[i].name.split('_')[1].split('-');
+                if (nameP[0] === nameLine) {
+                    if (indexIn === undefined) {
+                        indexIn = i;
+                    }
+                    if (+nameP[1] >= nameVertex - 1) {
+                        this.mapPointObjects.delete(this.groupPoints.children[i].name);
+                        this.groupPoints.children[i].name = this.updatedWall + "_" + nameLine + "-" + index;
+                        this.mapPointObjects.set(this.groupPoints.children[i].name, this.groupPoints.children[i]);
+
+                        var endPoint = new THREE.Vector2();
+                        if ((i + 1) < this.groupPoints.children.length) {
+                            var namePnext = this.groupPoints.children[i + 1].name.split('_')[1].split('-');
+                            if (namePnext[0] === nameLine) {
+                                endPoint.set(this.groupPoints.children[i + 1].position.x, this.groupPoints.children[i + 1].position.y);
+                            } else {
+                                endPoint.set(this.groupPoints.children[indexIn].position.x, this.groupPoints.children[indexIn].position.y);
+                            }
                         } else {
-                            endPoint.set(this.groupPoints.children[indexIn].position.x, this.groupPoints.children[indexIn].position.y);
+                            var namePnext = this.groupPoints.children[0].name.split('_')[1].split('-');
+                            if (namePnext[0] === nameLine) {
+                                endPoint.set(this.groupPoints.children[0].position.x, this.groupPoints.children[0].position.y);
+                            } else {
+                                endPoint.set(this.groupPoints.children[indexIn].position.x, this.groupPoints.children[indexIn].position.y);
+                            }
                         }
-                    } else {
-                        var namePnext = this.groupPoints.children[0].name.split('_')[1].split('-');
-                        if (namePnext[0] === nameLine) {
-                            endPoint.set(this.groupPoints.children[0].position.x, this.groupPoints.children[0].position.y);
-                        } else {
-                            endPoint.set(this.groupPoints.children[indexIn].position.x, this.groupPoints.children[indexIn].position.y);
-                        }                    }
-                    this.positionProportions(
+                        this.positionProportions(
                             new THREE.Vector2(this.groupPoints.children[i].position.x, this.groupPoints.children[i].position.y),
                             endPoint,
                             nameLine + "/" + index, this.updatedWall);
-                    index++;
+                        index++;
+                    }
                 }
             }
-        }
 
-      this.removeObject(this.groupProportions, this.mapProportions.get(nameLine + "/" + index + "_" +  this.updatedWall));
-      this.mapProportions.delete(nameLine + "/" + index + "_" +  this.updatedWall);
+            this.removeObject(this.groupProportions, this.mapProportions.get(nameLine + "/" + index + "_" + this.updatedWall));
+            this.mapProportions.delete(nameLine + "/" + index + "_" + this.updatedWall);
 
-        if (nameVertex === 0) {
-            object.geometry.vertices[object.geometry.vertices.length - 1].copy(object.geometry.vertices[0]);
-        }
-
-        this.mapX.delete(Math.round(point.position.x));
-        this.mapY.delete(Math.round(point.position.y));
-
-        object.geometry.verticesNeedUpdate = true;
-        object.geometry._bufferGeometry.setDrawRange(0, object.geometry.vertices.length);
-        object.geometry._bufferGeometry.attributes.position.needsUpdate = true;
-    } else {
-        var iter = 0;
-        var length = this.groupPoints.children.length;
-        while (iter < length) {
-            if (this.mapPointObjects.has(this.updatedWall + "_" + nameLine + "-" + iter)) {
-                var obj = this.mapPointObjects.get(this.updatedWall + "_" + nameLine + "-" + iter);
-                this.removeObject(this.groupPoints, obj);
-                this.removeIntersectObjectsArray(this.objects, obj);
-                this.removeObject(this.groupProportions, this.mapProportions.get(nameLine + "/" + iter + "_" +  this.updatedWall));
-                this.mapPointObjects.delete(obj.name);
-                var indexMain = mainLine.findIndex(obj => obj.x === object.geometry.vertices[iter].x && obj.y === object.geometry.vertices[iter].y);
-                if (indexMain >= 0) {
-                    mainLine.splice(indexMain, 1);
-                }
-                indexMain = mainLine.findIndex(obj => obj.x === object.geometry.vertices[iter].x && obj.y === object.geometry.vertices[iter].y);
-                if (indexMain >= 0) {
-                    mainLine.splice(indexMain, 1);
-                }
+            if (nameVertex === 0) {
+                object.geometry.vertices[object.geometry.vertices.length - 1].copy(object.geometry.vertices[0]);
             }
-            iter++;
+
+            this.mapX.delete(Math.round(point.position.x));
+            this.mapY.delete(Math.round(point.position.y));
+
+            object.geometry.verticesNeedUpdate = true;
+            object.geometry._bufferGeometry.setDrawRange(0, object.geometry.vertices.length);
+            object.geometry._bufferGeometry.attributes.position.needsUpdate = true;
+        } else {
+            var iter = 0;
+            var length = this.groupPoints.children.length;
+            while (iter < length) {
+                if (this.mapPointObjects.has(this.updatedWall + "_" + nameLine + "-" + iter)) {
+                    var obj = this.mapPointObjects.get(this.updatedWall + "_" + nameLine + "-" + iter);
+                    this.removeObject(this.groupPoints, obj);
+                    this.removeIntersectObjectsArray(this.objects, obj);
+                    this.removeObject(this.groupProportions, this.mapProportions.get(nameLine + "/" + iter + "_" + this.updatedWall));
+                    this.mapPointObjects.delete(obj.name);
+                    var indexMain = mainLine.findIndex(obj => obj.x === object.geometry.vertices[iter].x && obj.y === object.geometry.vertices[iter].y);
+                    if (indexMain >= 0) {
+                        mainLine.splice(indexMain, 1);
+                    }
+                    indexMain = mainLine.findIndex(obj => obj.x === object.geometry.vertices[iter].x && obj.y === object.geometry.vertices[iter].y);
+                    if (indexMain >= 0) {
+                        mainLine.splice(indexMain, 1);
+                    }
+                }
+                iter++;
+            }
+            this.removeObject(this.groupLinesUpdate, this.mapLines.get("line_" + this.updatedWall + "-" + nameLine));
         }
-        this.removeObject(this.groupLinesUpdate, this.mapLines.get("line_" + this.updatedWall + "-" + nameLine));
+
+        this.mapLinesWalls.set(this.updatedWall.toString(), mainLine);
+
+        this.updateExtrudePathX();
     }
-
-    this.mapLinesWalls.set(this.updatedWall.toString(), mainLine);
-
-    this.updateExtrudePathX();
 };
                 // help lines
 ControlDesigner.prototype.addHelperLine = function () {
@@ -2021,6 +1945,11 @@ ControlDesigner.prototype.updateExtrudePathX = function () {
           console.log("pathPts", pathPts);
           this.createCup_alternative(pathPts, mainLine);*/
     if (this.groupLinesUpdate.children.length) {
+        this.groupProportions.children = [];
+        /*for (var i = this.groupProportions.children.length-1; i >= 0; i--) {
+            this.mapPointObjects.delete(this.groupProportions.children[i].name);
+            this.removeObject(this.groupProportions, this.groupProportions.children[i]);
+        }*/
         var mainLine = [];
         var inputShape = new THREE.Shape(this.groupLinesUpdate.children[0].geometry.vertices);
 
@@ -2796,6 +2725,22 @@ ControlDesigner.prototype.unselectSubtractObject = function (object) {
     }
 };
 
+ControlDesigner.prototype.hoverOffPointObject = function (point) {
+    if (point && point !== this.selectedPoint) {
+        point.scale.set(10, 10, 1);
+        point.material.color = new THREE.Color("#d2faff");
+        point = null;
+    }
+};
+
+ControlDesigner.prototype.hoverOnPointObject = function (point) {
+    if (point && point !== this.selectedPoint) {
+        this.hoverOnObject = point;
+        point.scale.set(20, 20, 1);
+        point.material.color = new THREE.Color("#ff9183");
+    }
+};
+
 ControlDesigner.prototype.unselectPointObject = function (point) {
     if (point) {
         point.scale.set(10, 10, 1);
@@ -2805,8 +2750,9 @@ ControlDesigner.prototype.unselectPointObject = function (point) {
 
 ControlDesigner.prototype.selectPointObject = function (point) {
     if (point) {
+        this.hoverOffPointObject(this.hoverOnObject);
         point.scale.set(20, 20, 1);
-        point.material.color = new THREE.Color("#ff9183");
+        point.material.color = new THREE.Color("#00ff4b");
     }
 };
 

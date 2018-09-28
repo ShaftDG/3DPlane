@@ -185,87 +185,30 @@ function setTransformControls() {
     transformControl.showX = false;
     transformControl.showY = false;
     transformControl.showZ = false;
-    // transformControl.addEventListener( 'change', render );
+
     transformControl.setSize( transformControl.size * 0.5 );
     scene.add( transformControl );
-    // Hiding transform situation is a little in a mess :()
-    /* transformControl.addEventListener( 'change', function( e ) {
-         cancelHideTransorm();
-     } );
-     transformControl.addEventListener( 'mouseDown', function( e ) {
-         cancelHideTransorm();
-     } );
-     transformControl.addEventListener( 'mouseUp', function( e ) {
-         delayHideTransform();
-         var index = 0;
-         for (var i = 0; i < groupLinesUpdate.children.length; i++) {
-             if (groupLinesUpdate.children[i].name === "line_" + updatedWall.toString()) {
-                 index = i;
-                 i = groupLinesUpdate.children.length;
-             }
-         }
-         updateExtrudePath(groupLinesUpdate.children[index].geometry.attributes.position.array);
-     } );
-     transformControl.addEventListener( 'objectChange', function( e ) {
-         // console.log(transformControl.object.name);
-         updateObject(transformControl.object);
-     } );*/
 
     var arrObjects = designer.groupPoints.children;
     var dragcontrols = new THREE.DragControls( arrObjects, camera, renderer.domElement ); //
     dragcontrols.enabled = true;
     dragcontrols.addEventListener( 'hoveron', function ( event ) {
-        transformControl.attach( event.object );
-        designer.selectPointObject(transformControl.object);
-        /*
-                selectedObject = null;
-                for (var i = 0; i < groupLinesUpdate.children.length; i++) {
-                    groupLinesUpdate.children[i].material.color = new THREE.Color("#d70003");
-                }
-                for (var i = 0; i < objects.length; i++) {
-                    if (objects[i].name.split('_')[0] === "wallsCup") {
-                        objects[i].material.color = new THREE.Color("#9cc2d7");
-                    }
-                }*/
-        // cancelHideTransorm();
+        designer.hoverOnPointObject(event.object);
     } );
     dragcontrols.addEventListener( 'hoveroff', function ( event ) {
-        if (transformControl.object !== designer.selectedPoint && transformControl.object) {
-            designer.unselectPointObject(transformControl.object);
-            transformControl.detach(transformControl.object);
-        }
-        // delayHideTransform();
+            designer.hoverOffPointObject(designer.hoverOnObject);
     } );
     dragcontrols.addEventListener( 'drag', function ( event ) {
-
        designer.updateHelperLines(transformControl.object); ////////////!!!!!!!!!!!!!!!
       //  designer.updateObject(transformControl.object); ////////////!!!!!!!!!!!!!!!
         drag();
     } );
     dragcontrols.addEventListener( 'dragend', dragEnd );
-    dragcontrols.addEventListener( 'dragstart', function( e ) {
-        if (designer.selectedPoint !== transformControl.object && designer.selectedPoint) {
-            designer.unselectPointObject(designer.selectedPoint);
-            designer.selectedPoint = null;
-        }
-
-        // designer.mapX.delete(Math.round(transformControl.object.position.x));
-        // designer.mapY.delete(Math.round(transformControl.object.position.y));
+    dragcontrols.addEventListener( 'dragstart', function( event ) {
+        transformControl.attach( event.object );
+        designer.selectPointObject(transformControl.object);
     } );
 
-    /* var hiding;
-     function delayHideTransform() {
-         cancelHideTransorm();
-         hideTransform();
-     }
-     function hideTransform() {
-         hiding = setTimeout( function() {
-             transformControl.detach( transformControl.object );
-         }, 2500 )
-     }
-     function cancelHideTransorm() {
-         if ( hiding ) clearTimeout( hiding );
-     }*/
 }
 
 function drag( event ) {
@@ -273,7 +216,7 @@ function drag( event ) {
 }
 
 function dragEnd( event ) {
-    designer.updateExtrudePathX(transformControl.object);
+    designer.updateExtrudePathX();
     designer.lineHorizontal.visible = false;
     designer.lineVertical.visible = false;
 
@@ -617,53 +560,12 @@ function onKeyDown ( event ) {
             break;
         case 46: // delete
             if (designer.selectedObject) {
-                if (transformControl.object) {
-                    transformControl.detach(transformControl.object);
-                }
-                var arr = designer.selectedObject.name.split('_');
-
-                designer.removeIntersectObjectsArray(designer.objects, designer.mapWallsCup.get("wallsCup_" + arr[1]));
-                designer.removeIntersectObjectsArray(designer.objects, designer.mapWalls.get("walls_" + arr[1]));
-
-                designer.removeObject(designer.groupExtrude, designer.mapWalls.get("walls_" + arr[1]));
-                designer.removeObject(designer.groupPlane, designer.mapWallsCup.get("wallsCup_" + arr[1]));
-                designer.removeObject(designer.groupLinesUpdate, designer.mapLines.get("line_" + arr[1]));
-
-
-                for (var i = designer.groupPoints.children.length-1; i > -1; i--) {
-                    var name = designer.groupPoints.children[i].name;
-                    var a = name.split('_');
-                    if (a[1] === arr[1]) {
-                        designer.removeIntersectObjectsArray(designer.objects, designer.mapPointObjects.get(designer.groupPoints.children[i].name));
-                        designer.removeObject(designer.groupPoints, designer.mapPointObjects.get(designer.groupPoints.children[i].name));
-                        designer.removeObject(designer.groupProportions, designer.mapProportions.get(designer.groupProportions.children[i].name));
-                    }
-                }
-                designer.selectedObject = null;
-                designer.clearMap ();
+                designer.deleteSelectedObject(transformControl);
             } else  if (designer.selectedSubtractObject) {
-                if (transformControl.object) {
-                    transformControl.detach(transformControl.object);
-                }
-                var arr = designer.selectedSubtractObject.name.split('_');
-                designer.removeIntersectObjectsArray(designer.objects, designer.mapSubtract.get(designer.selectedSubtractObject.name));
-                designer.removeObject(designer.groupSubtract, designer.mapSubtract.get(designer.selectedSubtractObject.name));
-                designer.deleteNumSubtract(designer.groupSubtract, arr[1], designer.selectedSubtractObject.name);
-                designer.mapSubtract.delete(designer.selectedSubtractObject.name);
-
-                if (designer.mapSubtractObjects.has(designer.selectedSubtractObject.name)) {
-                    designer.removeIntersectObjectsArray(designer.objects, designer.mapSubtractObjects.get(designer.selectedSubtractObject.name));
-                    designer.removeObject(designer.groupSubtractObjects, designer.mapSubtractObjects.get(designer.selectedSubtractObject.name));
-                    designer.mapSubtractObjects.delete(designer.selectedSubtractObject.name);
-                    designer.rebuildWall(arr[1]);
-                }
-
-                designer.selectedSubtractObject = null;
-                designer.removeObject(designer.groupProportions, designer.mapProportions.get("distance_wall"));
-                designer.clearDistanceToPoint();
+                designer.deleteSelectedSubtractObject(transformControl);
             } else {
                 if (designer.groupPoints.children.length && transformControl.object) {
-                    designer.deletePointObject(transformControl.object);
+                    designer.deletePointObject(transformControl);
                 }
             }
             break;
