@@ -1406,10 +1406,10 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
                    D1 = (pathPts[j + 1].x - pX[0].x) * (pX[1].y - pX[0].y) - (pathPts[j + 1].y - pX[0].y) * (pX[1].x - pX[0].x);
                 }
                 if (!p1Intersections) {
-                    p1Intersections = this.pointInsideThePolygon(points, pX[0]);
+                    p1Intersections = this.pointInsideThePolygon(points, pX[0], true);
                 }
                 if (!p2Intersections) {
-                    p2Intersections = this.pointInsideThePolygon(points, pX[1]);
+                    p2Intersections = this.pointInsideThePolygon(points, pX[1], true);
                 }
                 // console.log("cross", cross);
                 if (cross && cross.overlapping) {
@@ -1683,10 +1683,11 @@ ControlDesigner.prototype.createCup_alternative = function (pathPts, mainLine) {
 ControlDesigner.prototype.updateCup_alternative = function (outPol, inPol) {
     var counterСlockwiseMap = new Map();
     var bufferMap = new Map();
+    var intersectionsInPolMap = new Map();
     var indexPointBegin = 0;
     var lengthPointBegin = 0;
     var indexFirstIntersection = null;
-    var indexLastIntersection = null;
+    var groupTotalCross = [];
     for (var i = 0; i < outPol.length; i++) {
 
         var p1Intersections = false, p2Intersections = false;
@@ -1712,27 +1713,43 @@ ControlDesigner.prototype.updateCup_alternative = function (outPol, inPol) {
         // console.log("!!!!!!!!! - i", i);
         //intersection calculation
         for (var j = 0; j < inPol.length; j++) {
-
-                // console.log("j", j);
-
+            // console.log("j", j);
             var points = [];
             var D = (inPol[j].x - pX[0].x) * (pX[1].y - pX[0].y) - (inPol[j].y - pX[0].y) * (pX[1].x - pX[0].x);
             var D1, cross;
             if (j === inPol.length - 1) {
+                if (!intersectionsInPolMap.has(j)) {
+                    intersectionsInPolMap.set(j,
+                        {
+                            arr: [inPol[j], inPol[0]],
+                            p1Intersections: this.pointInsideThePolygon(outPol, inPol[j], false),
+                            p2Intersections: this.pointInsideThePolygon(outPol, inPol[0], false)
+                        }
+                    );
+                }
                 cross = this.crossSectionX(pX[0], pX[1], inPol[j], inPol[0]);
                 points = [inPol[0], inPol[1], inPol[j - 1], inPol[j]];
                 D1 = (inPol[0].x - pX[0].x) * (pX[1].y - pX[0].y) - (inPol[0].y - pX[0].y) * (pX[1].x - pX[0].x);
             } else {
+                if (!intersectionsInPolMap.has(j)) {
+                    intersectionsInPolMap.set(j,
+                        {
+                            arr: [inPol[j], inPol[j + 1]],
+                            p1Intersections: this.pointInsideThePolygon(outPol, inPol[j], false),
+                            p2Intersections: this.pointInsideThePolygon(outPol, inPol[j+1], false)
+                        }
+                    );
+                }
                 cross = this.crossSectionX(pX[0], pX[1], inPol[j], inPol[j + 1]);
                 points = [inPol[j], inPol[j + 1], inPol[inPol.length - j - 2], inPol[inPol.length - j - 1]];
                 D1 = (inPol[j + 1].x - pX[0].x) * (pX[1].y - pX[0].y) - (inPol[j + 1].y - pX[0].y) * (pX[1].x - pX[0].x);
             }
 
                 if (!p1Intersections) {
-                    p1Intersections = this.pointInsideThePolygon(points, pX[0]);
+                    p1Intersections = this.pointInsideThePolygon(inPol, pX[0], true);
                 }
                 if (!p2Intersections) {
-                    p2Intersections = this.pointInsideThePolygon(points, pX[1]);
+                    p2Intersections = this.pointInsideThePolygon(inPol, pX[1], true);
                 }
                 // console.log("cross", cross);
                 if (cross && cross.overlapping) {
@@ -1741,17 +1758,6 @@ ControlDesigner.prototype.updateCup_alternative = function (outPol, inPol) {
                     }
                     indexLastIntersection = j;
                     var point = new THREE.Vector2(cross.x, cross.y);
-
-                    if (Math.round(D) > 0) {
-                        bufferMap.set(Math.round(inPol[j].x) + "-" + Math.round(inPol[j].y), point);
-                    } else {
-                        if (j !== inPol.length - 1) {
-                            bufferMap.set(Math.round(point.x) + "-" + Math.round(point.y), inPol[j + 1]);
-                        } else {
-                            bufferMap.set(Math.round(point.x) + "-" + Math.round(point.y), inPol[0]);
-                        }
-                    }
-
                     if (
                         (Math.round(point.x) === Math.round(pX[0].x) && Math.round(point.y) === Math.round(pX[0].y)) ||
                         (Math.round(point.x) === Math.round(pX[1].x) && Math.round(point.y) === Math.round(pX[1].y))
@@ -1769,6 +1775,30 @@ ControlDesigner.prototype.updateCup_alternative = function (outPol, inPol) {
                     } else {
                         if (Math.round(D) > 0 || Math.round(D1) > 0) {
                             groupCross.push(point);
+                            var line = intersectionsInPolMap.get(j);
+                            var tempArr = line.arr;
+                            tempArr.splice(-1, 0, point);
+
+                            if (tempArr.length > 3) {
+                                console.log("tempArr", tempArr);
+                                for (var g = tempArr.length-2; g > 0; g--) {
+                                    var lengthA = new THREE.Vector2().subVectors(tempArr[0], tempArr[g - 1]).length();
+                                    var lengthB = new THREE.Vector2().subVectors(tempArr[0], tempArr[g]).length();
+
+                                    if (lengthA > lengthB) {
+                                        console.log("lengthA", g-1);
+                                        console.log("lengthB", g);
+                                        var tmp = tempArr[g - 1];
+                                        tempArr[g - 1] = tempArr[g];
+                                        tempArr[g] = tmp;
+                                    } else if (lengthA === lengthB) {
+                                        tempArr.splice(g, 1);
+                                    }
+                                }
+                            }
+                            line.arr = tempArr;
+                            intersectionsInPolMap.set(j, line);
+                            groupTotalCross.push(point);
                         }
                         if (cross.startOn) {
                             p1Intersections = true;
@@ -1786,14 +1816,13 @@ ControlDesigner.prototype.updateCup_alternative = function (outPol, inPol) {
                         p1Intersections = true;
                         p2Intersections = true;
                     }
-                    if (cross.commonVertexStart /*&& j !== i + 1 && j !== 0 && j !== i - 1  && j !== inPol.length - 1*/) {
+                    if (cross.commonVertexStart) {
                         p1Intersections = true;
                     }
-                    if (cross.commonVertexEnd /*&& j !== i + 1 && j !== 0 && j !== i - 1 && j !== inPol.length - 1*/) {
+                    if (cross.commonVertexEnd) {
                         p2Intersections = true;
                     }
                 }
-
 
             //sort points intersection
             if (groupCross.length > 2) {
@@ -1809,34 +1838,13 @@ ControlDesigner.prototype.updateCup_alternative = function (outPol, inPol) {
                         groupCross.splice(g, 1);
                     }
                 }
-
             }
-
         }
 
         groupCross.push(pX[1]);
-
         // console.log("groupCross", groupCross);
         // console.log("p1Intersections", p1Intersections);
         // console.log("p2Intersections", p2Intersections);
-
-        //sort points intersection
-        /* for (var k = 1; k < groupCross.length; k++) {
-             for (var g = k; g > 0; g--) {
-                 var lengthA = new THREE.Vector2().subVectors(groupCross[0], groupCross[g - 1]).length();
-                 var lengthB = new THREE.Vector2().subVectors(groupCross[0], groupCross[g]).length();
-
-                 if (lengthA > lengthB) {
-                     var tmp = groupCross[g - 1];
-                     groupCross[g - 1] = groupCross[g];
-                     groupCross[g] = tmp;
-                 } else if (lengthA === lengthB) {
-                     groupCross.splice(g, 1);
-                  //   groupCross.splice(g-1, 1);
-                 }
-             }
-         }*/
-
         if (groupCross.length % 2 !== 0) {
             if (p1Intersections && p2Intersections) {
                 groupCross.splice(0, 1);
@@ -1856,7 +1864,6 @@ ControlDesigner.prototype.updateCup_alternative = function (outPol, inPol) {
             }
         }
         // console.log("groupCross", groupCross);
-
         // construct graph
         for (var k = 0; k < groupCross.length; k += 2) {
             if ( groupCross[k] && groupCross[k + 1] ) {
@@ -1867,9 +1874,21 @@ ControlDesigner.prototype.updateCup_alternative = function (outPol, inPol) {
             }
         }
     }
-
+    // console.log("intersectionsInPolMap", intersectionsInPolMap);
+    for (var j = 0; j < inPol.length; j++) {
+        var line = intersectionsInPolMap.get(j);
+        var arr = line.arr;
+            if (!line.p1Intersections) {
+                arr.splice(0, 1);
+            }
+            if (!line.p2Intersections) {
+                arr.splice(-1, 1);
+            }
+        for (var h = 0; h < arr.length; h+=2) {
+            bufferMap.set(Math.round(arr[h].x) + "-" + Math.round(arr[h].y), arr[h+1]);
+        }
+    }
     // path polygons calculation
-    // var firstPath = true;
     var beginPoint = outPol[indexPointBegin];
     var pOut = [];
     // console.log("counterСlockwiseMap", counterСlockwiseMap);
@@ -1882,70 +1901,49 @@ ControlDesigner.prototype.updateCup_alternative = function (outPol, inPol) {
             begin = beginPoint;
             beginPoint = null;
         }
-        var mesh = new THREE.Mesh(new THREE.SphereGeometry(10), new THREE.MeshBasicMaterial({color: "#00ff1c", transparent: true}));
-        mesh.position.x = begin.x;
-        mesh.position.y = begin.y;
-        mesh.position.z = 800;
-        this.add(mesh);
-        p.push(begin);
-        console.log("begin", begin);
+        if (counterСlockwiseMap.has(Math.round(begin.x) + "-" + Math.round(begin.y))) {
+            p.push(begin);
+        } else {
+            begin = bufferMap.entries().next().value[1];
+            p.push(begin);
+        }
+        // console.log("begin", begin);
         var current = counterСlockwiseMap.get(Math.round(begin.x) + "-" + Math.round(begin.y));
-
-        var shape = new THREE.Shape( [begin, current] );
-        var points = shape.getPoints();
-        var geometryPoints = new THREE.Geometry().setFromPoints( points );
-        // solid this.line
-        var line = new THREE.Line( geometryPoints, new THREE.LineBasicMaterial( { color: "#001aff", linewidth: 10, transparent: true } ) );
-        line.frustumCulled = false;
-        line.position.set( 0,0,720 );
-        line.name = "!!!!!!!!Begin";
-        this.add( line );
-
         if (current === undefined) {
             current = bufferMap.get(Math.round(begin.x) + "-" + Math.round(begin.y));
             bufferMap.delete(Math.round(begin.x) + "-" + Math.round(begin.y));
         }
+                var shape = new THREE.Shape( [begin, current] );
+                var points = shape.getPoints();
+                var geometryPoints = new THREE.Geometry().setFromPoints( points );
+                // solid this.line
+                var line = new THREE.Line( geometryPoints, new THREE.LineBasicMaterial( { color: "#001aff", linewidth: 10, transparent: true } ) );
+                line.frustumCulled = false;
+                line.position.set( 0,0,720 );
+                line.name = "!!!!!!!!Begin";
+                this.add( line );
         counterСlockwiseMap.delete(Math.round(begin.x) + "-" + Math.round(begin.y));
         // var index = 0;
         do {
-            //optimize points
-            /* var lengthA = new THREE.Vector2().subVectors(p[p.length-1], current).length();
-             if (Math.round(lengthA) >= 5 ) {
-                 p.push(current);
-             } else {
-                 if (p[p.length-1].x === current.x) {
-                     var lengthB = new THREE.Vector2().subVectors(new THREE.Vector2(), current).length();
-                     var lengthC = new THREE.Vector2().subVectors(new THREE.Vector2(), p[p.length-1]).length();
-                     if (lengthB > lengthC ) {
-                         p[p.length-1] = current;
-                     } else {
-
-                     }
-                 }
-             }*/
-            console.log("111111", current);
+            // console.log("111111", current);
             perimeter += new THREE.Vector2().subVectors(p[p.length-1], current).length();
             p.push(current);
-
             // console.log("has", counterСlockwiseMap.has(current.x));
             var tempCurrent = current;
             current = counterСlockwiseMap.get(Math.round(current.x) + "-" + Math.round(current.y));
-
-
-
             if (current === undefined) {
                 current = bufferMap.get(Math.round(tempCurrent.x) + "-" + Math.round(tempCurrent.y));
                 bufferMap.delete(Math.round(tempCurrent.x) + "-" + Math.round(tempCurrent.y));
             }
-            var shape = new THREE.Shape( [tempCurrent, current] );
-            var points = shape.getPoints();
-            var geometryPoints = new THREE.Geometry().setFromPoints( points );
-            // solid this.line
-            var line = new THREE.Line( geometryPoints, new THREE.LineBasicMaterial( { color: "#001aff", linewidth: 10, transparent: true } ) );
-            line.frustumCulled = false;
-            line.position.set( 0,0,720 );
-            line.name = "!!!!!!!!"+counterСlockwiseMap.size;
-            this.add( line );
+                        var shape = new THREE.Shape( [tempCurrent, current] );
+                        var points = shape.getPoints();
+                        var geometryPoints = new THREE.Geometry().setFromPoints( points );
+                        // solid this.line
+                        var line = new THREE.Line( geometryPoints, new THREE.LineBasicMaterial( { color: "#001aff", linewidth: 10, transparent: true } ) );
+                        line.frustumCulled = false;
+                        line.position.set( 0,0,720 );
+                        line.name = "!!!!!!!!"+counterСlockwiseMap.size;
+                        this.add( line );
 
             counterСlockwiseMap.delete(Math.round(tempCurrent.x) + "-" + Math.round(tempCurrent.y));
             // console.log("222222", current);
@@ -1954,32 +1952,16 @@ ControlDesigner.prototype.updateCup_alternative = function (outPol, inPol) {
         while (!begin.equals(current));
         // while (index <= 3);
 
-        // console.log("counterСlockwiseMap", counterСlockwiseMap);
-        // console.log("bufferMap", bufferMap);
-        /*  counterСlockwiseMap.forEach(function (value, key, map) {
-              var mesh = new THREE.Mesh(new THREE.SphereGeometry(10), new THREE.MeshBasicMaterial({color: "#ff00cf", transparent: true}));
-              mesh.position.x = value.x;
-              mesh.position.y = value.y;
-              mesh.position.z = 800;
-              scene.add(mesh);
-          });*/
-
-        // var s = this.areaPolygons(p);
-
         if (perimeter > this.widthWall*7) {
             pOut.push(p);
         }
-        /* if (firstPath && !pOut.length) {
-             pOut.push(p);
-             firstPath = false;
-         }*/
-        // pOut.push(p);
     }
     bufferMap.clear();
     counterСlockwiseMap.clear();
+    intersectionsInPolMap.clear();
     // console.log("pOut", pOut);
 
-  /*  // build out line
+   /* // build out line
     var shape = new THREE.Shape(pOut[0]);
     this.addLineShapeExp( shape, "#001fd7", 0, 50, 0, 0, 0, 0, 1, this.updatedWall, 0 );
     for (var j = 0; j < pOut[0].length; j++) {
@@ -2050,25 +2032,54 @@ ControlDesigner.prototype.areaPolygons = function (points) {
     return s;
 };
 
-ControlDesigner.prototype.pointInsideThePolygon = function (points, pointStart) {
+ControlDesigner.prototype.pointInsideThePolygon = function (points, pointStart, straightLine) {
 
-/*    var v = new THREE.Vector2().subVectors(points[1], points[0]);
-    var w = new THREE.Vector2().subVectors(pointStart, points[0]);
-    var c1 = v.dot(w);
-    var c2 = v.dot(v);*/
-
-    var D = (pointStart.x - points[0].x) * (points[1].y - points[0].y) - (pointStart.y - points[0].y) * (points[1].x - points[0].x);
-    var D1 = (pointStart.x - points[1].x) * (points[2].y - points[1].y) - (pointStart.y - points[1].y) * (points[2].x - points[1].x);
-    var D2 = (pointStart.x - points[2].x) * (points[3].y - points[2].y) - (pointStart.y - points[2].y) * (points[3].x - points[2].x);
-    var D3 = (pointStart.x - points[3].x) * (points[0].y - points[3].y) - (pointStart.y - points[3].y) * (points[0].x - points[3].x);
-    // console.log("D", D);
-    // console.log("D1", D1);
-    if (D < 0 && D1 < 0 && D2 < 0 && D3 < 0/*&& c1 >= 0 && c2 >= c1*/) {
-        // console.log("true", true);
-        return true;
-    } else {
-        return false;
-    }
+ if (straightLine) {
+     for (var i = 0; i < points.length; i++) {
+         var triangle = [];
+         var D, D1, D2;
+         if (i === 0) {
+             triangle = [points[points.length - 1], points[i], points[i + 1]];
+             D = (pointStart.x - triangle[0].x) * (triangle[1].y - triangle[0].y) - (pointStart.y - triangle[0].y) * (triangle[1].x - triangle[0].x);
+             D1 = (pointStart.x - triangle[1].x) * (triangle[2].y - triangle[1].y) - (pointStart.y - triangle[1].y) * (triangle[2].x - triangle[1].x);
+             D2 = (pointStart.x - triangle[2].x) * (triangle[0].y - triangle[2].y) - (pointStart.y - triangle[2].y) * (triangle[0].x - triangle[2].x);
+         } else if (i === points.length - 1) {
+             triangle = [points[i - 1], points[i], points[0]];
+             D = (pointStart.x - triangle[0].x) * (triangle[1].y - triangle[0].y) - (pointStart.y - triangle[0].y) * (triangle[1].x - triangle[0].x);
+             D1 = (pointStart.x - triangle[1].x) * (triangle[2].y - triangle[1].y) - (pointStart.y - triangle[1].y) * (triangle[2].x - triangle[1].x);
+             D2 = (pointStart.x - triangle[2].x) * (triangle[0].y - triangle[2].y) - (pointStart.y - triangle[2].y) * (triangle[0].x - triangle[2].x);
+         } else {
+             triangle = [points[i - 1], points[i], points[i + 1]];
+             D = (pointStart.x - triangle[0].x) * (triangle[1].y - triangle[0].y) - (pointStart.y - triangle[0].y) * (triangle[1].x - triangle[0].x);
+             D1 = (pointStart.x - triangle[1].x) * (triangle[2].y - triangle[1].y) - (pointStart.y - triangle[1].y) * (triangle[2].x - triangle[1].x);
+             D2 = (pointStart.x - triangle[2].x) * (triangle[0].y - triangle[2].y) - (pointStart.y - triangle[2].y) * (triangle[0].x - triangle[2].x);
+         }
+         if (D > 0 && D1 > 0 && D2 > 0) {
+             return true;
+         }
+     }
+ } else {
+     var intersections = 0;
+     for (var i = 0; i < points.length; i++) {
+         var cross;
+         if (i === points.length - 1) {
+             cross = this.crossSectionX(pointStart, new THREE.Vector2(1000000000, 1000000000), points[i], points[0]);
+         } else {
+             cross = this.crossSectionX(pointStart, new THREE.Vector2(1000000000, 1000000000), points[i], points[i + 1]);
+         }
+         if (cross && cross.overlapping) {
+             intersections++;
+         }
+     }
+     if (intersections === 0) {
+         return false;
+     } else if (intersections % 2 === 0) {
+         return false;
+     } else {
+         return true;
+     }
+ }
+    return false;
 };
 
 ControlDesigner.prototype.createCup = function (pathPts, mainLine) {
@@ -2278,7 +2289,9 @@ ControlDesigner.prototype.endUpdateLinePath = function (point) {
 
         var object = this.groupLinesUpdate.getObjectByName("line_" + this.updatedWall + "-" + nameLine);
 
-        this.checkIntersectionPolygons(this.groupLinesUpdate.children[0].geometry.vertices, object.geometry.vertices, nameVertex);
+        for (var i = 1; i < this.groupLinesUpdate.children.length; i++) {
+            this.checkIntersectionPolygons(this.groupLinesUpdate.children[0].geometry.vertices, this.groupLinesUpdate.children[i].geometry.vertices, i);
+        }
 
         /* if (nameVertex === 0) {
              object.geometry.vertices[object.geometry.vertices.length-1].copy(point.position);
@@ -2294,11 +2307,11 @@ ControlDesigner.prototype.checkIntersectionPolygons = function (pol1, pol2, name
     a1.splice(-1, 1);
     a2.splice(-1, 1);
 // a1.reverse();
-    a2.reverse();
+//     a2.reverse();
     var pathPts = a1.concat(a2);
-    console.log("aaa", a1);
-    console.log("bbb", a2);
-    console.log("concat", pathPts);
+    // console.log("aaa", a1);
+    // console.log("bbb", a2);
+    // console.log("concat", pathPts);
 // pathPts.reverse();
     /*  var shape = new THREE.Shape(a2);
       this.addLineShapeExp( shape, "#008a02", -20, 50, 0, 0, 0, 0, 1, this.updatedWall, 0 );*/
@@ -2315,7 +2328,7 @@ ControlDesigner.prototype.checkIntersectionPolygons = function (pol1, pol2, name
     }
     var lines = [beginP, a2[nameVertex], endP];
 
-    console.log(lines);
+    // console.log(lines);
     this.updateCup_alternative(a1, a2);
 };
 
@@ -2496,6 +2509,7 @@ ControlDesigner.prototype.addLineShapeExp = function ( shape, color, x, y, z, rx
     // shape.autoClose = true;
     var points = shape.getPoints();
     var geometryPoints = new THREE.Geometry().setFromPoints( points );
+    geometryPoints.vertices.push( geometryPoints.vertices[0].clone() );
     // solid this.line
     var line = new THREE.Line( geometryPoints, new THREE.LineBasicMaterial( { color: color, linewidth: 10, transparent: true } ) );
     line.frustumCulled = false;
