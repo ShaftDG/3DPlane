@@ -216,7 +216,7 @@ function drag( object ) {
 }
 
 function dragEnd( event ) {
-    designer.endUpdateLinePath(transformControl.object);
+    designer.endUpdateLinePath(transformControl);
     designer.updateExtrudePathX();
     designer.lineHorizontal.visible = false;
     designer.lineVertical.visible = false;
