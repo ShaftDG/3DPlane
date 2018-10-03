@@ -217,7 +217,7 @@ function drag( object ) {
 
 function dragEnd( event ) {
     designer.endUpdateLinePath(transformControl);
-    designer.updateExtrudePathX();
+    // designer.updateExtrudePathX();
     designer.lineHorizontal.visible = false;
     designer.lineVertical.visible = false;
 
@@ -550,7 +550,7 @@ function onKeyDown ( event ) {
             // console.log(" designer.mapX",  designer.mapX);
             // console.log(" designer.mapY",  designer.mapY);
             // console.log(" groupSubtract",  designer.groupSubtract);
-            // console.log(" objects",  designer.clockwiseMap);
+            console.log("    objects",  designer.objects);
             break;
         case 83: // s
             break;
