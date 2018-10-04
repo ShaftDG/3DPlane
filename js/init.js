@@ -436,7 +436,8 @@ function changeCamera(event){
             designer.groupExtrude.visible = false;
             designer.groupFinishedWalls.visible = false;
             designer.groupPlane.visible = true;
-            designer.groupLinesUpdate.visible = true;
+            designer.groupLinesUpdateIn.visible = true;
+            designer.groupLinesUpdateOut.visible = true;
             designer.groupLines.visible = true;
             designer.groupPoints.visible = true;
             designer.groupProportions.visible = true;
@@ -494,7 +495,8 @@ function changeCamera(event){
             // designer.groupExtrude.visible = true;
             designer.groupFinishedWalls.visible = true;
             designer.groupPlane.visible = false;
-            designer.groupLinesUpdate.visible = false;
+            designer.groupLinesUpdateOut.visible = false;
+            designer.groupLinesUpdateIn.visible = false;
             designer.groupLines.visible = false;
 
             designer.selectedScale = false;
