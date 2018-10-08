@@ -103,7 +103,7 @@ function ControlDesigner(textureSpritePointScale) {
     this.groupSubtract = new THREE.Object3D();
     this.groupSubtract.name = "groupSubtract";
     // this.groupSubtract.visible = false;
-    this.groupSubtract.nameSubtractObjects = new Map();
+    this.groupSubtract.userData.nameSubtractObjects = new Map();
     this.add(this.groupSubtract);
 
     this.groupLines = new THREE.Object3D();
@@ -1091,7 +1091,7 @@ ControlDesigner.prototype.deletePointObject = function (trControl) {
         var nameVertex = +arr[1];
         var index = nameVertex === 0 ? 0 : nameVertex - 1;
         var object = this.mapLines.get("line_" + this.updatedWall + "-" + nameLine);
-        var mainLine = this.mapLinesWalls.get(this.updatedWall.toString());
+        var mainLine = this.mapLinesWalls.get(this.updatedWall.toString() + "-" + nameLine);
 
         if (object.geometry.vertices.length > 4) {
 
@@ -1155,15 +1155,6 @@ ControlDesigner.prototype.deletePointObject = function (trControl) {
             object.geometry._bufferGeometry.attributes.position.needsUpdate = true;
 
             trControl.attach(this.groupPoints.children[indexIn]);
-            console.log("!!!!!!!!!!", trControl.object.name);
-             var mesh = new THREE.Mesh(new THREE.SphereGeometry(10), new THREE.MeshBasicMaterial({
-             color: "#00ff42",
-             transparent: true
-         }));
-         mesh.position.x = this.groupPoints.children[indexIn].position.x;
-         mesh.position.y = this.groupPoints.children[indexIn].position.y;
-         mesh.position.z = 800;
-         this.add(mesh);
             this.endUpdateLinePath({object: {name: "null_null"}});
         } else {
             var iter = 0;
@@ -1375,7 +1366,7 @@ ControlDesigner.prototype.extrudePath = function () {
    // this.addLineShape( inputShape, "#d70003", 0, 0, 0, 0, 0, 0, 1, this.numWalls );
     this.rebuildWall(this.numWalls);
     // console.log("mainLine", mainLine);
-    this.mapLinesWalls.set(this.numWalls.toString(), mainLine);
+    this.mapLinesWalls.set(this.updatedWall.toString() + "-0", mainLine);
     this.numWalls++;
 };
 
@@ -1935,16 +1926,19 @@ ControlDesigner.prototype.updateOutLine = function (outPol, inPol) {
 
     for (var j = 0; j < inPol.length; j++) {
         var line = intersectionsInPolMap.get(j);
-        var arr = line.arr;
         // console.log("line", line);
+        if (line) {
+            var arr = line.arr;
+
             if (!line.p1Intersections/* && !line.liesOn*/) {
                 arr.splice(0, 1);
             }
             if (!line.p2Intersections/* && !line.liesOn*/) {
                 arr.splice(-1, 1);
             }
-        for (var h = 0; h < arr.length-1; arr.length % 2 === 0 ? h += 2 : h++) {
-            bufferMap.set(Math.round(arr[h].x) + "-" + Math.round(arr[h].y), arr[h+1]);
+            for (var h = 0; h < arr.length - 1; arr.length % 2 === 0 ? h += 2 : h++) {
+                bufferMap.set(Math.round(arr[h].x) + "-" + Math.round(arr[h].y), arr[h + 1]);
+            }
         }
     }
     // console.log("intersectionsInPolMap", intersectionsInPolMap);
@@ -2743,44 +2737,31 @@ ControlDesigner.prototype.endUpdateLinePath = function (trControl) {
         }
 
         for (var i = 0; i < this.groupLinesUpdateOut.children.length; i++) {
-            var overlapOutInner = false;
-                var pathOutLine = this.groupLinesUpdateOut.children[i].geometry.vertices.slice();
-                pathOutLine.splice(-1, 1);
+                var pathOutLine = [this.groupLinesUpdateOut.children[i].geometry.vertices.slice()];
+                pathOutLine[0].splice(-1, 1);
                 var a = pIn.slice();
-                console.log("pathOutLine", pathOutLine);
-                console.log("a", a);
-                for (var j = 0; j < a.length; j++) {
-                    var path = this.intersectionLineWithOutLine(pathOutLine, a[j]);
-                    if (path.overlapping) {
-                        pathOutLine = path.pathLine;
-                        pIn.splice(j - (a.length - pIn.length), 1);
-                        overlapOut = true;
-                        overlapOutInner = true;
+                var lengthPath = pathOutLine.length;
+                for (var f = 0; f < lengthPath; f++) {
+                    for (var j = a.length - 1; j >= 0; j--) {
+
+                        var path = this.intersectionLineWithOutLine(pathOutLine[f], a[j]);
+                        if (path.overlapping) {
+                            var insertPath = path.pathLine;
+                            for (var k = 0; k < insertPath.length; k++) {
+                                pathOutLine.splice(f+k, 1, insertPath[k]);
+                            }
+                            pIn.splice(j, 1);
+                            overlapOut = true;
+                        }
                     }
                 }
-                if (overlapOutInner) {
-                    for (var k = 0; k < pathOutLine.length; k++) {
-                        pOut.push(pathOutLine[k]);
-                    }
-                } else {
-                    pOut.push(pathOutLine);
+                for (var k = 0; k < pathOutLine.length; k++) {
+                    pOut.push(pathOutLine[k]);
                 }
-
-
         }
-
-        /*  for (var i = 0; i < pOut.length; i++) {
-                 var shape = new THREE.Shape(pOut[i]);
-                 this.removeObject( this, this.getObjectByName("!!!!!!!line_" + this.updatedWall.toString() + "-" + i.toString()) );
-                 this.addLineShapeExp(shape, "#d700d3", 250, 250, 0, 0, 0, 0, 1, this.updatedWall, i);
-             }*/
-
 
         console.log("pOut", pOut);
         console.log("pIn", pIn);
-
-     /*   this.removeIntersectObjectsArray(this.objects, this.mapWallsCup.get("wallsCup_" + this.updatedWall.toString()));
-        this.removeObject(this.groupPlane, this.mapWallsCup.get("wallsCup_" + this.updatedWall.toString()));*/
 
         if (overlapIn || overlapOut) {
 
@@ -2799,11 +2780,12 @@ ControlDesigner.prototype.endUpdateLinePath = function (trControl) {
             this.clearGroup(this.groupExtrude.getObjectByName("walls_" + this.updatedWall.toString()));
 
             this.groupProportions.children = [];
-            var mainLine = [];
+
 
             var extrudeSettings = {depth: this.heightWall, bevelEnabled: false, steps: 1};
             // build out line
             for (var i = 0; i < pOut.length; i++) {
+                var mainLine = [];
                 var inputShape = new THREE.Shape(pOut[i]);
                 this.addLineShape(inputShape, "#d70003", 0, 0, 0, 0, 0, 0, 1, this.updatedWall, i, "outLine");
                 for (var j = 0; j < pOut[i].length; j++) {
@@ -2823,6 +2805,7 @@ ControlDesigner.prototype.endUpdateLinePath = function (trControl) {
                     }
                     mainLine.push(new THREE.Vector2(pOut[i][j].x, pOut[i][j].y));
                 }
+                mainLine.push(mainLine[0]);
                 mainLine[mainLine.length - 1] = {
                     x: mainLine[mainLine.length - 1].x,
                     y: mainLine[mainLine.length - 1].y,
@@ -2832,49 +2815,63 @@ ControlDesigner.prototype.endUpdateLinePath = function (trControl) {
                 if (pIn.length) {
                     // build in line
                     for (var k = 0; k < pIn.length; k++) {
-                        var shape = new THREE.Shape(pIn[k]);
-                        this.addLineShape(shape, "#d70003", 0, 0, 0, 0, 0, 0, 1, this.updatedWall, (k + pOut.length), "inLine");
-                        for (var j = 0; j < pIn[k].length; j++) {
-                            this.addPointObject(pIn[k][j].x, pIn[k][j].y, 0, this.updatedWall, (k + pOut.length) + "-" + j);
-                            if (j < pIn[k].length - 1) {
-                                this.extrudeFaceWall(pIn[k][j], pIn[k][j + 1], this.updatedWall, (k + pOut.length) + "/" + j);
-                                this.positionProportions(
-                                    new THREE.Vector2(pIn[k][j].x, pIn[k][j].y),
-                                    new THREE.Vector2(pIn[k][j + 1].x, pIn[k][j + 1].y),
-                                    (k + pOut.length) + "/" + j, this.updatedWall);
-                            } else {
-                                this.extrudeFaceWall(pIn[k][j], pIn[k][0], this.updatedWall, (k + pOut.length) + "/" + j);
-                                this.positionProportions(
-                                    new THREE.Vector2(pIn[k][j].x, pIn[k][j].y),
-                                    new THREE.Vector2(pIn[k][0].x, pIn[k][0].y),
-                                    (k + pOut.length) + "/" + j, this.updatedWall);
+                        if (this.pointInsideThePolygon(pOut[i], pIn[k][0], false).belongs) {
+                            var shape = new THREE.Shape(pIn[k]);
+                            this.addLineShape(shape, "#d70003", 0, 0, 0, 0, 0, 0, 1, this.updatedWall, (k + i + pOut.length * (i + 1)), "inLine");
+                            for (var j = 0; j < pIn[k].length; j++) {
+                                this.addPointObject(pIn[k][j].x, pIn[k][j].y, 0, this.updatedWall, (k + i + pOut.length * (i + 1)) + "-" + j);
+                                if (j < pIn[k].length - 1) {
+                                    this.extrudeFaceWall(pIn[k][j], pIn[k][j + 1], this.updatedWall, (k + i + pOut.length * (i + 1)) + "/" + j);
+                                    this.positionProportions(
+                                        new THREE.Vector2(pIn[k][j].x, pIn[k][j].y),
+                                        new THREE.Vector2(pIn[k][j + 1].x, pIn[k][j + 1].y),
+                                        (k + i + pOut.length * (i + 1)) + "/" + j, this.updatedWall);
+                                } else {
+                                    this.extrudeFaceWall(pIn[k][j], pIn[k][0], this.updatedWall, (k + i + pOut.length * (i + 1)) + "/" + j);
+                                    this.positionProportions(
+                                        new THREE.Vector2(pIn[k][j].x, pIn[k][j].y),
+                                        new THREE.Vector2(pIn[k][0].x, pIn[k][0].y),
+                                        (k + i + pOut.length * (i + 1)) + "/" + j, this.updatedWall);
+                                }
+                                mainLine.push(new THREE.Vector2(pIn[k][j].x, pIn[k][j].y));
                             }
-                            mainLine.push(new THREE.Vector2(pIn[k][j].x, pIn[k][j].y));
+                            mainLine.push(mainLine[0]);
+                            mainLine[mainLine.length - 1] = {
+                                x: mainLine[mainLine.length - 1].x,
+                                y: mainLine[mainLine.length - 1].y,
+                                end: true
+                            };
+                            var smileyEye1Path = new THREE.Path(pIn[k]);
+                            smileyEye1Path.moveTo(0, 0);
+                            inputShape.holes.push(smileyEye1Path);
                         }
-                        mainLine[mainLine.length - 1] = {
-                            x: mainLine[mainLine.length - 1].x,
-                            y: mainLine[mainLine.length - 1].y,
-                            end: true
-                        };
-                        var smileyEye1Path = new THREE.Path(pIn[k]);
-                        smileyEye1Path.moveTo(0, 0);
-                        inputShape.holes.push(smileyEye1Path);
                     }
                 }
                 this.addShape(inputShape, extrudeSettings, "#9cc2d7", "#39424e", 0, 0, 0, 0, 0, 0, 1, this.updatedWall, i);
+                this.mapLinesWalls.set(this.updatedWall.toString() + "-" + i.toString(), mainLine);
             }
             this.rebuildWall(this.updatedWall);
-            this.mapLinesWalls.set(this.updatedWall.toString(), mainLine);
         } else {
             this.updateExtrudePathX();
         }
-
     }
 };
 
 ControlDesigner.prototype.intersectionLineWithOutLine = function (pol1, pol2) {
     var a1 = pol1.slice();
     var a2 = pol2.slice();
+    // a2.reverse();
+    var res = 0;
+    for (var i = 0; i < a2.length; i++)
+    {
+        var p1 = i ? a2[i-1] : a2[a2.length-1];
+        var p2 = a2[i];
+        res += (p1.x - p2.x) * (p1.y + p2.y);
+    }
+    if (res > 0) {
+        a2.reverse();
+    }
+
     if (a1[0].x ===  a1[a1.length-1].x && a1[0].y ===  a1[a1.length-1].y) {
         a1.splice(-1, 1);
     }
@@ -2887,7 +2884,17 @@ ControlDesigner.prototype.intersectionLineWithOutLine = function (pol1, pol2) {
 ControlDesigner.prototype.intersectionLineWithInLine = function (pol1, pol2) {
     var a1 = pol1.slice();
     var a2 = pol2.slice();
-    // a2.reverse();
+
+    var res = 0;
+    for (var i = 0; i < a2.length; i++)
+    {
+        var p1 = i ? a2[i-1] : a2[a2.length-1];
+        var p2 = a2[i];
+        res += (p1.x - p2.x) * (p1.y + p2.y);
+    }
+    if (res > 0) {
+        a2.reverse();
+    }
     if (a1[0].x ===  a1[a1.length-1].x && a1[0].y ===  a1[a1.length-1].y) {
         a1.splice(-1, 1);
     }
@@ -2904,10 +2911,10 @@ ControlDesigner.prototype.updateExtrudePathX = function () {
 
     if (this.groupLinesUpdateOut.children.length) {
         this.groupProportions.children = [];
-        var mainLine = [];
         var extrudeSettings = {depth: this.heightWall, bevelEnabled: false, steps: 1};
         /////////////////////////////////////
         for (var i = 0; i < this.groupLinesUpdateOut.children.length; i++) {
+            var mainLine = [];
             var inputShape = new THREE.Shape(this.groupLinesUpdateOut.children[i].geometry.vertices);
             for (var j = 0; j < this.groupLinesUpdateOut.children[i].geometry.vertices.length; j++) {
                 if (j < this.groupLinesUpdateOut.children[i].geometry.vertices.length - 1) {
@@ -2928,32 +2935,32 @@ ControlDesigner.prototype.updateExtrudePathX = function () {
             if (this.groupLinesUpdateIn.children.length) {
                 // build in line
                 for (var k = 0; k < this.groupLinesUpdateIn.children.length; k++) {
-                    var shape = new THREE.Shape(this.groupLinesUpdateIn.children[k].geometry.vertices);
-
-                    for (var j = 0; j < this.groupLinesUpdateIn.children[k].geometry.vertices.length; j++) {
-                        if (j < this.groupLinesUpdateIn.children[k].geometry.vertices.length - 1) {
-                            this.extrudeFaceWall(this.groupLinesUpdateIn.children[k].geometry.vertices[j], this.groupLinesUpdateIn.children[k].geometry.vertices[j + 1], this.updatedWall, (k + this.groupLinesUpdateOut.children.length) + "/" + j);
-                            this.positionProportions(
-                                new THREE.Vector2(this.groupLinesUpdateIn.children[k].geometry.vertices[j].x, this.groupLinesUpdateIn.children[k].geometry.vertices[j].y),
-                                new THREE.Vector2(this.groupLinesUpdateIn.children[k].geometry.vertices[j + 1].x, this.groupLinesUpdateIn.children[k].geometry.vertices[j + 1].y),
-                                (k + this.groupLinesUpdateOut.children.length) + "/" + j, this.updatedWall);
+                    if (this.pointInsideThePolygon(this.groupLinesUpdateOut.children[i].geometry.vertices, this.groupLinesUpdateIn.children[k].geometry.vertices[0], false).belongs) {
+                        for (var j = 0; j < this.groupLinesUpdateIn.children[k].geometry.vertices.length; j++) {
+                            if (j < this.groupLinesUpdateIn.children[k].geometry.vertices.length - 1) {
+                                this.extrudeFaceWall(this.groupLinesUpdateIn.children[k].geometry.vertices[j], this.groupLinesUpdateIn.children[k].geometry.vertices[j + 1], this.updatedWall, (k + i + this.groupLinesUpdateOut.children.length * (i + 1)) + "/" + j);
+                                this.positionProportions(
+                                    new THREE.Vector2(this.groupLinesUpdateIn.children[k].geometry.vertices[j].x, this.groupLinesUpdateIn.children[k].geometry.vertices[j].y),
+                                    new THREE.Vector2(this.groupLinesUpdateIn.children[k].geometry.vertices[j + 1].x, this.groupLinesUpdateIn.children[k].geometry.vertices[j + 1].y),
+                                    (k + i + this.groupLinesUpdateOut.children.length * (i + 1)) + "/" + j, this.updatedWall);
+                            }
+                            mainLine.push(new THREE.Vector2(this.groupLinesUpdateIn.children[k].geometry.vertices[j].x, this.groupLinesUpdateIn.children[k].geometry.vertices[j].y));
                         }
-                        mainLine.push(new THREE.Vector2(this.groupLinesUpdateIn.children[k].geometry.vertices[j].x, this.groupLinesUpdateIn.children[k].geometry.vertices[j].y));
+                        mainLine[mainLine.length - 1] = {
+                            x: mainLine[mainLine.length - 1].x,
+                            y: mainLine[mainLine.length - 1].y,
+                            end: true
+                        };
+                        var smileyEye1Path = new THREE.Path(this.groupLinesUpdateIn.children[k].geometry.vertices);
+                        smileyEye1Path.moveTo(0, 0);
+                        inputShape.holes.push(smileyEye1Path);
                     }
-                    mainLine[mainLine.length - 1] = {
-                        x: mainLine[mainLine.length - 1].x,
-                        y: mainLine[mainLine.length - 1].y,
-                        end: true
-                    };
-                    var smileyEye1Path = new THREE.Path(this.groupLinesUpdateIn.children[k].geometry.vertices);
-                    smileyEye1Path.moveTo(0, 0);
-                    inputShape.holes.push(smileyEye1Path);
                 }
             }
             this.addShape(inputShape, extrudeSettings, "#9cc2d7", "#39424e", 0, 0, 0, 0, 0, 0, 1, this.updatedWall, i);
+            this.mapLinesWalls.set(this.updatedWall.toString() + "-" + i.toString(), mainLine);
         }
         this.rebuildWall(this.updatedWall);
-        this.mapLinesWalls.set(this.updatedWall.toString(), mainLine);
     }
 };
 
@@ -3235,7 +3242,8 @@ ControlDesigner.prototype.rebuildWall = function (nameWall){
 
     var singleGeometry = new THREE.Geometry();
 
-    var arr = this.groupSubtract.nameSubtractObjects.get(nameWall);
+    var arr = this.groupSubtract.userData.nameSubtractObjects.get(nameWall);
+    console.log(arr);
     if (arr) {
         for (var j = 0; j < arr.length; j++) {
             var pathPts = [];
@@ -4497,19 +4505,19 @@ ControlDesigner.prototype.positionSelectedObject3D = function ( updatedWall, pos
 };
 
 ControlDesigner.prototype.addNumSubtract = function (group, nameWall, nameObject) {
-    if (!group.nameSubtractObjects.has(nameWall)) {
-        group.nameSubtractObjects.set(nameWall, [nameObject]);
+    if (!group.userData.nameSubtractObjects.has(nameWall)) {
+        group.userData.nameSubtractObjects.set(nameWall, [nameObject]);
     } else {
-        var arr = group.nameSubtractObjects.get(nameWall);
+        var arr = group.userData.nameSubtractObjects.get(nameWall);
         arr.push(nameObject);
-        group.nameSubtractObjects.set(nameWall, arr)
+        group.userData.nameSubtractObjects.set(nameWall, arr)
     }
 };
 
 ControlDesigner.prototype.deleteNumSubtract = function (group, nameWall, nameObject) {
-    var arr = group.nameSubtractObjects.get(nameWall);
+    var arr = group.userData.nameSubtractObjects.get(nameWall);
     this.removeIntersectObjectsArray(arr, nameObject);
-    group.nameSubtractObjects.set(nameWall, arr)
+    group.userData.nameSubtractObjects.set(nameWall, arr)
 };
 
 ControlDesigner.prototype.changeSize2D = function (object, changedSize) {
@@ -4678,6 +4686,7 @@ ControlDesigner.prototype.mouseMove2D = function (posMouse){
         posMouse.z = 710;
         if (this.selectedSubtractObject) {
             var arr = this.selectedSubtractObject.name.split('_');
+            this.partWall = arr[1];
             this.positionCursor2D(arr[1], posMouse, this.selectedSubtractObject, this.selectedSubtractObject.userData.width);
         }
     }
@@ -4688,18 +4697,20 @@ ControlDesigner.prototype.mouseClickCursor2D = function (intersect){
     if (!this.selectedInstr && !this.selectedScale) {
         if (!this.cursor2D && this.boolCursor && arr[0] === "wallsCup") {
             this.createCursor2D();
-            this.updatedWall = +arr[1];
-            this.positionCursor2D(this.updatedWall.toString(), intersect.point, this.cursor2D, this.widthSubtractObject);
-            this.cursor2D.name = this.updatedWall.toString();
+            this.updatedWall = +arr[1].split('-')[0];
+            this.partWall = arr[1];
+            this.positionCursor2D(this.partWall, intersect.point, this.cursor2D, this.widthSubtractObject);
+            this.cursor2D.name = this.partWall.toString();
         } else if (this.cursor2D) {
             if (arr[0] === "wallsCup") {
                 if (this.cursor2D.name === arr[1]) {
                     this.addDoor2D(this.cursor2D, this.groupSubtract.children.length, arr[1]);
                     this.rebuildWall(this.updatedWall.toString());
                 }
-                this.updatedWall = +arr[1];
-                this.positionCursor2D(this.updatedWall.toString(), intersect.point, this.cursor2D, this.widthSubtractObject);
-                this.cursor2D.name = this.updatedWall.toString();
+                this.updatedWall = +arr[1].split('-')[0];
+                this.partWall = arr[1];
+                this.positionCursor2D(this.partWall, intersect.point, this.cursor2D, this.widthSubtractObject);
+                this.cursor2D.name = this.partWall.toString();
             } else {
                 this.addDoor2D(this.cursor2D, this.groupSubtract.children.length, this.updatedWall.toString());
                 this.rebuildWall(this.updatedWall.toString());
@@ -4710,7 +4721,7 @@ ControlDesigner.prototype.mouseClickCursor2D = function (intersect){
 
 ControlDesigner.prototype.mouseMoveCursor2D = function (posMouse ){
     if (this.boolCursor && this.cursor2D) {
-        this.positionCursor2D(this.updatedWall.toString(), posMouse, this.cursor2D, this.widthSubtractObject);
+        this.positionCursor2D(this.partWall.toString(), posMouse, this.cursor2D, this.widthSubtractObject);
     }
 };
 
@@ -4740,7 +4751,7 @@ ControlDesigner.prototype.addDoor2D = function (object, nameObject, nameWall){
     var mat = new THREE.MeshBasicMaterial({color: "#4145d7", transparent: true, depthTest: false});
     var cursor2D = new THREE.Mesh( geometry, mat );
     this.addHelper(cursor2D);
-    cursor2D.name = "subtract-" + nameObject + "_" + nameWall;
+    cursor2D.name = "subtract-" + nameObject + "_" + object.name;
     cursor2D.position.copy(object.position);
     cursor2D.position.z += 10;
     cursor2D.rotation.copy(object.rotation);
@@ -4760,7 +4771,7 @@ ControlDesigner.prototype.addDoor3D = function (object, nameObject, nameWall){
     var mat = new THREE.MeshBasicMaterial({color: "#4145d7"});
     var cursor3D = new THREE.Mesh( geometry, mat );
     this.addHelper(cursor3D);
-    cursor3D.name = "subtract-" + nameObject + "_" + nameWall;
+    cursor3D.name = "subtract-" + nameObject + "_" + object.name;
     cursor3D.position.x = object.position.x;
     cursor3D.position.y = -object.position.z;
     cursor3D.position.z = 710;
@@ -4887,7 +4898,8 @@ ControlDesigner.prototype.mouseClick2D = function (intersect, event){
             this.selectedSubtractObject = intersect.object;
 
             this.selectSubtractObject(this.selectedSubtractObject);
-            this.positionCursor2D(arr[1], this.selectedSubtractObject.position, this.selectedSubtractObject, this.selectedSubtractObject.userData.width);
+            this.partWall = arr[1];
+            this.positionCursor2D(this.partWall, this.selectedSubtractObject.position, this.selectedSubtractObject, this.selectedSubtractObject.userData.width);
             this.menuObject.setPosition(event, this.selectedSubtractObject.position);
             this.objectParametersMenu.getObjectProperties(this.selectedSubtractObject);
             this.objectParametersMenu.visibleMenu();
@@ -4920,7 +4932,8 @@ ControlDesigner.prototype.mouseClick3D = function (intersect){
                 this.selectedSubtractObject = intersect.object;
 
                 this.selectSubtractObject(this.selectedSubtractObject);
-                this.positionSelectedObject3D(arr[1], this.selectedSubtractObject.position, this.selectedSubtractObject, this.mapSubtractObjects,
+                this.partWall = arr[1];
+                this.positionSelectedObject3D(this.partWall, this.selectedSubtractObject.position, this.selectedSubtractObject, this.mapSubtractObjects,
                     this.mapSubtract, this.selectedSubtractObject.userData.width, this.selectedSubtractObject.userData.height, this.selectedSubtractObject.userData.fromFloor);
                 this.menuObject.setPosition(event, this.selectedSubtractObject.position);
                 this.objectParametersMenu.getObjectProperties(this.selectedSubtractObject);
@@ -4956,7 +4969,7 @@ ControlDesigner.prototype.mouseCancel = function (event){
                         this.tempPosition.y - this.selectedSubtractObject.position.y,
                         this.tempPosition.z - this.selectedSubtractObject.position.z
                     ).length() > 0) {
-                        this.rebuildWall(this.selectedSubtractObject.name.split('_')[1]);
+                        this.rebuildWall(this.selectedSubtractObject.name.split('_')[1].split('-')[0]);
                         this.selectedSubtractObject = this.mapSubtractObjects.get(this.selectedSubtractObject.name);
                         this.selectSubtractObject(this.selectedSubtractObject);
                     }
@@ -4966,7 +4979,7 @@ ControlDesigner.prototype.mouseCancel = function (event){
                         this.tempPosition.y - this.selectedSubtractObject.position.y,
                         this.tempPosition.z - this.selectedSubtractObject.position.z
                     ).length() > 0) {
-                        this.rebuildWall(this.selectedSubtractObject.name.split('_')[1]);
+                        this.rebuildWall(this.selectedSubtractObject.name.split('_')[1].split('-')[0]);
                         this.selectedSubtractObject = this.mapSubtract.get(this.selectedSubtractObject.name);
                         this.selectSubtractObject(this.selectedSubtractObject);
                     }
@@ -4980,13 +4993,17 @@ ControlDesigner.prototype.mouseCancel = function (event){
 ControlDesigner.prototype.mouseClickCursor3D = function (intersect){
     var arr = intersect.object.name.split('_');
     if (!this.cursor3D && this.boolCursor && arr[0] === "walls") {
-        arr[1] = arr[1].split('-')[0];
+        this.updatedWall = +arr[1].split('-')[0];
+        this.partWall = arr[1].split('/')[0];
         this.createCursor3D();
-        this.positionCursor3D(arr[1], intersect.point, this.cursor3D, this.widthSubtractObject, this.heightSubtractObject, this.fromFloorSubtractObject);
+        this.positionCursor3D(this.partWall, intersect.point, this.cursor3D, this.widthSubtractObject, this.heightSubtractObject, this.fromFloorSubtractObject);
+        this.cursor3D.name = this.partWall.toString();
     } else if (this.cursor3D && arr[0] === "walls" ) {
-        arr[1] = arr[1].split('-')[0];
-        this.addDoor3D(this.cursor3D, this.groupSubtract.children.length, arr[1]);
-        this.rebuildWall(arr[1]);
+        this.updatedWall = arr[1].split('-')[0];
+        this.partWall = arr[1].split('/')[0];
+        this.cursor3D.name = this.partWall.toString();
+        this.addDoor3D(this.cursor3D, this.groupSubtract.children.length, this.updatedWall);
+        this.rebuildWall(this.updatedWall);
     }
 };
 
@@ -4997,17 +5014,16 @@ ControlDesigner.prototype.mouseMove3D = function ( intersect ){
         this.objectParametersMenu.hiddenMenu();
         if (this.selectedSubtractObject) {
             var arr = this.selectedSubtractObject.name.split('_');
-            arr[1] = arr[1].split('-')[0];
+            this.partWall = arr[1].split('/')[0];
             this.positionSelectedObject3D(arr[1], intersect.point, this.selectedSubtractObject, this.mapSubtractObjects,
                 this.mapSubtract, this.selectedSubtractObject.userData.width, this.selectedSubtractObject.userData.height, this.selectedSubtractObject.userData.fromFloor);
         }
     }
 };
 
-ControlDesigner.prototype.mouseMoveCursor3D = function (intersect ){
+ControlDesigner.prototype.mouseMoveCursor3D = function (intersect){
     var arr = intersect.object.name.split('_');
     if (this.cursor3D && arr[0] === "walls") {
-        arr[1] = arr[1].split('-')[0];
-        this.positionCursor3D(arr[1], intersect.point, this.cursor3D, this.widthSubtractObject, this.heightSubtractObject, this.fromFloorSubtractObject);
+        this.positionCursor3D(this.partWall, intersect.point, this.cursor3D, this.widthSubtractObject, this.heightSubtractObject, this.fromFloorSubtractObject);
     }
 };
